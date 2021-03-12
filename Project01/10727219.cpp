@@ -97,7 +97,7 @@ class Scanner{
       return Getseparators( mch ) ;
     } // else if()
     else {
-      return "000" ;
+      return Getothers( mch ) ;
     } // else
   } // Gettoken() 
   
@@ -127,6 +127,21 @@ class Scanner{
     string temp = "" ; 
     temp += mch ;
     Getchar() ;
+    
+    return temp ;
+  } // Getseparators() 
+  
+  string Getothers( char & mch ) {
+    string temp = "" ; 
+    temp += mch ;
+    Getchar() ;
+    
+    while ( !Isseparators( mch ) ) {
+      temp += mch ;
+      
+      Getchar() ; 
+      
+    } // while()
     
     return temp ;
   } // Getseparators() 
