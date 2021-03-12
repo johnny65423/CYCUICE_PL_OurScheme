@@ -17,112 +17,119 @@ struct Token {
   Type type ;
 };
 
-bool iswhitespace( char ch ) {
+
+bool Iswhitespace( char ch ) {
   if ( ch == ' ' ) return true ;
   else if ( ch == '\t' ) return true ;
   else if ( ch == '\n' ) return true ;
   else return false ;
-  
-}
 
-bool isdight( char ch ) {
+} // Iswhitespace()
+
+bool Isdight( char ch ) {
   if ( ch >= '0' && ch <= '9' ) return true ;
   else return false ;
-		  
-}
 
-bool isseparators( char ch ) {
+} // Isdight()
+
+bool Isseparators( char ch ) {
   if ( ch == '(' || ch == ')' ) return true ;
   else if ( ch == ';' || ch == '\"'  || ch == '\'' ) return true ;
-  else if ( iswhitespace( ch ) ) return true ;
+  else if ( Iswhitespace( ch ) ) return true ;
   else return false ;
-		  
-}
+  
+} // Isseparators() 
 
 
 class Scanner{
   public:
-  char ch ;  
+  char mch ;  
   
   Scanner() {
-    ch = '\0' ;
+    mch = '\0' ;
     
-  }
-  void Readnwschar(){
-    while( ch == ' ' || ch == '\n' || ch == '\t' || ch == '\0' ) {
+  } // Scanner() 
+  
+  void Readnwschar() {
+    while ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) {
       Getchar() ;
-    }
-  }
+    } // while()
+    
+  } // Readnwschar() 
   
   void Gettokenlist() {
     
     Readnwschar() ;
     string temp = "" ;
     temp = Gettoken() ;
-    while( temp != "\"exit\"" ) {
+    while ( temp != "\"exit\"" ) {
       
-      cout << "Token  "<< temp << endl ;
+      cout << "Token  " << temp << endl ;
       
       temp = Gettoken() ;
       
-    }
+    } // while()
+    
     cout << "done" ;
-  }
+  } // Gettokenlist() 
     
   private:
 
-  void Getchar(){
+  void Getchar() {
     
-    scanf( "%c", &ch ) ;
+    scanf( "%c", &mch ) ;
     gColumn++ ;
-    if ( ch == '\n' ) {
+    if ( mch == '\n' ) {
       gColumn = 1 ;
       gLine++ ;
-    }
+    } // if()
   
-  }
+  } // Getchar() 
   
-  string Gettoken(){
+  string Gettoken() {
     Readnwschar() ;
     
-    if( ch == '\"' ) {
+    if ( mch == '\"' ) {
       
-      return Getstring( ch ) ;
-    }
-    else if ( isseparators(ch) ) {
-      return Getseparators( ch ) ;
-    }
-  }
+      return Getstring( mch ) ;
+    } // if()
+    else if ( Isseparators( mch ) ) {
+      return Getseparators( mch ) ;
+    } // else if()
+    else {
+      return "000" ;
+    } // else
+  } // Gettoken() 
   
-  string Getstring( char & ch ) {
+  string Getstring( char & mch ) {
     string temp = "" ;
-    temp += ch ;
+    temp += mch ;
     Getchar() ;
        
-    while ( ch != '\"' ){
-      temp += ch ;
+    while ( mch != '\"' ) {
+      temp += mch ;
       
-      if( ch == '\\' ) {
+      if ( mch == '\\' ) {
         Getchar() ; 
-        temp += ch ;
-      }
+        temp += mch ;
+      } // if()
       
       Getchar() ; 
-    }
+    } // while()
     
-    temp += ch ;
+    temp += mch ;
     Getchar() ;
     
     return temp ;
-  } 
+  } // Getstring() 
 
-  string Getseparators( char & ch ) {
+  string Getseparators( char & mch ) {
     string temp = "" ; 
-    temp += ch ;
+    temp += mch ;
     Getchar() ;
     
     return temp ;
-  } 
+  } // Getseparators() 
   
 };
 
