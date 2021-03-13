@@ -61,11 +61,11 @@ class Scanner{
   void Gettokenlist() {
     printf( "> " ) ;
     Readnwschar() ;
-    string temp = "" ;
+    Token temp ;
     temp = Gettoken() ;
-    while ( temp != "\"exit\"" ) {
+    while ( temp.str != "\"exit\"" ) {
       
-      cout << temp << endl ;
+      cout << temp.str << endl ;
       printf( "> " ) ;
       temp = Gettoken() ;
       
@@ -87,7 +87,24 @@ class Scanner{
   
   } // Getchar() 
   
-  string Gettoken() {
+  Token Gettoken() {
+    Token retoken ;
+    retoken.column = gColumn ;
+    retoken.line = gLine ;
+    //retoken.str = Setstr( Gettokenstr() ) ;
+    //retoken.type = Gettype() ;
+    return retoken ;
+  } // Gettoken()
+  
+  string Setstr( string str ) {
+    
+    ;
+    
+  } // Setstr()
+  
+  
+  
+  string Gettokenstr() {
     Readnwschar() ;
     
     if ( mch == '\"' ) {
@@ -100,7 +117,7 @@ class Scanner{
     else {
       return Getothers( mch ) ;
     } // else
-  } // Gettoken() 
+  } // Gettokenstr() 
   
   string Getstring( char & mch ) {
     string temp = "" ;
