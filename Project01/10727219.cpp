@@ -65,7 +65,7 @@ class Scanner{
     temp = Gettoken() ;
     while ( temp.str != "\"exit\"" ) {
       
-      cout << temp.str << endl ;
+      cout << temp.str<< "  " << temp.type << endl ;
       printf( "> " ) ;
       temp = Gettoken() ;
       
@@ -91,10 +91,21 @@ class Scanner{
     Token retoken ;
     retoken.column = gColumn ;
     retoken.line = gLine ;
+    retoken.str = Gettokenstr() ;
     //retoken.str = Setstr( Gettokenstr() ) ;
-    //retoken.type = Gettype() ;
+    retoken.type = Gettype(retoken.str) ;
     return retoken ;
   } // Gettoken()
+  
+  Type Gettype( string str ) {
+    if( str == "(" ) return LPAREN ;
+    else if( str == ")" ) return LPAREN ;
+    else if( str == "." ) return DOT ;
+    else if( str == "nil" && str == "#f" ) return NIL ;
+    else if( str == "t" && str == "#t" ) return T ;
+    else if( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
+    else if( str == "'" ) return QUOTE ;
+  } // Gettype()
   
   string Setstr( string str ) {
     
