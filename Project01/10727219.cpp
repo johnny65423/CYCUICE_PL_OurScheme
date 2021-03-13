@@ -2,6 +2,7 @@
 # include <iostream>
 # include <stdio.h>
 # include <string>
+# include <map>
 
 using namespace std;
 
@@ -58,14 +59,14 @@ class Scanner{
   } // Readnwschar() 
   
   void Gettokenlist() {
-    
+    printf( "> " ) ;
     Readnwschar() ;
     string temp = "" ;
     temp = Gettoken() ;
     while ( temp != "\"exit\"" ) {
       
-      cout << "Token  " << temp << endl ;
-      
+      cout << temp << endl ;
+      printf( "> " ) ;
       temp = Gettoken() ;
       
     } // while()
@@ -144,11 +145,14 @@ class Scanner{
     } // while()
     
     return temp ;
-  } // Getseparators() 
+  } // Getothers() 
   
 };
 
 int main() {
   Scanner scanner = Scanner() ;
+  printf( "Welcome to OurScheme!\n" ) ;
   scanner.Gettokenlist() ;
+  printf( "Thanks for using OurScheme!\n" ) ;
+  
 } // main()
