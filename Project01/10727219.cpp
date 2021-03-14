@@ -6,7 +6,7 @@
 
 using namespace std;
 
-enum Type { LPAREN, PAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL };
+enum Type { LPAREN, PAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = 1 ;            // 「下一個要讀進來的字元」所在的column number
@@ -27,11 +27,11 @@ bool Iswhitespace( char ch ) {
 
 } // Iswhitespace()
 
-bool Isdight( char ch ) {
+bool Isdigit( char ch ) {
   if ( ch >= '0' && ch <= '9' ) return true ;
   else return false ;
 
-} // Isdight()
+} // Isdigit()
 
 bool Isseparators( char ch ) {
   if ( ch == '(' || ch == ')' ) return true ;
@@ -41,6 +41,25 @@ bool Isseparators( char ch ) {
   
 } // Isseparators() 
 
+Type Numtype( string str ) {
+  if ( !Isdigit( str[0] ) && str[0] != '+' && str[0] != '-' && str[0] != '.' )
+    return UNKNOWN ;
+  
+  int dotnum = 0 ;
+  if ( str[0] == '.' ) dotnum++ ;
+  for ( int i = 1 ; i < str.size() ; i++ ) {
+    if ( str[i] == '.' ) dotnum++ ;
+    
+    if ( !Isdigit( str[i] ) && str[i] != '.' )
+      return UNKNOWN ;
+  } // for
+  
+  if ( dotnum == 0 ) return INT ;
+  else if ( dotnum == 1 ) return FLOAT ;
+  else return UNKNOWN ;
+  
+  
+} // Numtype()
 
 class Scanner{
   public:
@@ -63,9 +82,9 @@ class Scanner{
     Readnwschar() ;
     Token temp ;
     temp = Gettoken() ;
-    while ( temp.str != "\"exit\"" ) {
+    while ( temp.str != "0" ) {
       
-      cout << temp.str<< "  " << temp.type << endl ;
+      cout << temp.str << "  " << temp.type << endl ;
       printf( "> " ) ;
       temp = Gettoken() ;
       
@@ -81,6 +100,7 @@ class Scanner{
     scanf( "%c", &mch ) ;
     gColumn++ ;
     if ( mch == '\n' ) {
+      
       gColumn = 1 ;
       gLine++ ;
     } // if()
@@ -92,24 +112,28 @@ class Scanner{
     retoken.column = gColumn ;
     retoken.line = gLine ;
     retoken.str = Gettokenstr() ;
-    //retoken.str = Setstr( Gettokenstr() ) ;
-    retoken.type = Gettype(retoken.str) ;
+    // retoken.str = Setstr( Gettokenstr() ) ;
+    retoken.type = Gettype( retoken.str ) ;
     return retoken ;
   } // Gettoken()
   
   Type Gettype( string str ) {
-    if( str == "(" ) return LPAREN ;
-    else if( str == ")" ) return LPAREN ;
-    else if( str == "." ) return DOT ;
-    else if( str == "nil" && str == "#f" ) return NIL ;
-    else if( str == "t" && str == "#t" ) return T ;
-    else if( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if( str == "'" ) return QUOTE ;
+    Type numtype = Numtype( str ) ;
+    if ( str == "(" ) return LPAREN ;
+    else if ( str == ")" ) return LPAREN ;
+    else if ( str == "." ) return DOT ;
+    else if ( str == "nil" || str == "#f" ) return NIL ;
+    else if ( str == "t" || str == "#t" ) return T ;
+    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
+    else if ( str == "'" ) return QUOTE ;
+    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
+    else return UNKNOWN ;  
+      
   } // Gettype()
   
   string Setstr( string str ) {
     
-    ;
+    return "000";
     
   } // Setstr()
   
@@ -135,7 +159,8 @@ class Scanner{
     temp += mch ;
     Getchar() ;
        
-    while ( mch != '\"' ) {
+    while ( mch != '\"' )  {
+      if ( mch == '\n' ) return "ERROR" ;
       temp += mch ;
       
       if ( mch == '\\' ) {
