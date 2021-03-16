@@ -1,4 +1,5 @@
 # include <cstdlib>
+# include <vector>
 # include <iostream>
 # include <stdio.h>
 # include <string>
@@ -9,7 +10,7 @@ using namespace std;
 enum Type { LPAREN, PAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
-int gColumn = 1 ;            // 「下一個要讀進來的字元」所在的column number
+int gColumn = -1 ;            // 「下一個要讀進來的字元」所在的column number
 
 struct Token {
   string str ;
@@ -83,17 +84,30 @@ class Scanner{
     Token temp ;
     temp = Gettoken() ;
     while ( temp.str != "0" ) {
+      tokenlist.push_back( temp ) ;
       
-      cout << temp.str << "  " << temp.type << endl ;
+      // cout << temp.str << "  " << temp.type << endl ;
+      
       printf( "> " ) ;
       temp = Gettoken() ;
       
     } // while()
     
-    cout << "done" ;
+    //cout << "done" ;
   } // Gettokenlist() 
     
+  void Print() {
+    for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
+      cout << tokenlist.at(i).str ;
+      cout << tokenlist.at(i).line ;
+      cout << tokenlist.at(i).column << endl ; 
+    }
+    
+  }  
+  
   private:
+  
+  vector<Token> tokenlist ; ;
 
   void Getchar() {
     
@@ -101,7 +115,7 @@ class Scanner{
     gColumn++ ;
     if ( mch == '\n' ) {
       
-      gColumn = 1 ;
+      gColumn = -1 ;
       gLine++ ;
     } // if()
   
@@ -161,14 +175,32 @@ class Scanner{
        
     while ( mch != '\"' )  {
       if ( mch == '\n' ) return "ERROR" ;
-      temp += mch ;
       
+      bool check = true ;
       if ( mch == '\\' ) {
         Getchar() ; 
-        temp += mch ;
+        if ( mch == 't' ) {
+          temp += '\t' ;
+        } // if
+        else if ( mch == 'n' ) {
+          temp += '\n' ;
+        } // else if
+        else if ( mch == '\"' ) {
+          temp += '\"' ;
+        } // else if
+        else if ( mch == '\\' ) {
+          temp += '\\' ;
+        } // else if
+        else {
+          check = false ;
+        } // else
       } // if()
-      
-      Getchar() ; 
+      else {
+        temp += mch ;
+        
+      } // else
+      if ( check )
+        Getchar() ; 
     } // while()
     
     temp += mch ;
@@ -206,6 +238,7 @@ int main() {
   Scanner scanner = Scanner() ;
   printf( "Welcome to OurScheme!\n" ) ;
   scanner.Gettokenlist() ;
+  scanner.Print() ;
   printf( "Thanks for using OurScheme!\n" ) ;
   
 } // main()
