@@ -4,13 +4,16 @@
 # include <stdio.h>
 # include <string>
 # include <map>
+# include <sstream>
 
 using namespace std;
 
-enum Type { LPAREN, PAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, UNKNOWN };
+enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = -1 ;            // 「下一個要讀進來的字元」所在的column number
+
+int gTestNum ;
 
 struct Token {
   string str ;
@@ -19,6 +22,15 @@ struct Token {
   Type type ;
 };
 
+bool Isatomtype( Type type ) {
+  if ( type == SYMBOL || type == INT || type == FLOAT )
+    return true ;
+  else if ( type == STRING || type == NIL || type == T )
+    return true ;   
+  else 
+    return false ;
+  
+} // Isatomtype()
 
 bool Iswhitespace( char ch ) {
   if ( ch == ' ' ) return true ;
@@ -62,6 +74,43 @@ Type Numtype( string str ) {
   
 } // Numtype()
 
+bool Isend( vector< Token > tokenlist ) {
+  int size = tokenlist.size() ;
+  if ( size == 3 && tokenlist.at( 1 ).str == "exit" )
+    return true ;
+  else return false ;  
+  
+} // Isend()
+
+class Exception {
+public:
+  string merrorstr;
+  
+  Exception() {  }
+
+  Exception( string str ) {
+    merrorstr = str;
+  } // Exception()
+
+}; // Exception
+
+class Stringerror : public Exception {
+public:
+  Stringerror( Token temp ) {
+    stringstream ss ;
+    ss << "stringerror: " << temp.str << "  " << temp.type ;
+    
+    merrorstr = ss.str() ;
+  } // Stringerror()
+};
+
+class Callend : public Exception {
+public:
+  Callend() {
+    ;
+  } // Callend()
+};
+
 class Scanner{
   public:
   char mch ;  
@@ -78,6 +127,93 @@ class Scanner{
     
   } // Readnwschar() 
   
+  void ReadSexp( vector<Token> & tokenlist ) {
+    Token temp ;
+    Readnwschar() ;
+    temp = Gettoken() ;
+    // cout << "**" << temp.str << endl ;
+    if ( temp.type == LPAREN ) {
+      // cout << "l(" << temp.str << endl ;
+      tokenlist.push_back( temp ) ;
+      ReadSexp( tokenlist ) ;
+      
+      Readnwschar() ;
+      // cout << ">>" << mch ;
+      
+      while ( mch != ')' && mch != '.' ) {
+        ReadSexp( tokenlist ) ;
+        Readnwschar() ;
+       
+      } // while
+        
+       
+      if ( mch == '.' ) {
+        temp = Gettoken() ;
+        // cout << temp.str << endl ;
+        tokenlist.push_back( temp ) ;
+        ReadSexp( tokenlist ) ;
+        Readnwschar() ;
+      } // if
+        
+      Readnwschar() ;
+      
+      if ( mch == ')' ) {
+       
+        temp = Gettoken() ;
+        // cout << temp.str << endl ;
+        tokenlist.push_back( temp ) ;
+      } // if
+      else {
+        cout << mch << "in" << endl ;
+        throw Stringerror( temp ) ;// error
+      } // else
+      
+    } // if
+    else if ( Isatomtype( temp.type ) ) {
+      // cout << temp.str << endl ;
+      tokenlist.push_back( temp ) ;
+    } // else if
+    else if ( temp.type == QUOTE ) {
+      tokenlist.push_back( temp ) ;
+      ReadSexp( tokenlist ) ;
+    } // else if 
+    else {
+      cout << "out" << endl ;
+      throw Stringerror( temp ) ;// error
+    } // else
+    
+  } // ReadSexp()
+  
+  void Gettokenlist() {
+    
+    // Readnwschar() ;
+    while ( 0 == 0 ) {
+      printf( "> " ) ;
+      vector<Token> tokenlist ;
+      try {
+        
+        ReadSexp(  tokenlist ) ;
+        
+      } // try
+      catch ( Stringerror e ) {
+        cout << e.merrorstr ;
+      } // catch
+      // cout << "readed" << endl ;
+      if ( Isend( tokenlist ) )
+        throw Callend() ; 
+      for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
+        cout << tokenlist.at( i ).str << endl ;
+        // cout << tokenlist.at( i ).line ;
+        // cout << tokenlist.at( i ).column << endl ; 
+      } // for
+      
+      cout << endl ;
+    } // while()
+    
+    // cout << "done" ;
+  } // Gettokenlist()
+  
+  /*
   void Gettokenlist() {
     printf( "> " ) ;
     Readnwschar() ;
@@ -86,14 +222,14 @@ class Scanner{
     while ( temp.str != "0" ) {
       tokenlist.push_back( temp ) ;
       
-      // cout << temp.str << "  " << temp.type << endl ;
+      cout << temp.str << "  " << temp.type << endl ;
       
       printf( "> " ) ;
       temp = Gettoken() ;
       
     } // while()
     
-    //cout << "done" ;
+    // cout << "done" ;
   } // Gettokenlist() 
     
   void Print() {
@@ -104,10 +240,11 @@ class Scanner{
     }
     
   }  
+  */
   
   private:
   
-  vector<Token> tokenlist ; ;
+  // vector<Token> tokenlist ;
 
   void Getchar() {
     
@@ -126,22 +263,29 @@ class Scanner{
     retoken.column = gColumn ;
     retoken.line = gLine ;
     retoken.str = Gettokenstr() ;
+    if ( retoken.str == ";" ) {
+      
+      while ( mch != '\n' )
+        Getchar() ;
+    } // if
+    // cout << "type" << endl ;
     // retoken.str = Setstr( Gettokenstr() ) ;
     retoken.type = Gettype( retoken.str ) ;
+    
     return retoken ;
   } // Gettoken()
   
   Type Gettype( string str ) {
     Type numtype = Numtype( str ) ;
     if ( str == "(" ) return LPAREN ;
-    else if ( str == ")" ) return LPAREN ;
+    else if ( str == ")" ) return RPAREN ;
     else if ( str == "." ) return DOT ;
-    else if ( str == "nil" || str == "#f" ) return NIL ;
+    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
     else if ( str == "t" || str == "#t" ) return T ;
     else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
     else if ( str == "'" ) return QUOTE ;
     else if ( numtype == INT || numtype == FLOAT ) return numtype ;
-    else return UNKNOWN ;  
+    else return SYMBOL ;  
       
   } // Gettype()
   
@@ -199,6 +343,7 @@ class Scanner{
         temp += mch ;
         
       } // else
+      
       if ( check )
         Getchar() ; 
     } // while()
@@ -213,6 +358,14 @@ class Scanner{
     string temp = "" ; 
     temp += mch ;
     Getchar() ;
+    if ( temp == "(" ) {
+      Readnwschar() ;
+      
+      if ( mch == ')' ) {
+        temp += ")" ; 
+        Getchar() ;
+      } // if
+    } // if 
     
     return temp ;
   } // Getseparators() 
@@ -236,9 +389,16 @@ class Scanner{
 
 int main() {
   Scanner scanner = Scanner() ;
+  cin >> gTestNum ;
   printf( "Welcome to OurScheme!\n" ) ;
-  scanner.Gettokenlist() ;
-  scanner.Print() ;
+  try {
+    scanner.Gettokenlist() ;
+  } // try
+  catch ( Callend e ) {
+    ;
+  } // catch
+  
+  // scanner.Print() ;
   printf( "Thanks for using OurScheme!\n" ) ;
   
 } // main()
