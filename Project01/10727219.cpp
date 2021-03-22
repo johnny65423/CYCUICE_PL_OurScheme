@@ -316,11 +316,11 @@ class Scanner{
     retoken.column = gColumn ;
     retoken.line = gLine ;
     retoken.str = Gettokenstr() ;
-    if ( retoken.str == ";" ) {
+    while ( retoken.str == ";" ) {
       while ( mch != '\n' )
         Getchar() ;
       retoken.str = Gettokenstr() ;
-    } // if
+    } // while
     
     retoken.type = Gettype( retoken.str ) ;
     retoken.str = Setstr( retoken.str ) ;
