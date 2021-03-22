@@ -149,6 +149,13 @@ public:
   } // Callend()
 };
 
+class EndOfFileError : public Exception {
+public:
+  EndOfFileError() {
+    ;
+  } // EndOfFileError()
+};
+
 class Scanner{
   public:
   char mch ;  
@@ -215,9 +222,6 @@ class Scanner{
     else if ( temp.type == QUOTE ) {
       tokenlist.push_back( temp ) ;
       ReadSexp( tokenlist ) ;
-    } // else if 
-    else if ( temp.type == COMMENT ) {
-      ;
     } // else if 
     else {
       cout << "out" << endl ;
@@ -295,7 +299,9 @@ class Scanner{
 
   void Getchar() {
     
-    scanf( "%c", &mch ) ;
+    int eof = scanf( "%c", &mch ) ;
+    if ( eof == EOF )
+      throw EndOfFileError() ;
     gColumn++ ;
     if ( mch == '\n' ) {
       
@@ -313,6 +319,7 @@ class Scanner{
     if ( retoken.str == ";" ) {
       while ( mch != '\n' )
         Getchar() ;
+      retoken.str = Gettokenstr() ;
     } // if
     
     retoken.type = Gettype( retoken.str ) ;
@@ -391,6 +398,7 @@ class Scanner{
         } // else if
         else {
           check = false ;
+          temp += '\\' ;
         } // else
       } // if()
       else {
@@ -444,13 +452,16 @@ class Scanner{
 int main() {
   Scanner scanner = Scanner() ;
   cin >> gTestNum ;
-  printf( "Welcome to OurScheme!\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     scanner.Gettokenlist() ;
   } // try
   catch ( Callend e ) {
     ;
   } // catch
+  catch ( EndOfFileError e ) {
+    printf( "ERROR (no more input) : END-OF-FILE encountered" ) ;
+  } // catch  
   
   // scanner.Print() ;
   printf( "\nThanks for using OurScheme!\n" ) ;
