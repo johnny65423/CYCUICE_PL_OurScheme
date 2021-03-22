@@ -5,10 +5,12 @@
 # include <string>
 # include <map>
 # include <sstream>
+# include <iomanip>
 
+ 
 using namespace std;
 
-enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, UNKNOWN };
+enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMMENT, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = -1 ;            // 「下一個要讀進來的字元」所在的column number
@@ -17,8 +19,11 @@ int gTestNum ;
 
 struct Token {
   string str ;
+  
   int line ;
   int column ;
+  int intnum ;
+  float floatnum ;
   Type type ;
 };
 
@@ -58,16 +63,20 @@ Type Numtype( string str ) {
   if ( !Isdigit( str[0] ) && str[0] != '+' && str[0] != '-' && str[0] != '.' )
     return UNKNOWN ;
   
+  bool hasdigit = false ;
+  
   int dotnum = 0 ;
   if ( str[0] == '.' ) dotnum++ ;
   for ( int i = 1 ; i < str.size() ; i++ ) {
     if ( str[i] == '.' ) dotnum++ ;
-    
+    if ( Isdigit( str[i] ) )
+      hasdigit = true ;
     if ( !Isdigit( str[i] ) && str[i] != '.' )
       return UNKNOWN ;
   } // for
   
-  if ( dotnum == 0 ) return INT ;
+  if ( !hasdigit ) return UNKNOWN ;
+  else if ( dotnum == 0 ) return INT ;
   else if ( dotnum == 1 ) return FLOAT ;
   else return UNKNOWN ;
   
@@ -81,6 +90,35 @@ bool Isend( vector< Token > tokenlist ) {
   else return false ;  
   
 } // Isend()
+
+int Decodeint( string str ) {
+  int positive = 1 ;
+  if ( str[0] == '+' )
+    str.erase( 0, 1 ) ;
+  else if ( str[0] == '-' ) {
+    str.erase( 0, 1 ) ;
+    positive = -1 ;
+  } // else if
+  
+  int num = atoi( str.c_str() ) * positive ; 
+  return num ;
+} // Decodeint()
+
+float Decodefloat( string str ) {
+  int positive = 1 ;
+  if ( str[0] == '+' )
+    str.erase( 0, 1 ) ;
+  else if ( str[0] == '-' ) {
+    str.erase( 0, 1 ) ;
+    positive = -1 ;
+  } // else if
+  
+  if ( str[0] == '.' )
+    str = "0" + str ;
+  
+  float num = atof( str.c_str() ) * positive ; 
+  return num ;
+} // Decodefloat()
 
 class Exception {
 public:
@@ -171,11 +209,15 @@ class Scanner{
     } // if
     else if ( Isatomtype( temp.type ) ) {
       // cout << temp.str << endl ;
+      
       tokenlist.push_back( temp ) ;
     } // else if
     else if ( temp.type == QUOTE ) {
       tokenlist.push_back( temp ) ;
       ReadSexp( tokenlist ) ;
+    } // else if 
+    else if ( temp.type == COMMENT ) {
+      ;
     } // else if 
     else {
       cout << "out" << endl ;
@@ -202,9 +244,14 @@ class Scanner{
       if ( Isend( tokenlist ) )
         throw Callend() ; 
       for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
-        cout << tokenlist.at( i ).str << endl ;
-        // cout << tokenlist.at( i ).line ;
-        // cout << tokenlist.at( i ).column << endl ; 
+        
+        if ( tokenlist.at( i ).type == INT )
+          cout << tokenlist.at( i ).intnum << endl ;
+        else if ( tokenlist.at( i ).type == FLOAT )
+          cout << fixed << setprecision( 3 ) << tokenlist.at( i ).floatnum << endl ;
+        else 
+          cout << tokenlist.at( i ).str << endl ;
+
       } // for
       
       cout << endl ;
@@ -264,14 +311,18 @@ class Scanner{
     retoken.line = gLine ;
     retoken.str = Gettokenstr() ;
     if ( retoken.str == ";" ) {
-      
       while ( mch != '\n' )
         Getchar() ;
     } // if
-    // cout << "type" << endl ;
-    // retoken.str = Setstr( Gettokenstr() ) ;
-    retoken.type = Gettype( retoken.str ) ;
     
+    retoken.type = Gettype( retoken.str ) ;
+    retoken.str = Setstr( retoken.str ) ;
+    
+    if ( retoken.type == INT )
+      retoken.intnum = Decodeint( retoken.str ) ;
+    else if ( retoken.type == FLOAT )
+      retoken.floatnum = Decodefloat( retoken.str ) ;
+      
     return retoken ;
   } // Gettoken()
   
@@ -285,13 +336,16 @@ class Scanner{
     else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
     else if ( str == "'" ) return QUOTE ;
     else if ( numtype == INT || numtype == FLOAT ) return numtype ;
+    else if ( str == ";" ) return COMMENT ;
     else return SYMBOL ;  
       
   } // Gettype()
   
   string Setstr( string str ) {
     
-    return "000";
+    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
+    else if ( str == "t" || str == "#t" ) return "#t" ;
+    else return str ; 
     
   } // Setstr()
   
@@ -399,6 +453,6 @@ int main() {
   } // catch
   
   // scanner.Print() ;
-  printf( "Thanks for using OurScheme!\n" ) ;
+  printf( "\nThanks for using OurScheme!\n" ) ;
   
 } // main()
