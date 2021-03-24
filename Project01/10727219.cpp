@@ -13,7 +13,7 @@ using namespace std;
 enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMMENT, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
-int gColumn = -1 ;            // 「下一個要讀進來的字元」所在的column number
+int gColumn = 0 ;            // 「下一個要讀進來的字元」所在的column number
 bool gReading = false ;
 int gTestNum ;
 
@@ -334,7 +334,7 @@ class Scanner{
     gColumn++ ;
     if ( mch == '\n' ) {
       
-      gColumn = -1 ;
+      gColumn = 0 ;
       gLine++ ;
     } // if()
   
@@ -342,12 +342,16 @@ class Scanner{
   
   Token Gettoken() {
     Token retoken ;
+    Readnwschar() ; 
     retoken.column = gColumn ;
     retoken.line = gLine ;
     retoken.str = Gettokenstr() ;
     while ( retoken.str == ";" ) {
       while ( mch != '\n' )
         Getchar() ;
+      Readnwschar() ; 
+      retoken.column = gColumn ;
+      retoken.line = gLine ;
       retoken.str = Gettokenstr() ;
     } // while
     
@@ -359,7 +363,7 @@ class Scanner{
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
       
-    
+    cout << retoken.str << " " << retoken.line << " " << retoken.column << endl ;
     return retoken ;
   } // Gettoken()
   
@@ -482,6 +486,8 @@ class Scanner{
 int main() {
   Scanner scanner = Scanner() ;
   cin >> gTestNum ;
+  char t ;
+  scanf( "%c",  &t ) ;
   printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     scanner.Gettokenlist() ;
