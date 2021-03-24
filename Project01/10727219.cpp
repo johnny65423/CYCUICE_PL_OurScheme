@@ -327,8 +327,6 @@ class Scanner{
   
   private:
   
-  // vector<Token> tokenlist ;
-
   void Getchar() {
     
     int eof = scanf( "%c", &mch ) ;
@@ -392,8 +390,6 @@ class Scanner{
     else return str ; 
     
   } // Setstr()
-  
-  
   
   string Gettokenstr() {
     Readnwschar() ;
