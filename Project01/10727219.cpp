@@ -136,15 +136,18 @@ class Stringerror : public Exception {
 public:
   Stringerror( Token temp, int check ) {
     stringstream ss ;
-    if ( check == 1 ){
+    if ( check == 0 ){
       ss << "ERROR (unexpected token) : atom or '(' expected when token at Line " ;
-	  ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
-	} // if
-	else {
-	  ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
-	  ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
-	} // else 
-	
+	    ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
+	  } // if
+	  else if ( check == 1 ){
+  	  ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
+  	  ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
+  	} // else 
+	  else {
+  	  ss << "END-OF-LINE encountered at Line " ;
+  	  ss << temp.line << " Column " << temp.column ;
+  	} // else
     merrorstr = ss.str() ;
   } // Stringerror()
 };
@@ -226,6 +229,7 @@ class Scanner{
       } // if
       else {
         // cout << mch << "in" << endl ;
+        temp = Gettoken() ;
         throw Stringerror( temp, 1 ) ;// error
       } // else
       
@@ -240,7 +244,7 @@ class Scanner{
       ReadSexp( tokenlist ) ;
     } // else if 
     else {
-      // cout << "out" << endl ;
+      cout << temp.str << endl ;
       throw Stringerror( temp, 0 ) ;// error
     } // else
     
@@ -259,7 +263,6 @@ class Scanner{
 	  try {
         
         ReadSexp(  tokenlist ) ;
-        
         
       } // try
       catch ( Stringerror e ) {
@@ -363,7 +366,7 @@ class Scanner{
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
       
-    cout << retoken.str << " " << retoken.line << " " << retoken.column << endl ;
+    // cout << retoken.str << " " << retoken.line << " " << retoken.column << endl ;
     return retoken ;
   } // Gettoken()
   
@@ -413,7 +416,10 @@ class Scanner{
     Getchar() ;
        
     while ( mch != '\"' )  {
-      if ( mch == '\n' ) return "ERROR" ;
+      if ( mch == '\n' ) {
+        Token nonono ;
+        throw Stringerror( nonono, 2 ) ;
+      }
       
       bool check = true ;
       if ( mch == '\\' ) {
