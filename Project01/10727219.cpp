@@ -14,7 +14,7 @@ enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMM
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = -1 ;            // 「下一個要讀進來的字元」所在的column number
-
+bool gReading = false ;
 int gTestNum ;
 
 struct Token {
@@ -134,10 +134,17 @@ public:
 
 class Stringerror : public Exception {
 public:
-  Stringerror( Token temp ) {
+  Stringerror( Token temp, int check ) {
     stringstream ss ;
-    ss << "stringerror: " << temp.str << "  " << temp.type ;
-    
+    if ( check == 1 ){
+      ss << "ERROR (unexpected token) : atom or '(' expected when token at Line " ;
+	  ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
+	} // if
+	else {
+	  ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
+	  ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
+	} // else 
+	
     merrorstr = ss.str() ;
   } // Stringerror()
 };
@@ -152,7 +159,15 @@ public:
 class EndOfFileError : public Exception {
 public:
   EndOfFileError() {
-    ;
+    stringstream ss ;
+    if ( gReading ){
+      ss << "ERROR (no closing quote) : END-OF-LINE encountered at Line " << gLine << " Column " << gColumn ;
+	} // if
+	else {
+	  ss << "ERROR (no more input) : END-OF-FILE encountered" ;
+	} // else 
+
+    merrorstr = ss.str() ;
   } // EndOfFileError()
 };
 
@@ -177,6 +192,7 @@ class Scanner{
     Readnwschar() ;
     temp = Gettoken() ;
     // cout << "**" << temp.str << endl ;
+    gReading = true ;
     if ( temp.type == LPAREN ) {
       // cout << "l(" << temp.str << endl ;
       tokenlist.push_back( temp ) ;
@@ -209,8 +225,8 @@ class Scanner{
         tokenlist.push_back( temp ) ;
       } // if
       else {
-        cout << mch << "in" << endl ;
-        throw Stringerror( temp ) ;// error
+        // cout << mch << "in" << endl ;
+        throw Stringerror( temp, 1 ) ;// error
       } // else
       
     } // if
@@ -224,8 +240,8 @@ class Scanner{
       ReadSexp( tokenlist ) ;
     } // else if 
     else {
-      cout << "out" << endl ;
-      throw Stringerror( temp ) ;// error
+      // cout << "out" << endl ;
+      throw Stringerror( temp, 0 ) ;// error
     } // else
     
   } // ReadSexp()
@@ -234,19 +250,32 @@ class Scanner{
     
     // Readnwschar() ;
     while ( 0 == 0 ) {
+    	
+      // bool err = false ;
       printf( "> " ) ;
       vector<Token> tokenlist ;
-      try {
+      gLine = 1 ;
+      
+	  try {
         
         ReadSexp(  tokenlist ) ;
+        
         
       } // try
       catch ( Stringerror e ) {
         cout << e.merrorstr ;
+        while ( mch != '\n' )
+          Getchar() ;
+        tokenlist.clear() ;
       } // catch
+      
+      
       // cout << "readed" << endl ;
+      gReading = false ;  
       if ( Isend( tokenlist ) )
         throw Callend() ; 
+        
+      
       for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
         
         if ( tokenlist.at( i ).type == INT )
@@ -330,6 +359,7 @@ class Scanner{
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
       
+    
     return retoken ;
   } // Gettoken()
   
@@ -460,7 +490,7 @@ int main() {
     ;
   } // catch
   catch ( EndOfFileError e ) {
-    printf( "ERROR (no more input) : END-OF-FILE encountered" ) ;
+    printf( "%s", e.merrorstr.c_str() ) ;
   } // catch  
   
   // scanner.Print() ;
