@@ -543,7 +543,7 @@ class Scanner{
   	  Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
     } /// if
     else if( tokenlist.at( index ).type == DOT ) {
-  	  
+  	  // not finish : if index++ is >>(<< 
   	  index++ ;
       tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
   	  index+= 2 ;
