@@ -512,7 +512,7 @@ class Scanner{
     	Treerecursion( tokentree, tokenlist, point, index ) ;
     }
     	
-   	for( int i = 0 ; i < 30 ; i++ ) {
+   	for( int i = 0 ; i < 128 ; i++ ) {
    	  map< int, Token >::iterator temp = tokentree.find(i) ;
    	  if( temp != tokentree.end() ) {
    	    cout << i << " " << temp->second.str << endl ;	
@@ -545,8 +545,19 @@ class Scanner{
     else if( tokenlist.at( index ).type == DOT ) {
   	  // not finish : if index++ is >>(<< 
   	  index++ ;
-      tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
-  	  index+= 2 ;
+  	  if( tokenlist.at( index ).type != LPAREN ) {
+  	    tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;  
+  	    index+= 2 ;
+      } // if
+  	  
+  	  else {
+  	    Treerecursion( tokentree, tokenlist, point, index ) ;
+  	    index++ ;
+      }
+  	    
+  	    
+      // tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
+  	  
     } /// if
     else {
       tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
