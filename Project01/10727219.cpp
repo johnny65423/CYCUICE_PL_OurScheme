@@ -512,7 +512,7 @@ class Scanner{
     	Treerecursion( tokentree, tokenlist, point, index ) ;
     }
     	
-   	for( int i = 0 ; i < 128 ; i++ ) {
+   	for( int i = 0 ; i < 1024 ; i++ ) {
    	  map< int, Token >::iterator temp = tokentree.find(i) ;
    	  if( temp != tokentree.end() ) {
    	    cout << i << " " << temp->second.str << endl ;	
@@ -526,6 +526,7 @@ class Scanner{
   } // Buildtree()
   
   void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
+  	// (((1 . 2) (3 4) 5 . 6) 7 . 8)
   	cout << index << endl;
   	if( tokenlist.at( index ).type == QUOTE ) {
   	  tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
@@ -549,7 +550,7 @@ class Scanner{
   	  index++ ;
   	  if( tokenlist.at( index ).type != LPAREN ) {
   	    tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;  
-  	    index+= 2 ;
+  	    index++ ;
       } // if
   	  
   	  else {
