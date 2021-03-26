@@ -503,12 +503,12 @@ class Scanner{
   
   Buildtree( vector<Token> tokenlist ) {
   	map< int, Token > tokentree ;
+  	int point = 1 ;
+    int index = 0 ;
   	if( tokenlist.size() == 1 ) {
   	  tokentree.insert( pair< int, Token >( 1, tokenlist.at( 0 ) ) ) ;	
     }
     else {
-    	int point = 1 ;
-    	int index = 0 ;
     	Treerecursion( tokentree, tokenlist, point, index ) ;
     }
     	
@@ -519,6 +519,8 @@ class Scanner{
   	  }
 	  }
 	
+	  Printtree(tokentree, point, 0 ) ;
+    
 	
 	
   } // Buildtree()
@@ -571,6 +573,33 @@ class Scanner{
 	}
   	
   } // Treerecursion()
+  
+  void Printtree( map< int, Token > & tokentree, int point, int spacenum ) {
+    for ( int i = 0 ; i < spacenum ; i++ )
+      printf( " " ) ;
+      
+    if ( tokentree.find( 2*(2*point) ) == tokentree.end() )   
+      printf( "( " ) ;  
+    
+    string str = tokentree.find( 2*point )->second.str ;
+    if ( str == "." )
+      Printtree(tokentree, 2*point, spacenum+2 ) ;
+    else
+      printf( "%s\n", str.c_str() ) ;  
+      
+    str = tokentree.find( 2*point+1 )->second.str ;
+    if ( str == "." ) 
+      Printtree(tokentree, 2*point+1, spacenum+2 ) ;
+    else
+      printf( "%s\n", str.c_str() ) ;  
+      
+    for ( int i = 0 ; i < spacenum ; i++ )
+      printf( " " ) ;
+        
+      printf( ")" ) ; 
+    
+    
+  } // Printtree()
   
 };
 
