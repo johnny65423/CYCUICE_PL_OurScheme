@@ -575,28 +575,49 @@ class Scanner{
   } // Treerecursion()
   
   void Printtree( map< int, Token > & tokentree, int point, int spacenum ) {
-    for ( int i = 0 ; i < spacenum ; i++ )
-      printf( " " ) ;
-      
-    if ( tokentree.find( 2*(2*point) ) == tokentree.end() )   
-      printf( "( " ) ;  
-    
-    string str = tokentree.find( 2*point )->second.str ;
-    if ( str == "." )
-      Printtree(tokentree, 2*point, spacenum+2 ) ;
-    else
-      printf( "%s\n", str.c_str() ) ;  
-      
-    str = tokentree.find( 2*point+1 )->second.str ;
-    if ( str == "." ) 
-      Printtree(tokentree, 2*point+1, spacenum+2 ) ;
-    else
-      printf( "%s\n", str.c_str() ) ;  
-      
-    for ( int i = 0 ; i < spacenum ; i++ )
-      printf( " " ) ;
+  	string str ;
+  	Type type = tokentree.find( point )->second.type ;
+  	bool p = false ; 
+  	
+  	if( type == DOT ) {
+  	  for ( int i = 0 ; i < spacenum ; i++ )
+        printf( " " ) ;
         
-      printf( ")" ) ; 
+  		printf( "( " ) ;
+			p = true ; 
+		}
+
+  	
+  	while( tokentree.find( point ) != tokentree.end() ) {
+		  type = tokentree.find( point )->second.type ;
+ 		  
+ 		  if( type == DOT ) {
+ 		  	Printtree(tokentree, 2*point, spacenum+2 ) ;
+  	  } // if
+  	  else if( type == NIL ) {
+ 		  	;
+  	  } // else if
+  	  else {
+  	  	str = tokentree.find( point )->second.str ;
+  	  	if ( !p )
+  	  	  for ( int i = 0 ; i < spacenum ; i++ )
+            printf( " " ) ;
+  	  	printf( "%s\n", str.c_str() ) ;
+		  } // else 
+		  
+
+  		
+  		point = 2 * point + 1 ;
+		} // while
+  	
+  	if( p ) {
+  	  for ( int i = 0 ; i < spacenum ; i++ )
+        printf( " " ) ;
+        
+  		printf( ")" ) ;
+			p = true ; 
+		}
+ 
     
     
   } // Printtree()
