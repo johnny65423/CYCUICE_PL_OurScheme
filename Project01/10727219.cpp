@@ -279,7 +279,7 @@ class Scanner{
       if ( Isend( tokenlist ) )
         throw Callend() ; 
         
-      
+      /*
       for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
         
         if ( tokenlist.at( i ).type == INT )
@@ -290,7 +290,7 @@ class Scanner{
           cout << tokenlist.at( i ).str << endl ;
 
       } // for
-      
+      */
       Buildtree(tokenlist) ;
       
       cout << endl ;
@@ -505,6 +505,7 @@ class Scanner{
   	map< int, Token > tokentree ;
   	int point = 1 ;
     int index = 0 ;
+    // cout << "size "<< tokenlist.size() ;
   	if( tokenlist.size() == 1 ) {
   	  tokentree.insert( pair< int, Token >( 1, tokenlist.at( 0 ) ) ) ;	
     }
@@ -512,22 +513,28 @@ class Scanner{
     	Treerecursion( tokentree, tokenlist, point, index ) ;
     }
     	
-   	for( int i = 0 ; i < 1024 ; i++ ) {
+   	for( int i = 0 ; i < 102400 ; i++ ) {
    	  map< int, Token >::iterator temp = tokentree.find(i) ;
    	  if( temp != tokentree.end() ) {
    	    cout << i << " " << temp->second.str << endl ;	
   	  }
 	  }
-	
+	  
+	  cout << endl ;
+	  cout << "printtree" << endl ; 
 	  Printtree(tokentree, point, 0 ) ;
     
 	
 	
   } // Buildtree()
   
-  void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
+  void Treerecursion2( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
   	// (((1 . 2) (3 4) 5 . 6) 7 . 8)
-  	cout << index << endl;
+  	// ( (1 (2 3) 4 . 5) 6 . 7 )
+  	
+  	// ( ( 1 (2 3) 4 ) 5 )
+  	//cout << index << " " << tokenlist.at( index ).str << endl;
+  	cout << "r" << endl ; 
   	if( tokenlist.at( index ).type == QUOTE ) {
   	  tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
   	  Treerecursion( tokentree, tokenlist, 2*point, index ) ;
@@ -535,24 +542,33 @@ class Scanner{
   	  Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
     } /// if
     else if( tokenlist.at( index ).type == LPAREN ) {
+      cout << "LP "<< index << " " << tokenlist.at( index ).str << endl;
   	  tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
   	  index++ ;
-  	  if( tokenlist.at( index ).type != LPAREN )
+  	  if( tokenlist.at( index ).type != LPAREN ){
+  	    // cout << 2*point << " " << tokenlist.at( index ).str << endl;
   	    tokentree.insert( pair< int, Token >( 2*point, tokenlist.at( index ) ) ) ;
+      } 
   	  else
   	    Treerecursion( tokentree, tokenlist, 2*point, index ) ;
   	    
   	  index++ ;
+  	  cout << "next "<< index << " " << tokenlist.at( index ).str << endl;
   	  Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
+  	  cout << "final "<< index << " " << tokenlist.at( index ).str << endl;
+  	  
+  	  
     } /// if
     else if( tokenlist.at( index ).type == DOT ) {
+      cout << "dot "<< index << " " << tokenlist.at( index ).str << endl;
   	  // not finish : if index++ is >>(<< 
   	  index++ ;
   	  if( tokenlist.at( index ).type != LPAREN ) {
+  	    // cout << point << " " << tokenlist.at( index ).str << endl;
   	    tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;  
   	    index++ ;
+  	    cout << "nextnext "<< index << " " << tokenlist.at( index ).str << endl;
       } // if
-  	  
   	  else {
   	    Treerecursion( tokentree, tokenlist, point, index ) ;
   	    index++ ;
@@ -563,16 +579,61 @@ class Scanner{
   	  
     } /// if
     else {
+      cout << "else "<< index << " " << tokenlist.at( index ).str << endl;
       tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
-      
+      // cout << 2*point << " " << tokenlist.at( index ).str << endl;
       tokentree.insert( pair< int, Token >( 2*point, tokenlist.at( index ) ) ) ;
       index++ ;
+	  
       if( tokenlist.at( index ).type == RPAREN )
   	    tokentree.insert( pair< int, Token >( 2*point+1, Maktoken( "nil" ) ) ) ;
   	  else
   	    Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
-	}
+	  }
   	
+  	// cout << index << endl ;
+  	cout << index << " " << tokenlist.at( index ).str << endl;
+  } // Treerecursion()
+  
+  void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
+    cout << tokenlist.at( index ).str << " " << point << endl ;
+    if( tokenlist.at( index ).type == LPAREN ) {
+      
+  	  index++ ;
+  	  Type type = tokenlist.at( index ).type ;
+  	  while ( type != DOT && type != RPAREN ) {
+  	    cout << ". "<< point << endl;
+  	    tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
+  	    
+  	    cout << "loop" << tokenlist.at( index ).str << " " << 2 * point << endl ;
+  		  Treerecursion( tokentree, tokenlist, 2 * point, index ) ; 
+  		  point = 2 * point + 1 ;
+  		  type = tokenlist.at( index ).type ;
+  		  
+      } // while
+      cout << "looped" << tokenlist.at( index ).str << endl ;	  
+    	//point = point / 2 ;
+  	  if( index < tokenlist.size() - 1 && tokenlist.at( index ).type == RPAREN )
+  	    index++ ;
+  	    
+  	  if( tokenlist.at( index ).type == DOT ) {
+  		  index++ ;  
+  		  cout << "dot" << tokenlist.at( index ).str << endl ;
+        Treerecursion( tokentree, tokenlist, point, index ) ;
+  		  index++ ;
+  	  }
+      else {
+        cout << "end" << tokenlist.at( index ).str << endl ;	
+  		  tokentree.insert( pair< int, Token >( point, Maktoken( "nil" ) ) ) ;
+  		  // index++ ; 
+    	}  
+
+    } /// if
+  	else {
+      tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
+      cout << tokenlist.at( index ).str << " " << point << endl ;
+      index++ ;
+  	} // else 
   } // Treerecursion()
   
   void Printtree( map< int, Token > & tokentree, int point, int spacenum ) {
@@ -603,7 +664,7 @@ class Scanner{
   	  	if ( !p )
   	  	  for ( int i = 0 ; i < spacenum ; i++ )
             printf( " " ) ;
-  	  	printf( "%s\n", str.c_str() ) ;
+  	  	printf( "%d %s\n", point, str.c_str() ) ;
 		  } // else 
 		  
 
