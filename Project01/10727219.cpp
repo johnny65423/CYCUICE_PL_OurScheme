@@ -128,6 +128,7 @@ float Decodefloat( string str ) {
 
 bool Justdot() {
   char ch = cpeek() ;
+  
   if( Iswhitespace( ch ) )
     return true ;
   else if( Isseparators( ch ) )
@@ -207,6 +208,16 @@ class Scanner{
     
   } // Readnwschar() 
   
+  void Skipcomment() {
+    while ( mch == ';' ){
+      Getchar() ;
+      while ( mch != '\n' ) {
+        Getchar() ;
+      }
+      Readnwschar() ;
+    }
+  } // Skipcomment()
+  
   void ReadSexp( vector<Token> & tokenlist ) {
     Token temp ;
     Readnwschar() ;
@@ -224,11 +235,14 @@ class Scanner{
       while ( mch != ')' && !( mch == '.' && Justdot() ) ) {
         ReadSexp( tokenlist ) ;
         Readnwschar() ;
-       
+        Skipcomment() ;
+        // cout << "mch :" << mch << endl ;
       } // while
         
-       
-      if ( mch == '.' && Justdot()  ) {
+      cout <<">>" << mch << "<<"<< endl ; 
+      
+      if ( mch == '.' && Justdot() ) {
+        // cout <<"dddot" << endl ; 
         temp = Gettoken() ;
         // cout << temp.str << endl ;
         tokenlist.push_back( temp ) ;
@@ -237,7 +251,8 @@ class Scanner{
       } // if
         
       Readnwschar() ;
-      
+      Skipcomment() ;
+      cout <<">>" << mch << "<<"<< endl ; 
       if ( mch == ')' ) {
        
         temp = Gettoken() ;
@@ -272,12 +287,12 @@ class Scanner{
     // Readnwschar() ;
     while ( 0 == 0 ) {
     	
-      // bool err = false ;
+      bool err = false ;
       printf( "> " ) ;
       vector<Token> tokenlist ;
       gLine = 1 ;
       
-	  try {
+	    try {
         
         ReadSexp(  tokenlist ) ;
         
@@ -287,62 +302,36 @@ class Scanner{
         while ( mch != '\n' )
           Getchar() ;
         tokenlist.clear() ;
+        err = true ;
       } // catch
       
-      
       // cout << "readed" << endl ;
-      gReading = false ;  
-      if ( Isend( tokenlist ) )
-        throw Callend() ; 
-        
-      /*
-      for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
-        
-        if ( tokenlist.at( i ).type == INT )
-          cout << tokenlist.at( i ).intnum << endl ;
-        else if ( tokenlist.at( i ).type == FLOAT )
-          cout << fixed << setprecision( 3 ) << tokenlist.at( i ).floatnum << endl ;
-        else 
-          cout << tokenlist.at( i ).str << endl ;
-
-      } // for
-      */
-      Buildtree(tokenlist) ;
+      gReading = false ;
       
+      if ( !err ) {
+        if ( Isend( tokenlist ) )
+          throw Callend() ; 
+          
+        /*
+        for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
+          
+          if ( tokenlist.at( i ).type == INT )
+            cout << tokenlist.at( i ).intnum << endl ;
+          else if ( tokenlist.at( i ).type == FLOAT )
+            cout << fixed << setprecision( 3 ) << tokenlist.at( i ).floatnum << endl ;
+          else 
+            cout << tokenlist.at( i ).str << endl ;
+  
+        } // for
+        */
+        Buildtree(tokenlist) ;  
+      } // if
+              
       cout << endl ;
     } // while()
     
     // cout << "done" ;
   } // Gettokenlist()
-  
-  /*
-  void Gettokenlist() {
-    printf( "> " ) ;
-    Readnwschar() ;
-    Token temp ;
-    temp = Gettoken() ;
-    while ( temp.str != "0" ) {
-      tokenlist.push_back( temp ) ;
-      
-      cout << temp.str << "  " << temp.type << endl ;
-      
-      printf( "> " ) ;
-      temp = Gettoken() ;
-      
-    } // while()
-    
-    // cout << "done" ;
-  } // Gettokenlist() 
-    
-  void Print() {
-    for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
-      cout << tokenlist.at(i).str ;
-      cout << tokenlist.at(i).line ;
-      cout << tokenlist.at(i).column << endl ; 
-    }
-    
-  }  
-  */
   
   private:
   
@@ -708,8 +697,8 @@ class Scanner{
 
 int main() {
   Scanner scanner = Scanner() ;
-  cin >> gTestNum ;
   char t ;
+  scanf( "%d",  &gTestNum  ) ;
   scanf( "%c",  &t ) ;
   printf( "Welcome to OurScheme!\n\n" ) ;
   try {
