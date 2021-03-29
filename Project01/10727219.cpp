@@ -27,11 +27,12 @@ struct Token {
   Type type ;
 };
 
-char cpeek() {
-    char ans = getc(stdin);
-    ungetc(ans, stdin);
-    return ans;
-} // cpeek()
+char Cpeek() {
+  // int num = getc( stdin ) ;
+  char ch = cin.peek();
+  // ungetc(ans, stdin);
+  return ch;
+} // Cpeek()
 
 bool Isatomtype( Type type ) {
   if ( type == SYMBOL || type == INT || type == FLOAT )
@@ -85,8 +86,7 @@ Type Numtype( string str ) {
   else if ( dotnum == 0 ) return INT ;
   else if ( dotnum == 1 ) return FLOAT ;
   else return UNKNOWN ;
-  
-  
+
 } // Numtype()
 
 bool Isend( vector< Token > tokenlist ) {
@@ -127,11 +127,11 @@ float Decodefloat( string str ) {
 } // Decodefloat()
 
 bool Justdot() {
-  char ch = cpeek() ;
+  char ch = Cpeek() ;
   
-  if( Iswhitespace( ch ) )
+  if ( Iswhitespace( ch ) )
     return true ;
-  else if( Isseparators( ch ) )
+  else if ( Isseparators( ch ) )
     return true ;
   else 
     return false ;  
@@ -153,18 +153,19 @@ class Stringerror : public Exception {
 public:
   Stringerror( Token temp, int check ) {
     stringstream ss ;
-    if ( check == 0 ){
+    if ( check == 0 ) {
       ss << "ERROR (unexpected token) : atom or '(' expected when token at Line " ;
-	    ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
-	  } // if
-	  else if ( check == 1 ){
-  	  ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
-  	  ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
-  	} // else 
-	  else {
-  	  ss << "END-OF-LINE encountered at Line " ;
-  	  ss << temp.line << " Column " << temp.column ;
-  	} // else
+      ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
+    } // if
+    else if ( check == 1 ) {
+      ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
+      ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
+    } // else if 
+    else {
+      ss << "END-OF-LINE encountered at Line " ;
+      ss << temp.line << " Column " << temp.column << "" ;
+    } // else
+    
     merrorstr = ss.str() ;
   } // Stringerror()
 };
@@ -180,12 +181,12 @@ class EndOfFileError : public Exception {
 public:
   EndOfFileError() {
     stringstream ss ;
-    if ( gReading ){
+    if ( gReading ) {
       ss << "ERROR (no closing quote) : END-OF-LINE encountered at Line " << gLine << " Column " << gColumn ;
-	} // if
-	else {
-	  ss << "ERROR (no more input) : END-OF-FILE encountered" ;
-	} // else 
+    } // if
+    else {
+      ss << "ERROR (no more input) : END-OF-FILE encountered" ;
+    } // else 
 
     merrorstr = ss.str() ;
   } // EndOfFileError()
@@ -209,13 +210,14 @@ class Scanner{
   } // Readnwschar() 
   
   void Skipcomment() {
-    while ( mch == ';' ){
+    while ( mch == ';' ) {
       Getchar() ;
       while ( mch != '\n' ) {
         Getchar() ;
-      }
+      } // while
+      
       Readnwschar() ;
-    }
+    } // while
   } // Skipcomment()
   
   void ReadSexp( vector<Token> & tokenlist ) {
@@ -232,14 +234,14 @@ class Scanner{
       Readnwschar() ;
       // cout << ">>" << mch ;
       
-      while ( mch != ')' && !( mch == '.' && Justdot() ) ) {
+      while ( mch != ')' && ! ( mch == '.' && Justdot() ) ) {
         ReadSexp( tokenlist ) ;
         Readnwschar() ;
         Skipcomment() ;
         // cout << "mch :" << mch << endl ;
       } // while
         
-      cout <<">>" << mch << "<<"<< endl ; 
+      // cout <<">>" << mch << "<<"<< endl ; 
       
       if ( mch == '.' && Justdot() ) {
         // cout <<"dddot" << endl ; 
@@ -252,7 +254,7 @@ class Scanner{
         
       Readnwschar() ;
       Skipcomment() ;
-      cout <<">>" << mch << "<<"<< endl ; 
+      // cout <<">>" << mch << "<<"<< endl ; 
       if ( mch == ')' ) {
        
         temp = Gettoken() ;
@@ -276,7 +278,7 @@ class Scanner{
       ReadSexp( tokenlist ) ;
     } // else if 
     else {
-      cout << temp.str << endl ;
+      // cout << temp.str << endl ;
       throw Stringerror( temp, 0 ) ;// error
     } // else
     
@@ -286,19 +288,20 @@ class Scanner{
     
     // Readnwschar() ;
     while ( 0 == 0 ) {
-    	
+      
       bool err = false ;
       printf( "> " ) ;
       vector<Token> tokenlist ;
-      gLine = 1 ;
       
-	    try {
-        
+      try {
+        Readnwschar() ;
+        Skipcomment() ;
+        gLine = 1 ;
         ReadSexp(  tokenlist ) ;
         
       } // try
       catch ( Stringerror e ) {
-        cout << e.merrorstr ;
+        printf( "%s\n", e.merrorstr.c_str() ) ;
         while ( mch != '\n' )
           Getchar() ;
         tokenlist.clear() ;
@@ -309,6 +312,7 @@ class Scanner{
       gReading = false ;
       
       if ( !err ) {
+        // cout << tokenlist.size() ;
         if ( Isend( tokenlist ) )
           throw Callend() ; 
           
@@ -324,10 +328,15 @@ class Scanner{
   
         } // for
         */
-        Buildtree(tokenlist) ;  
+        Buildtree( tokenlist ) ;  
       } // if
               
       cout << endl ;
+      if ( mch == '\n' )
+        gLine = 0 ;
+      else   
+        gLine = 1 ;
+      gColumn = 1 ;
     } // while()
     
     // cout << "done" ;
@@ -350,7 +359,7 @@ class Scanner{
   } // Getchar() 
   
   Token Maktoken( string str ) {
-  	Token retoken ;
+    Token retoken ;
     retoken.column = -1 ;
     retoken.line = -1 ;
     retoken.str = str ;
@@ -387,7 +396,7 @@ class Scanner{
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
       
-    cout << retoken.str << " " << retoken.line << " " << retoken.column << endl ;
+    // cout << retoken.str << " " << retoken.line << " " << retoken.column << endl ;
     return retoken ;
   } // Gettoken()
   
@@ -420,10 +429,10 @@ class Scanner{
     if ( mch == '\"' ) {
       
       return Getstring( mch ) ;
-    } // if()
+    } // if
     else if ( Isseparators( mch ) ) {
       return Getseparators( mch ) ;
-    } // else if()
+    } // else if
     else {
       return Getothers( mch ) ;
     } // else
@@ -438,7 +447,7 @@ class Scanner{
       if ( mch == '\n' ) {
         Token nonono ;
         throw Stringerror( nonono, 2 ) ;
-      }
+      } // if
       
       bool check = true ;
       if ( mch == '\\' ) {
@@ -506,191 +515,208 @@ class Scanner{
     return temp ;
   } // Getothers() 
   
-  Buildtree( vector<Token> tokenlist ) {
-  	map< int, Token > tokentree ;
-  	int point = 1 ;
+  void Buildtree( vector<Token> tokenlist ) {
+    map< int, Token > tokentree ;
+    int point = 1 ;
     int index = 0 ;
     // cout << "size "<< tokenlist.size() ;
-  	if( tokenlist.size() == 1 ) {
-  	  tokentree.insert( pair< int, Token >( 1, tokenlist.at( 0 ) ) ) ;	
-    }
+    if ( tokenlist.size() == 1 ) {
+      // tokentree.insert( pair< int, Token >( 1, tokenlist.at( 0 ) ) ) ;
+      // cout << tokenlist.at(0).str << endl ;
+      tokentree[1] =  tokenlist.at( 0 ) ;
+    } // if
     else {
-    	Treerecursion( tokentree, tokenlist, point, index ) ;
+      Treerecursion( tokentree, tokenlist, point, index ) ;
+    } // else
+    /*  
+     for( int i = 0 ; i < 102400 ; i++ ) {
+       map< int, Token >::iterator temp = tokentree.find(i) ;
+       if( temp != tokentree.end() ) {
+         cout << i << " " << temp->second.str << endl ;  
+      }
     }
-    /*	
-   	for( int i = 0 ; i < 102400 ; i++ ) {
-   	  map< int, Token >::iterator temp = tokentree.find(i) ;
-   	  if( temp != tokentree.end() ) {
-   	    cout << i << " " << temp->second.str << endl ;	
-  	  }
-	  }
-	  */
-	  cout << endl ;
-	  cout << "printtree" << endl ; 
-	  Printtree(tokentree, point, 0 ) ;
+    */
+    // cout << endl ;
+    // cout << "printtree" << endl ; 
     
-	
-	
+    Printtree( tokentree, point, 0 ) ;
+    
+  
+  
   } // Buildtree()
   
+  /*
   void Treerecursion2( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
-  	// (((1 . 2) (3 4) 5 . 6) 7 . 8)
-  	// ( (1 (2 3) 4 . 5) 6 . 7 )
-  	
-  	// ( ( 1 (2 3) 4 ) 5 )
-  	//cout << index << " " << tokenlist.at( index ).str << endl;
-  	cout << "r" << endl ; 
-  	if( tokenlist.at( index ).type == QUOTE ) {
-  	  tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
-  	  Treerecursion( tokentree, tokenlist, 2*point, index ) ;
-  	  index++ ;
-  	  Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
-    } /// if
+    // (((1 . 2) (3 4) 5 . 6) 7 . 8)
+    // ( (1 (2 3) 4 . 5) 6 . 7 )
+    
+    // ( ( 1 (2 3) 4 ) 5 )
+    // cout << index << " " << tokenlist.at( index ).str << endl;
+    cout << "r" << endl ; 
+    if( tokenlist.at( index ).type == QUOTE ) {
+      // tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
+      tokentree[ point ] = Maktoken( "." ) ;
+      Treerecursion( tokentree, tokenlist, 2*point, index ) ;
+      index++ ;
+      Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
+    } // if
     else if( tokenlist.at( index ).type == LPAREN ) {
       cout << "LP "<< index << " " << tokenlist.at( index ).str << endl;
-  	  tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
-  	  index++ ;
-  	  if( tokenlist.at( index ).type != LPAREN ){
-  	    // cout << 2*point << " " << tokenlist.at( index ).str << endl;
-  	    tokentree.insert( pair< int, Token >( 2*point, tokenlist.at( index ) ) ) ;
+      tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
+      index++ ;
+      if( tokenlist.at( index ).type != LPAREN ){
+        // cout << 2*point << " " << tokenlist.at( index ).str << endl;
+        tokentree.insert( pair< int, Token >( 2*point, tokenlist.at( index ) ) ) ;
       } 
-  	  else
-  	    Treerecursion( tokentree, tokenlist, 2*point, index ) ;
-  	    
-  	  index++ ;
-  	  cout << "next "<< index << " " << tokenlist.at( index ).str << endl;
-  	  Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
-  	  cout << "final "<< index << " " << tokenlist.at( index ).str << endl;
-  	  
-  	  
-    } /// if
+      else
+        Treerecursion( tokentree, tokenlist, 2*point, index ) ;
+        
+      index++ ;
+      cout << "next "<< index << " " << tokenlist.at( index ).str << endl;
+      Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
+      cout << "final "<< index << " " << tokenlist.at( index ).str << endl;
+      
+      
+    } // if
     else if( tokenlist.at( index ).type == DOT ) {
       cout << "dot "<< index << " " << tokenlist.at( index ).str << endl;
-  	  // not finish : if index++ is >>(<< 
-  	  index++ ;
-  	  if( tokenlist.at( index ).type != LPAREN ) {
-  	    // cout << point << " " << tokenlist.at( index ).str << endl;
-  	    tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;  
-  	    index++ ;
-  	    cout << "nextnext "<< index << " " << tokenlist.at( index ).str << endl;
+      // not finish : if index++ is >>(<< 
+      index++ ;
+      if( tokenlist.at( index ).type != LPAREN ) {
+        // cout << point << " " << tokenlist.at( index ).str << endl;
+        tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;  
+        index++ ;
+        // cout << "nextnext "<< index << " " << tokenlist.at( index ).str << endl;
       } // if
-  	  else {
-  	    Treerecursion( tokentree, tokenlist, point, index ) ;
-  	    index++ ;
+      else {
+        Treerecursion( tokentree, tokenlist, point, index ) ;
+        index++ ;
       }
-  	    
-  	    
+        
+        
       // tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
-  	  
-    } /// if
+      
+    } // if
     else {
-      cout << "else "<< index << " " << tokenlist.at( index ).str << endl;
+      // cout << "else "<< index << " " << tokenlist.at( index ).str << endl;
       tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
       // cout << 2*point << " " << tokenlist.at( index ).str << endl;
       tokentree.insert( pair< int, Token >( 2*point, tokenlist.at( index ) ) ) ;
       index++ ;
-	  
+    
       if( tokenlist.at( index ).type == RPAREN )
-  	    tokentree.insert( pair< int, Token >( 2*point+1, Maktoken( "nil" ) ) ) ;
-  	  else
-  	    Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
-	  }
-  	
-  	// cout << index << endl ;
-  	cout << index << " " << tokenlist.at( index ).str << endl;
+        tokentree.insert( pair< int, Token >( 2*point+1, Maktoken( "nil" ) ) ) ;
+      else
+        Treerecursion( tokentree, tokenlist, 2*point+1, index ) ;
+    }
+    
+    // cout << index << endl ;
+    cout << index << " " << tokenlist.at( index ).str << endl;
   } // Treerecursion()
+  */ 
   
   void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
     // cout << tokenlist.at( index ).str << " " << point << endl ;
-    if( tokenlist.at( index ).type == LPAREN ) {
+    if ( tokenlist.at( index ).type == LPAREN ) {
       
-  	  index++ ;
-  	  Type type = tokenlist.at( index ).type ;
-  	  while ( type != DOT && type != RPAREN ) {
-  	    // cout << ". "<< point << endl;
-  	    tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
-  	    
-  	    // cout << "loop" << tokenlist.at( index ).str << " " << 2 * point << endl ;
-  		  Treerecursion( tokentree, tokenlist, 2 * point, index ) ; 
-  		  point = 2 * point + 1 ;
-  		  type = tokenlist.at( index ).type ;
-  		  
+      index++ ;
+      Type type = tokenlist.at( index ).type ;
+      while ( type != DOT && type != RPAREN ) {
+        // cout << ". "<< point << endl;
+        // tokentree.insert( pair< int, Token >( point, Maktoken( "." ) ) ) ;
+        tokentree[ point ] = Maktoken( "." ) ;
+        // cout << "loop" << tokenlist.at( index ).str << " " << 2 * point << endl ;
+        Treerecursion( tokentree, tokenlist, 2 * point, index ) ; 
+        point = 2 * point + 1 ;
+        type = tokenlist.at( index ).type ;
+        
       } // while
-      // cout << "looped" << tokenlist.at( index ).str << endl ;	  
-    	//point = point / 2 ;
-  	  if( index < tokenlist.size() - 1 && tokenlist.at( index ).type == RPAREN )
-  	    index++ ;
-  	    
-  	  if( tokenlist.at( index ).type == DOT ) {
-  		  index++ ;  
-  		  // cout << "dot" << tokenlist.at( index ).str << endl ;
+      // cout << "looped" << tokenlist.at( index ).str << endl ;    
+      // point = point / 2 ;
+      if ( index < tokenlist.size() - 1 && tokenlist.at( index ).type == RPAREN )
+        index++ ;
+        
+      if ( tokenlist.at( index ).type == DOT ) {
+        index++ ;  
+        // cout << "dot" << tokenlist.at( index ).str << endl ;
         Treerecursion( tokentree, tokenlist, point, index ) ;
-  		  index++ ;
-  	  }
+        index++ ;
+      } // if
       else {
-        //  cout << "end" << tokenlist.at( index ).str << endl ;	
-  		  tokentree.insert( pair< int, Token >( point, Maktoken( "nil" ) ) ) ;
-  		  // index++ ; 
-    	}  
+        // cout << "end" << tokenlist.at( index ).str << endl ;  
+        // tokentree.insert( pair< int, Token >( point, Maktoken( "nil" ) ) ) ;
+        tokentree[ point ] = Maktoken( "nil" ) ;
+        // index++ ; 
+      } // else
 
-    } /// if
-  	else {
-      tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
+    } // if
+    else {
+      // tokentree.insert( pair< int, Token >( point, tokenlist.at( index ) ) ) ;
+      tokentree[ point ] = tokenlist.at( index ) ;
       // cout << tokenlist.at( index ).str << " " << point << endl ;
       index++ ;
-  	} // else 
+    } // else 
   } // Treerecursion()
   
+  void Printtoken( Token token ) {
+    Type type = token.type ;
+    // cout << type << endl ;
+    if ( type == INT )
+      printf( "%d", token.intnum ) ;
+    else if ( type == FLOAT )
+      printf( "%.3f", token.floatnum ) ;
+    else 
+      printf( "%s", token.str.c_str() ) ;
+         
+  } // Printtoken()
+  
   void Printtree( map< int, Token > & tokentree, int point, int spacenum ) {
-  	string str = tokentree.find( point )->second.str;
-  	Type type = tokentree.find( point )->second.type ;
-  	// cout << "print" << tokentree.find( point )->second.str << endl ;
-  	if( type == DOT ) {
-  	  for ( int i = 0 ; i < spacenum ; i++ )
+    // string str = tokentree.find( point )->second.str;
+    Type type = tokentree.find( point )->second.type ;
+    // cout << "print" << tokentree.find( point )->second.str << endl ;
+    if ( type == DOT ) {
+      for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
         
-  		printf( "( " ) ;
-  		
-  		Printtree( tokentree, 2*point, spacenum ) ;
-  		
-  		point = 2 * point + 1 ;
-  		while( tokentree.find( point ) != tokentree.end() ) {
-  		  type = tokentree.find( point )->second.type ;
-  		  if ( type == DOT ) {
-    		  type = tokentree.find( 2 * point )->second.type ;
-    		  
+      printf( "( " ) ;
+      
+      Printtree( tokentree, 2*point, spacenum ) ;
+      
+      point = 2 * point + 1 ;
+      while ( tokentree.find( point ) != tokentree.end() ) {
+        type = tokentree.find( point )->second.type ;
+        if ( type == DOT ) {
+          type = tokentree.find( 2 * point )->second.type ;
+          
           if ( type == DOT )
-            Printtree(tokentree, 2 * point, spacenum + 2 ) ;
+            Printtree( tokentree, 2 * point, spacenum + 2 ) ;
           else {
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
-    	      printf( "%s\n", tokentree.find( 2 * point )->second.str.c_str() ) ;
-          }  
-        }
-  		  else {
-  		    Printtree(tokentree, point, spacenum ) ;
-        }
-  		    
-    		
-    		point = 2 * point + 1 ;
-		  } // while
-		  
-		  for ( int i = 0 ; i < spacenum ; i++ )
+            Printtoken( tokentree.find( 2 * point )->second ) ;
+            printf( "\n" ) ;
+          } // else
+        } // if
+        else {
+          Printtree( tokentree, point, spacenum ) ;
+        } // else
+          
+        
+        point = 2 * point + 1 ;
+      } // while
+      
+      for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
         
-		  printf( ")\n" ) ;
-		}
-		else if ( type == NIL ) ;
+      printf( ")\n" ) ;
+    } // if
     else {
       for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
-  	  printf( "%s\n", str.c_str() ) ;
+      Printtoken( tokentree.find( point )->second ) ;
+      printf( "\n" ) ;
     } // else
-  	
 
- 
-    
-    
   } // Printtree()
   
 };
@@ -708,10 +734,10 @@ int main() {
     ;
   } // catch
   catch ( EndOfFileError e ) {
-    printf( "%s", e.merrorstr.c_str() ) ;
+    printf( "%s\n", e.merrorstr.c_str() ) ;
   } // catch  
   
   // scanner.Print() ;
-  printf( "\nThanks for using OurScheme!\n" ) ;
+  printf( "Thanks for using OurScheme!\n" ) ;
   
 } // main()
