@@ -348,10 +348,12 @@ class Scanner{
     
     int eof = scanf( "%c", &mch ) ;
     if ( eof == EOF ) {
-      if ( gReading )
-        throw EndOfFileError() ;
-      else
-        gEnd = true ;
+      // if ( gReading )
+      //   throw EndOfFileError() ;
+      // else
+      //   gEnd = true ;
+      gEnd = true ;
+      mch = '\0' ;
     } // if
       
     gColumn++ ;
@@ -451,7 +453,7 @@ class Scanner{
     tk.line = gLine ;  
     tk.column = gColumn ;
     // cout << tk.line << " "<< tk.column << endl ;
-    while ( mch != '\"' )  {
+    while ( mch != '\"' && !gEnd )  {
       
       if ( mch == '\n' ) {
         // cout << tk.line << " "<< tk.column << endl ;
@@ -522,7 +524,7 @@ class Scanner{
     temp += mch ;
     Getchar() ;
     
-    while ( !Isseparators( mch ) ) {
+    while ( !Isseparators( mch ) && !gEnd ) {
       temp += mch ;
       
       Getchar() ; 
@@ -751,10 +753,10 @@ int main() {
     ;
   } // catch
   catch ( EndOfFileError e ) {
-    printf( "%s\n", e.merrorstr.c_str() ) ;
+    printf( "%s", e.merrorstr.c_str() ) ;
   } // catch  
   
   // scanner.Print() ;
-  printf( "Thanks for using OurScheme!\n" ) ;
+  printf( "\nThanks for using OurScheme!\n" ) ;
   
 } // main()
