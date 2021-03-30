@@ -16,6 +16,7 @@ int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = 0 ;            // 「下一個要讀進來的字元」所在的column number
 bool gReading = false ;
 int gTestNum ;
+bool gEnd = false ;
 
 struct Token {
   string str ;
@@ -161,9 +162,10 @@ public:
       ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
       ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
     } // else if 
-    else {
-      ss << "END-OF-LINE encountered at Line " ;
-      ss << temp.line << " Column " << temp.column << "" ;
+    
+    else { // 2 "  "
+      ss << "ERROR (no closing quote) : END-OF-LINE encountered at Line " ;
+      ss << temp.line << " Column " << temp.column + 1 << "" ;
     } // else
     
     merrorstr = ss.str() ;
@@ -182,7 +184,8 @@ public:
   EndOfFileError() {
     stringstream ss ;
     if ( gReading ) {
-      ss << "ERROR (no closing quote) : END-OF-LINE encountered at Line " << gLine << " Column " << gColumn ;
+      ss << "**ERROR (no closing quote) : END-OF-LINE encountered at Line " ;
+      ss << gLine << " Column " << gColumn ;
     } // if
     else {
       ss << "ERROR (no more input) : END-OF-FILE encountered" ;
@@ -292,17 +295,27 @@ class Scanner{
       bool err = false ;
       printf( "> " ) ;
       vector<Token> tokenlist ;
-      
+      if ( gEnd )
+        throw EndOfFileError() ;
+        
       try {
-        Readnwschar() ;
-        Skipcomment() ;
+        // cout << ">>" << mch << "<<" << endl ;
+        while ( Iswhitespace( mch ) && mch != '\n' )
+          Getchar() ;
+        
+        if ( mch == '\n' )
+          Getchar() ;
+          
+        gLine = 1 ;    
+        // cout << ">>" << mch << "<<" << endl ;
         gLine = 1 ;
         ReadSexp(  tokenlist ) ;
         
       } // try
       catch ( Stringerror e ) {
         printf( "%s\n", e.merrorstr.c_str() ) ;
-        while ( mch != '\n' )
+        gReading = false ;
+        while ( !gEnd && mch != '\n' )
           Getchar() ;
         tokenlist.clear() ;
         err = true ;
@@ -316,26 +329,13 @@ class Scanner{
         if ( Isend( tokenlist ) )
           throw Callend() ; 
           
-        /*
-        for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
-          
-          if ( tokenlist.at( i ).type == INT )
-            cout << tokenlist.at( i ).intnum << endl ;
-          else if ( tokenlist.at( i ).type == FLOAT )
-            cout << fixed << setprecision( 3 ) << tokenlist.at( i ).floatnum << endl ;
-          else 
-            cout << tokenlist.at( i ).str << endl ;
-  
-        } // for
-        */
         Buildtree( tokenlist ) ;  
       } // if
               
       cout << endl ;
-      if ( mch == '\n' )
-        gLine = 0 ;
-      else   
-        gLine = 1 ;
+
+      
+      
       gColumn = 1 ;
     } // while()
     
@@ -347,8 +347,13 @@ class Scanner{
   void Getchar() {
     
     int eof = scanf( "%c", &mch ) ;
-    if ( eof == EOF )
-      throw EndOfFileError() ;
+    if ( eof == EOF ) {
+      if ( gReading )
+        throw EndOfFileError() ;
+      else
+        gEnd = true ;
+    } // if
+      
     gColumn++ ;
     if ( mch == '\n' ) {
       
@@ -442,16 +447,23 @@ class Scanner{
     string temp = "" ;
     temp += mch ;
     Getchar() ;
-       
+    Token tk ;
+    tk.line = gLine ;  
+    tk.column = gColumn ;
+    // cout << tk.line << " "<< tk.column << endl ;
     while ( mch != '\"' )  {
+      
       if ( mch == '\n' ) {
-        Token nonono ;
-        throw Stringerror( nonono, 2 ) ;
+        // cout << tk.line << " "<< tk.column << endl ;
+        throw Stringerror( tk, 2 ) ;
       } // if
       
       bool check = true ;
       if ( mch == '\\' ) {
         Getchar() ; 
+        if ( gColumn > tk.column )
+          tk.column = gColumn ;
+          
         if ( mch == 't' ) {
           temp += '\t' ;
         } // if
@@ -474,8 +486,13 @@ class Scanner{
         
       } // else
       
+      
       if ( check )
         Getchar() ; 
+        
+      if ( gColumn > tk.column )
+        tk.column = gColumn ;
+          
     } // while()
     
     temp += mch ;
