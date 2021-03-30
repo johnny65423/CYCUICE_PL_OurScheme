@@ -652,22 +652,22 @@ class Scanner{
       } // while
       // cout << "looped" << tokenlist.at( index ).str << endl ;    
       // point = point / 2 ;
-      if ( index < tokenlist.size() - 1 && tokenlist.at( index ).type == RPAREN ) {
-      	index++ ;
-			} // if
+      
         
         
       if ( tokenlist.at( index ).type == DOT ) {
         index++ ;  
         // cout << "dot" << tokenlist.at( index ).str << endl ;
         Treerecursion( tokentree, tokenlist, point, index ) ;
-        // index++ ;
+        index++ ; // problem
       } // if
       else {
         // cout << "end" << tokenlist.at( index ).str << endl ;  
         // tokentree.insert( pair< int, Token >( point, Maktoken( "nil" ) ) ) ;
         tokentree[ point ] = Maktoken( "nil" ) ;
-        // index++ ; 
+        if ( index < tokenlist.size() - 1 ) {
+      	  index++ ;
+			  } // if
       } // else
 
     } // if
@@ -708,16 +708,16 @@ class Scanner{
   void Printtree( map< int, Token > & tokentree, int point, int spacenum ) {
     // string str = tokentree.find( point )->second.str;
     Type type = tokentree.find( point )->second.type ;
-    // cout << "print" << tokentree.find( point )->second.str << endl ;
+    // cout << spacenum << endl ;
     if ( type == DOT ) {
-      for ( int i = 0 ; i < spacenum - 2 ; i++ )
-        printf( " " ) ;
+      // for ( int i = 0 ; i < spacenum ; i++ )
+      //   printf( " " ) ;
         
       printf( "( " ) ;
       
       type = tokentree.find( 2 * point )->second.type ;
         if ( type == DOT )
-          Printtree( tokentree, 2 * point, spacenum ) ;
+          Printtree( tokentree, 2 * point, spacenum + 2 ) ;
         else {
           // for ( int i = 0 ; i < spacenum ; i++ )
           //   printf( " " ) ;
@@ -731,8 +731,11 @@ class Scanner{
         if ( type == DOT ) {
           type = tokentree.find( 2 * point )->second.type ;
           
-          if ( type == DOT )
-            Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+          if ( type == DOT ){
+          	 for ( int i = 0 ; i < spacenum + 2 ; i++ )
+            printf( " " ) ;
+          	Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+					} // if
           else {
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
@@ -742,7 +745,7 @@ class Scanner{
           } // else
         } // if
         else {
-          Printtree( tokentree, point, spacenum ) ;
+          Printtree( tokentree, point, spacenum + 2 ) ;
         } // else
           
         
@@ -755,7 +758,8 @@ class Scanner{
       printf( ")\n" ) ;
     } // if
     else {
-      for ( int i = 0 ; i < spacenum + 2 ; i++ )
+    	
+      for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
       Printtoken( tokentree.find( point )->second ) ;
       printf( "\n" ) ;
