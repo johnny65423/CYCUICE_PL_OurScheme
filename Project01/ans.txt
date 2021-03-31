@@ -1,0 +1,258 @@
+Welcome to OurScheme!
+
+> v
+
+> @$%--3
+
+> 3.25a
+
+> a.b
+
+> -.
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #fa
+
+> exit
+
+> "Hi"
+
+> "  (1 . 2   . 3)  "
+
+> "   ( 1 2 3 . 4 5 6 . 7 . nil ) "
+
+> "What's up?"
+
+> "There is an ENTER HERE>>
+See?!"
+
+> "Use '"' to start and close a string."
+
+> #tt
+
+> nil
+
+> NIL
+
+> "You need to handle >>\<<"
+
+> "You also need to handle >>"<<"
+
+> 325
+
+> Hello
+
+> there!
+
+> -325
+
+> 3.250
+
+> -3.250
+
+> 3.250
+
+> "OurScheme allows the use of '\n', '\t' and  '\"' in a string."
+
+> "Please enter YES\NO below this line >
+"
+
+> 325.000
+
+> 325.000
+
+> -325.000
+
+> 0.375
+
+> 0.375
+
+> -0.375
+
+> ( 1
+  2
+  3
+  .
+  4
+)
+
+> ( 1
+  2
+  3
+)
+
+> ( 1
+  ( 2
+    .
+    3
+  )
+  4
+)
+
+> -3.250
+
+> -325.000
+
+> -0.375
+
+> -0.125
+
+> -0.125
+
+> 0.315
+
+> 5
+
+> +-3.25
+
+> exit
+
+> ( 1
+  2
+  3
+  .
+  4
+)
+
+> ( 1
+  2
+  3
+)
+
+> ( 1
+  2
+  3
+  4
+)
+
+> ( -1.500
+  "2.25"
+  ^&%$*+-=
+)
+
+> ( -1.500
+  "2.25"
+  ^&%$*+-=
+)
+
+> more
+
+> comments
+
+> here
+
+> ( Hi
+  there!
+  "How are you?"
+)
+
+> ( Hi
+  there
+)
+
+> ( How
+  are
+  you
+)
+
+> ( -1.500
+  "2.25"
+  ^&%$*+-=
+)
+
+> ( 10
+  12.000
+  nil
+)
+
+> ( 10
+  nil
+  0.125
+)
+
+> ( 1
+  2.500
+)
+
+> ( 1
+  2.a
+  .
+  a
+)
+
+> ( 1
+  2.25.5
+  #t
+)
+
+> ( nil#f
+)
+
+> ( nil
+)
+
+> ( 12.500
+  4
+  .
+  5
+)
+
+> ( 3
+  .
+  25
+)
+
+> ( 3
+  0.250
+)
+
+> ( 3.250
+)
+
+> ( abc.
+  " defg "
+)
+
+> ( Hi
+  there
+  !
+  How
+  are
+  you
+  ?
+)
+
+> ( Hi
+  there
+  How
+  is
+  it
+  going?
+)
+
+> ( -110
+  2.125
+  -3
+)
+
+> ( 4
+  "The sun is shining on this land."
+  23
+  0.500
+  .
+  7.000
+)
+
+> ( 3.000
+  25
+)
+
+> ERROR (no more input) : END-OF-FILE encountered
+Thanks for using OurScheme!

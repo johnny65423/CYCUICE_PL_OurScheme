@@ -75,8 +75,6 @@ Type Numtype( string str ) {
   
   int dotnum = 0 ;
   if ( str[0] == '.' ) dotnum++ ;
-  else if ( Isdigit( str[0] ) ) hasdigit = true ;
-  
   for ( int i = 1 ; i < str.size() ; i++ ) {
     if ( str[i] == '.' ) dotnum++ ;
     if ( Isdigit( str[i] ) )
@@ -85,7 +83,6 @@ Type Numtype( string str ) {
       return UNKNOWN ;
   } // for
   
-
   if ( !hasdigit ) return UNKNOWN ;
   else if ( dotnum == 0 ) return INT ;
   else if ( dotnum == 1 ) return FLOAT ;
@@ -209,7 +206,7 @@ class Scanner{
   } // Scanner() 
   
   void Readnwschar() {
-    while ( ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) && !gEnd ) {
+    while ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) {
       Getchar() ;
     } // while()
     
@@ -218,7 +215,7 @@ class Scanner{
   void Skipcomment() {
     while ( mch == ';' ) {
       Getchar() ;
-      while ( mch != '\n' && !gEnd ) {
+      while ( mch != '\n' ) {
         Getchar() ;
       } // while
       
@@ -305,7 +302,7 @@ class Scanner{
       try {
         
         // cout << ">>" << mch << "<<" << endl ;
-        while ( Iswhitespace( mch ) && mch != '\n' && !gEnd )
+        while ( Iswhitespace( mch ) && mch != '\n' )
           Getchar() ;
         
         if ( mch == '\n' )
@@ -335,8 +332,7 @@ class Scanner{
           
         Buildtree( tokenlist ) ;  
       } // if
-      // if ( gEnd )
-      //   throw EndOfFileError() ;        
+              
       cout << endl ;
 
       
@@ -398,14 +394,9 @@ class Scanner{
     retoken.line = gLine ;
     retoken.str = Gettokenstr() ;
     while ( retoken.str == ";" ) {
-      while ( mch != '\n' && !gEnd )
+      while ( mch != '\n' )
         Getchar() ;
-      
-      if ( gEnd )  
-        throw EndOfFileError() ;
-      else
-        Readnwschar() ; 
-        
+      Readnwschar() ; 
       retoken.column = gColumn ;
       retoken.line = gLine ;
       retoken.str = Gettokenstr() ;
@@ -419,7 +410,7 @@ class Scanner{
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
     // cout << ">>" << mch  << "<<" << endl ;  
-    // cout << retoken.str << " " << retoken.type << endl ;
+    // cout << retoken.str << " " << retoken.line << " " << retoken.column << endl ;
     return retoken ;
   } // Gettoken()
   
@@ -547,8 +538,6 @@ class Scanner{
       
     } // while()
     // cout << "+++" << mch << endl ;
-    if ( gEnd )
-      throw EndOfFileError() ; 
     return temp ;
   } // Getothers() 
   
