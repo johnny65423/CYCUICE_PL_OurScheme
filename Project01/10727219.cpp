@@ -186,6 +186,7 @@ class EndOfFileError : public Exception {
 public:
   EndOfFileError() {
     stringstream ss ;
+    /*
     if ( gReading ) {
       ss << "**ERROR (no closing quote) : END-OF-LINE encountered at Line " ;
       ss << gLine << " Column " << gColumn ;
@@ -193,6 +194,8 @@ public:
     else {
       ss << "ERROR (no more input) : END-OF-FILE encountered" ;
     } // else 
+    */ 
+    ss << "ERROR (no more input) : END-OF-FILE encountered" ;
 
     merrorstr = ss.str() ;
   } // EndOfFileError()
@@ -464,11 +467,12 @@ class Scanner{
   string Getstring( char & mch ) {
     string temp = "" ;
     temp += mch ;
-    Getchar() ;
     Token tk ;
     tk.line = gLine ;  
     tk.column = gColumn ;
     // cout << tk.line << " "<< tk.column << endl ;
+    Getchar() ;
+    
     while ( mch != '\"' && !gEnd )  {
       
       if ( mch == '\n' ) {
@@ -836,6 +840,6 @@ int main() {
   } // catch  
   
   // scanner.Print() ;
-  printf( "\nThanks for using OurScheme!\n" ) ;
+  printf( "\nThanks for using OurScheme!" ) ;
   
 } // main()
