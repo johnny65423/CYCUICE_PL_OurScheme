@@ -1,22 +1,8 @@
-( ( Hi "!" How . "are you?" ) "Fine.  Thank you." )
-
-( ( Hi "!" How . "are you?" ) "Fine.  Thank you." )
-
-
-
-( 10 ;dfsdfegsgsfsd
-20   ;shrthdfbdfbfdb
-     ;rtdhththfthgjjgj
-30
-)
-
-(    (     ; is encountered or the user has entered an S-expression
-              ;
-Hi "!" How    ; note that the principle of "longest match preferred" 
-              ; should be honored ; e.g., if the user enters 'How', 
-. "are you?"  ; you should get 'How' and not (just) 'H' or 'Ho' ;
-
-      )   "Fine.  Thank you."
-      
- )
+( !;)
+    .
+    ( %^&
+      .
+      abc
+    )
+  )
 

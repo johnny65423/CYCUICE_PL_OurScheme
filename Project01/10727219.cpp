@@ -93,10 +93,12 @@ Type Numtype( string str ) {
 
 } // Numtype()
 
-bool Isend( vector< Token > tokenlist ) {
-  int size = tokenlist.size() ;
-  if ( size == 3 && tokenlist.at( 1 ).str == "exit" )
+bool Isend( map< int, Token > tokentree ) {
+  if ( tokentree.find( 2 ) == tokentree.end() || tokentree.find( 3 ) == tokentree.end() )
+    return false ;
+  else if ( tokentree.find( 2 )->second.str == "exit" && tokentree.find( 3 )->second.type == NIL )
     return true ;
+
   else return false ;  
   
 } // Isend()
@@ -333,8 +335,8 @@ class Scanner{
       
       if ( !err ) {
         // cout << tokenlist.size() ;
-        if ( Isend( tokenlist ) )
-          throw Callend() ; 
+        // if ( Isend( tokenlist ) )
+        //   throw Callend() ; 
           
         Buildtree( tokenlist ) ;  
       } // if
@@ -581,6 +583,10 @@ class Scanner{
     cout << endl ;
     cout << "printtree" << endl ; 
     */
+    
+    if ( Isend( tokentree ) )
+      throw Callend() ; 
+    
     Printtree( tokentree, point, 0 ) ;
     
   
@@ -741,70 +747,80 @@ class Scanner{
       printf( "( " ) ;
       
       type = tokentree.find( 2 * point )->second.type ;
-      
-      if ( type == DOT )
-        Printtree( tokentree, 2 * point, spacenum + 2 ) ;
-      else {
-        // for ( int i = 0 ; i < spacenum ; i++ )
-        //   printf( " " ) ;
-        Printtoken( tokentree.find( 2 * point )->second ) ;  
+      if ( type == QUOTE ) {
+        Printtoken( tokentree.find( 2 * point )->second ) ;
         printf( "\n" ) ;
-      } // else
-                
-      point = 2 * point + 1 ;
-      while ( tokentree.find( point ) != tokentree.end() ) {
-        type = tokentree.find( point )->second.type ;
-        if ( type == DOT ) {
-          type = tokentree.find( 2 * point )->second.type ;
-          
+        for ( int i = 0 ; i < spacenum + 2 ; i++ )
+          printf( " " ) ;
+        Printtree( tokentree, 2 * point + 1, spacenum + 2 ) ;
+      } // if
+      else {
+        if ( type == DOT )
+          Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+        else {
+          // for ( int i = 0 ; i < spacenum ; i++ )
+          //   printf( " " ) ;
+          Printtoken( tokentree.find( 2 * point )->second ) ;  
+          printf( "\n" ) ;
+        } // else
+                  
+        point = 2 * point + 1 ;
+        while ( tokentree.find( point ) != tokentree.end() ) {
+          type = tokentree.find( point )->second.type ;
           if ( type == DOT ) {
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
-            Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+            type = tokentree.find( 2 * point )->second.type ;
+            
+            if ( type == DOT ) {
+              for ( int i = 0 ; i < spacenum + 2 ; i++ )
+                printf( " " ) ;
+              Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+            } // if
+            else {
+              
+              for ( int i = 0 ; i < spacenum + 2 ; i++ )
+                printf( " " ) ;
+                
+              Printtoken( tokentree.find( 2 * point )->second ) ;
+              printf( "\n" ) ;
+            } // else
           } // if
           else {
-            
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
-              
-            Printtoken( tokentree.find( 2 * point )->second ) ;
-            printf( "\n" ) ;
+            type = tokentree.find( point )->second.type ;
+            if ( type != NIL ) {
+              for ( int i = 0 ; i < spacenum + 2 ; i++ )
+                printf( " " ) ;
+                    
+              Printtoken( tokentree.find( point / 2 )->second ) ;
+              printf( "\n" ) ;  
+            } // if
+             
+            Printtree( tokentree, point, spacenum + 2 ) ;
           } // else
-        } // if
-        else {
-          type = tokentree.find( point )->second.type ;
-          if ( type != NIL ) {
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
+            
+          
+          point = 2 * point + 1 ;
+          /*
+          if ( tokentree.find( point ) != tokentree.end() ) {
+            type = tokentree.find( point )->second.type ;
+            // cout << tokentree.find( point )->second.str << endl ;
+            if ( type != DOT && type != NIL ) {
+              for ( int i = 0 ; i < spacenum + 2 ; i++ )
+                printf( " " ) ;
                   
-            Printtoken( tokentree.find( point / 2 )->second ) ;
-            printf( "\n" ) ;  
+              Printtoken( tokentree.find( point / 2 )->second ) ;
+              printf( ">>\n" ) ;  
+            } // if
+            
           } // if
-           
-          Printtree( tokentree, point, spacenum + 2 ) ;
-        } // else
-          
+          */
+        } // while
         
-        point = 2 * point + 1 ;
-        /*
-        if ( tokentree.find( point ) != tokentree.end() ) {
-          type = tokentree.find( point )->second.type ;
-          // cout << tokentree.find( point )->second.str << endl ;
-          if ( type != DOT && type != NIL ) {
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
-                
-            Printtoken( tokentree.find( point / 2 )->second ) ;
-            printf( ">>\n" ) ;  
-          } // if
-          
-        } // if
-        */
-      } // while
-      
+        
+      } // else
+
       for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
-        
+          
       printf( ")\n" ) ;
     } // if
     else {
