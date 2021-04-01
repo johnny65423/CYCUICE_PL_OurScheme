@@ -243,6 +243,7 @@ class Scanner{
       ReadSexp( tokenlist ) ;
       
       Readnwschar() ;
+      Skipcomment() ; 
       // cout << ">>" << mch ;
       
       while ( mch != ')' && ! ( mch == '.' && Justdot() ) ) {
@@ -310,13 +311,16 @@ class Scanner{
       try {
         
         // cout << ">>" << mch << "<<" << endl ;
+        gLine = 1 ;  
+        /*
         while ( Iswhitespace( mch ) && mch != '\n' && !gEnd )
           Getchar() ;
         
         if ( mch == '\n' )
           Getchar() ;
-          
-        gLine = 1 ;    
+        */ 
+        while ( Iswhitespace( mch ) && !gEnd )
+          Getchar() ; 
         
         ReadSexp(  tokenlist ) ;
         
@@ -344,14 +348,18 @@ class Scanner{
       //   throw EndOfFileError() ;        
       cout << endl ;
 
-      
+      /*
       if ( Iswhitespace( mch ) )
         gColumn = 1 ;
       else 
         gColumn = 0 ;
-        
+      */  
+      
       if ( mch == '\n' )
-        gColumn = 0 ;  
+        gColumn = 0 ; 
+      else 
+        gColumn = 1 ;  
+         
     } // while()
     
     // cout << "done" ;
