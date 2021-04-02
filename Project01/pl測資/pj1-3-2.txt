@@ -381,8 +381,3 @@ See?!"
 
 > ERROR (no more input) : END-OF-FILE encountered
 Thanks for using OurScheme!<<
-
-你的程式的輸出是>>Welcome to OurScheme!
-
-
-Thanks for using OurScheme!<<
