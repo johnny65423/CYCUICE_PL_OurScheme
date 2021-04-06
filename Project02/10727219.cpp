@@ -219,7 +219,6 @@ class Printer {
     if ( type == DOT ) {
 
       printf( "( " ) ;
-      
       type = tokentree.find( 2 * point )->second.type ;
       if ( type == QUOTE ) {
         Printtoken( tokentree.find( 2 * point )->second ) ;
