@@ -574,6 +574,12 @@ class Scanner{
     if ( Isend( tokentree ) )
       throw Callend() ; 
     
+    
+    for ( int i = 1 ; i < 1000 ; i++ )
+      if( tokentree.find(i) != tokentree.end() )
+        cout << i << " " << tokentree.find(i)->second.str << endl ; 
+    
+    
     Printtree( tokentree, point, 0 ) ;
   
   } // Buildtree() 
