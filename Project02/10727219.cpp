@@ -12,8 +12,8 @@ using namespace std;
 
 enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMMENT, UNKNOWN };
 
-int gLine = 1 ;              // ¡u¤U¤@­Ó­nÅª¶i¨Óªº¦r¤¸¡v©Ò¦bªºline number
-int gColumn = 0 ;            // ¡u¤U¤@­Ó­nÅª¶i¨Óªº¦r¤¸¡v©Ò¦bªºcolumn number
+int gLine = 1 ;              // ã€Œä¸‹ä¸€å€‹è¦è®€é€²ä¾†çš„å­—å…ƒã€æ‰€åœ¨çš„line number
+int gColumn = 0 ;            // ã€Œä¸‹ä¸€å€‹è¦è®€é€²ä¾†çš„å­—å…ƒã€æ‰€åœ¨çš„column number
 bool gReading = false ;
 int gTestNum ;
 bool gEnd = false ;
