@@ -219,8 +219,10 @@ class Printer {
     if ( type == DOT ) {
 
       printf( "( " ) ;
+      
       type = tokentree.find( 2 * point )->second.type ;
-      if ( type == QUOTE ) {
+      // if ( type == QUOTE ) {
+	  if ( 1 == 0 ) { // need to delete
         Printtoken( tokentree.find( 2 * point )->second ) ;
         printf( "\n" ) ;
         type = tokentree.find( 2 * point + 1 )->second.type ;
@@ -636,6 +638,7 @@ class Treemaker {
       } // else
 
     } // if
+	
     else if ( tokenlist.at( index ).type == QUOTE ) {
       
       tokentree[ point ] = Maktoken( "." ) ;
@@ -643,10 +646,14 @@ class Treemaker {
       tokentree[ 2 * point ] = tokenlist.at( index ) ;
       
       index++ ;
-
-      Treerecursion( tokentree, tokenlist, 2 * point + 1, index ) ;
+      
+	  point = 2 * point + 1 ;
+	  tokentree[ point ] = Maktoken( "." ) ;
+      Treerecursion( tokentree, tokenlist, 2 * point, index ) ;
+	  tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
       
     } // else if
+	
     else {
 
       tokentree[ point ] = tokenlist.at( index ) ;
@@ -743,6 +750,7 @@ class Interpreter{
       
       if ( !err ) {
         mtreemaker.Buildtree( mtokenlist, mtokentree ) ; 
+
         mprinter.Printtree( mtokentree, 1, 0 ) ; 
       } // if
 
