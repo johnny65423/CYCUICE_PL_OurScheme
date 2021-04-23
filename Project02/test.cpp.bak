@@ -26,6 +26,9 @@ struct Token {
   int intnum ;
   float floatnum ;
   Type type ;
+  
+  Token * left ;
+  Token * right ;
 };
 
 char Cpeek() {
