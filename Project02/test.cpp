@@ -200,73 +200,80 @@ public:
 
 class Printer {
   private:
-  void Printtoken( Token token ) {
-    Type type = token.type ;
+  void Printtoken( Token * token ) {
+    Type type = token->type ;
 
     if ( type == INT )
-      printf( "%d", token.intnum ) ;
+      printf( "%d", token->intnum ) ;
     else if ( type == FLOAT )
-      printf( "%.3f", token.floatnum ) ;
+      printf( "%.3f", token->floatnum ) ;
     else if ( type == QUOTE )
       printf( "%s", "quote" ) ;
     else 
-      printf( "%s", token.str.c_str() ) ;
+      printf( "%s", token->str.c_str() ) ;
          
   } // Printtoken()
   
   public:
-  void Printtree( map< int, Token > & tokentree, int point, int spacenum ) {
+  void Printtree( Token * tokentree ) {
+  	Token * temp = tokentree ;
+  	
+  	PrintRe( temp, 0 ) ;
+  } // Printtree()
+  
+  void PrintRe( Token * temp, int spacenum ) {
 
-    Type type = tokentree.find( point )->second.type ;
+    Type type = temp->type ;
 
     if ( type == DOT ) {
 
       printf( "( " ) ;
       
-      type = tokentree.find( 2 * point )->second.type ;
+      type = temp->left->type ;
 
       if ( type == DOT )
-        Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+        PrintRe( temp->left, spacenum + 2 ) ;
       else {
 
-        Printtoken( tokentree.find( 2 * point )->second ) ;  
+        Printtoken( temp->left ) ;  
         printf( "\n" ) ;
       } // else
                   
-      point = 2 * point + 1 ;
-      while ( tokentree.find( point ) != tokentree.end() ) {
-        type = tokentree.find( point )->second.type ;
+      temp = temp->right ;
+      while ( temp != NULL ) {
+        type = temp->type ;
         if ( type == DOT ) {
-          type = tokentree.find( 2 * point )->second.type ;
+          type = temp->left->type ;
             
           if ( type == DOT ) {
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
-            Printtree( tokentree, 2 * point, spacenum + 2 ) ;
+            PrintRe( temp->left, spacenum + 2 ) ;
           } // if
           else {
               
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
                 
-            Printtoken( tokentree.find( 2 * point )->second ) ;
+            Printtoken( temp->left ) ;
             printf( "\n" ) ;
           } // else
         } // if
         else {
-          type = tokentree.find( point )->second.type ;
+          type = temp->type ;
           if ( type != NIL ) {
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
-                    
-            Printtoken( tokentree.find( point / 2 )->second ) ;
+            
+            printf(".") ;        
+            // .Printtoken( Maketoken( "." ) ) ; 
             printf( "\n" ) ;  
           } // if
              
-          Printtree( tokentree, point, spacenum + 2 ) ;
+          PrintRe( temp, spacenum + 2 ) ;
         } // else
             
-        point = 2 * point + 1 ;
+        temp = temp->right ;
 
       } // while
         
@@ -277,12 +284,12 @@ class Printer {
       
     } // if
     else {
-      if ( type == NIL && point != 1 ) 
+      if ( type == NIL ) 
         ;
       else {
         for ( int i = 0 ; i < spacenum ; i++ )
           printf( " " ) ;
-        Printtoken( tokentree.find( point )->second ) ;
+        Printtoken( temp ) ;
         printf( "\n" ) ;  
       } // else
 
@@ -591,7 +598,19 @@ class Treemaker {
   } // Buildtree()
       
   private:  
-
+  Token * NewToken( Token token ) {
+    Token * retoken = new Token ;
+    retoken->str = token.str ;
+    retoken->line = token.line ;
+    retoken->column = token.column ;
+    retoken->intnum = token.intnum ;
+    retoken->floatnum = token.floatnum ;
+    retoken->type = token.type ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+  	
+  	return retoken ;
+  } // NetToken()
   void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
 
     if ( tokenlist.at( index ).type == LPAREN ) {
@@ -697,7 +716,8 @@ class Interpreter{
     while ( 0 == 0 ) {
       
       mtokenlist.clear() ;
-      mtokentree.clear() ;
+      morigintree ;
+      mtokentree = NULL ;
       
       bool err = false ;
       
@@ -766,6 +786,7 @@ class Interpreter{
   Scanner mscanner ;
   Treemaker mtreemaker ;
   vector<Token> mtokenlist ;
+  map< int, Token > morigintree ;
   Token * mtokentree ; 
     
 };

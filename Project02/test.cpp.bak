@@ -571,13 +571,13 @@ class Scanner {
 
 class Treemaker {
   public:
-  void Buildtree( vector<Token> & tokenlist, map< int, Token > & tokentree ) {
+  void Buildtree( vector<Token> & tokenlist, Token * tokentree ) {
     
     int point = 1 ;
     int index = 0 ;
 
     if ( tokenlist.size() == 1 ) {
-      tokentree[1] =  tokenlist.at( 0 ) ;
+      tokentree = NewToken( tokenlist.at( 0 ) ) ;
     } // if
     else {
       Treerecursion( tokentree, tokenlist, point, index ) ;
@@ -591,7 +591,19 @@ class Treemaker {
   } // Buildtree()
       
   private:  
-
+  Token * NewToken( Token token ) {
+    Token * retoken = new Token ;
+    retoken->str = token.str ;
+    retoken->line = token.line ;
+    retoken->column = token.column ;
+    retoken->intnum = token.intnum ;
+    retoken->floatnum = token.floatnum ;
+    retoken->type = token.type ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+  	
+  	return retoken ;
+  } // NetToken()
   void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
 
     if ( tokenlist.at( index ).type == LPAREN ) {
@@ -697,7 +709,7 @@ class Interpreter{
     while ( 0 == 0 ) {
       
       mtokenlist.clear() ;
-      mtokentree.clear() ;
+      mtokentree = NULL ;
       
       bool err = false ;
       
@@ -766,7 +778,7 @@ class Interpreter{
   Scanner mscanner ;
   Treemaker mtreemaker ;
   vector<Token> mtokenlist ;
-  map< int, Token > mtokentree ; 
+  Token * mtokentree ; 
     
 };
 

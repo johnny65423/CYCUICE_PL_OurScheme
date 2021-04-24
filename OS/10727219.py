@@ -9,8 +9,8 @@ def Bubblesort(data, num):
     # 定義資料長度
     n = len(data)
     xxx = n / 100
-    int = 1
-    for i in range(n-2):                   # 有 n 個資料長度，但只要執行 n-1 次
+    int = 0
+    for i in range(n-1):                   # 有 n 個資料長度，但只要執行 n-1 次
         #if( i % xxx == 0 ):
         #    print( int,"%" )
         #    int+= 1
@@ -19,14 +19,36 @@ def Bubblesort(data, num):
                 data[j], data[j+1] = data[j+1], data[j]
     
     print(num,"done")
-
+    
+def Merge(list1, list2):
+    # 定義資料長度
+    i1 = 0
+    i2 = 0
+    relist = []
+    while ( i1 < len(list1) - 1 or i2 < len(list2) ) :
+        if( i1 == len(list1) ) :
+            relist.append(list2[i2])
+            i2+= 1
+        elif ( i2 == len(list2) ) :
+            relist.append(list1[i1])
+            i1+= 1
+        else :
+            if( list1[i1] >= list2[i2] ) :
+                relist.append(list1[i1])
+                i1+= 1
+            else :    
+                relist.append(list2[i2])
+                i2+= 1
+    
+    print(num,"done")    
+    return relist
 
 #filename = input("請輸入檔案名稱：")
 k = input("請輸入要切成幾份：")
 k = int(k)
-filename = "input_1w"
-filename = filename + ".txt"
-f = open(filename, "r")
+filename = "input_10w"
+openname = filename + ".txt"
+f = open(openname, "r")
 
 numlist = []
 s = 0 
@@ -48,8 +70,21 @@ Bubblesort(m1list,0)
 
 end = time.time()
 
-print("M1執行時間：%f 秒" % (end - start))
+m1name = filename+"_output1.txt"
+f = open( m1name, "w" )
 
+f.writelines("Sort : \n")
+
+for i in range(len(m1list)):
+    f.writelines(str(m1list[i]))
+    f.writelines("\n")
+print("M1執行時間：%f 秒" % (end - start))
+f.writelines("CPU Time：%f\n" % (end - start))
+f.writelines("Output Time：")
+f.writelines(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ))
+
+f.writelines("\n")
+f.close()
 #====================================Mission1====================================
 
 #====================================Mission2====================================
@@ -82,17 +117,28 @@ while ( index < len(numlist) ) :
         
 m2thread = []    
 for i in range(len(m2list)):
+    #print("list", i, ":", m2list[i])
     m2thread.append(threading.Thread(target = Bubblesort, args = (m2list[i],i)))
     m2thread[i].start()
 
 for i in range(len(m2thread)):
     m2thread[i].join()
+
+del m2thread[i]   
+ 
+#for i in range(len(m2list)):
+    #print("list", i, ":", m2list[i])
+    #m2thread.append(threading.Thread(target = Bubblesort, args = (m2list[i],i)))
+    #m2thread[i].start()   
+    
+#for i in range(len(m2thread)):
+#    m2thread[i].join()    
     
 end = time.time()
 
 print("M2執行時間：%f 秒" % (end - start))
 
-#for i in range(len(m2list)):
-#    print(m2list[i])
+for i in range(len(m2list)):
+    print(m2list[i])
 
 #====================================Mission2====================================
