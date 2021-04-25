@@ -8,12 +8,12 @@ from numba import jit
 def Bubblesort(data, num):
     # 定義資料長度
     n = len(data)
-    xxx = n / 100
-    int = 0
+    xxx = n / 1000
+    count = 0
     for i in range(n-1):                   # 有 n 個資料長度，但只要執行 n-1 次
-        #if( i % xxx == 0 ):
-        #    print( int,"%" )
-        #    int+= 1
+        if( i % xxx == 0 ):
+            print( count,"%" )
+            count+= 1
         for j in range(n-i-1):             # 從第1個開始比較直到最後一個還沒到最終位置的數字 
             if data[j] > data[j+1]:        # 比大小然後互換
                 data[j], data[j+1] = data[j+1], data[j]
@@ -40,13 +40,18 @@ def Merge(list1, list2):
                 relist.append(list2[i2])
                 i2+= 1
     
-    print(num,"done")    
+    print("done")    
     return relist
 
+
+def Mergelist( arraylist, num1, num2 ):
+    if( num1 != num2 ) :
+        arraylist[num1] = Merge( arraylist[num1], arraylist[num2] )
+        del arraylist[num2]
 #filename = input("請輸入檔案名稱：")
 k = input("請輸入要切成幾份：")
 k = int(k)
-filename = "input_10w"
+filename = "input_100w"
 openname = filename + ".txt"
 f = open(openname, "r")
 
@@ -88,7 +93,7 @@ f.close()
 #====================================Mission1====================================
 
 #====================================Mission2====================================
-
+'''
 step = int(len(numlist) / k)+1
 
 if len(numlist) % k == 0 :
@@ -140,5 +145,5 @@ print("M2執行時間：%f 秒" % (end - start))
 
 for i in range(len(m2list)):
     print(m2list[i])
-
+'''
 #====================================Mission2====================================

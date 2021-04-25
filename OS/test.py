@@ -4,21 +4,40 @@ import time
 def print111():
     print('111')
 
+def Merge(list1, list2):
+    # 定義資料長度
+    i1 = 0
+    i2 = 0
+    relist = []
+    while ( i1 < len(list1) - 1 or i2 < len(list2) ) :
+        if( i1 == len(list1) ) :
+            relist.append(list2[i2])
+            i2+= 1
+        elif ( i2 == len(list2) ) :
+            relist.append(list1[i1])
+            i1+= 1
+        else :
+            if( list1[i1] <= list2[i2] ) :
+                relist.append(list1[i1])
+                i1+= 1
+            else :    
+                relist.append(list2[i2])
+                i2+= 1
+    
+    print("done")    
+    return relist
 
-# 定義線程
-t_list = []
 
-t1 = threading.Thread(target=print111)
-t_list.append(t1)
-t2 = threading.Thread(target=print111)
-t_list.append(t2)
-t3 = threading.Thread(target=print111)
-t_list.append(t3)
+def Mergelist( arraylist, num1, num2 ):
+    if( num1 != num2 ) :
+        arraylist[num1] = Merge( arraylist[num1], arraylist[num2] )
+        del arraylist[num2]
 
-# 開始工作
-for t in t_list:
-    t.start()
 
-# 調整多程順序
-for t in t_list:
-    t.join()
+a = []
+a.append( [0,1,2,3,5,7,10,10,45,77,85,111] )
+a.append( [2,4,6] )
+print(a)
+
+Mergelist(a,0,1)
+print(a)
