@@ -35,9 +35,15 @@ def Mergelist( arraylist, num1, num2 ):
 
 
 a = []
-a.append( [0,1,2,3,5,7,10,10,45,77,85,111] )
-a.append( [2,4,6] )
+a.append( [4,6,8] )
+a.append( [7,10] )
 print(a)
 
-Mergelist(a,0,1)
+
+m2thread2 = threading.Thread(target = Mergelist, args = (a,0, 1))
+
+m2thread2.start()
+
+m2thread2.join() 
+
 print(a)
