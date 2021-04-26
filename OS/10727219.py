@@ -56,7 +56,7 @@ def Mergelist( arraylist, num1, num2 ):
 #filename = input("請輸入檔案名稱：")
 k = input("請輸入要切成幾份：")
 k = int(k)
-filename = "input"
+filename = "input_100w"
 openname = filename + ".txt"
 f = open(openname, "r")
 
@@ -145,15 +145,17 @@ while( len(m2list) > 1 ):
         m2thread2[i].start()
     for i in range(len(m2thread2)):
         m2thread2[i].join()
-    print( m2list )    
-    num = len(m2list) - 1 
-    print(num, int(((len(m2list) + 1) / 2) - 1 ) )
-    while( num > int(((len(m2list) + 1) / 2) - 1 ) ) :
-        print("del", num)
+    #print( m2list )    
+    num = int(len(m2list) - 1) 
+    endindex = int(((len(m2list) + 1) / 2) - 1 )
+    
+    while( num > endindex ) :
+        #print("del", num)
         del m2list[num]
         num -= 1
-    print( m2list )
-    print( len(m2list) )
+        #print("check ", num, int(((len(m2list) + 1) / 2) - 1 ) )
+    #print( m2list )
+    #print( len(m2list) )
     
 end = time.time()
 
