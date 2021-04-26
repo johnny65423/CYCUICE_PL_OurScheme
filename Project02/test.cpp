@@ -217,8 +217,13 @@ class Printer {
   public:
   void Printtree( Token * tokentree ) {
   	Token * temp = tokentree ;
-  	
-  	PrintRe( temp, 0 ) ;
+  	if( temp->right == NULL && temp->left == NULL ){
+  	  Printtoken(temp);
+  	  printf( "\n" );
+    }
+  	  
+  	else  
+    	PrintRe( temp, 0 ) ;
   } // Printtree()
   
   void PrintRe( Token * temp, int spacenum ) {
@@ -597,20 +602,9 @@ class Treemaker {
   
   } // Buildtree()
       
-  private:  
-  Token * NewToken( Token token ) {
-    Token * retoken = new Token ;
-    retoken->str = token.str ;
-    retoken->line = token.line ;
-    retoken->column = token.column ;
-    retoken->intnum = token.intnum ;
-    retoken->floatnum = token.floatnum ;
-    retoken->type = token.type ;
-    retoken->left = NULL ;
-    retoken->right = NULL ;
-  	
-  	return retoken ;
-  } // NetToken()
+  private:    
+  
+
   void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
 
     if ( tokenlist.at( index ).type == LPAREN ) {
@@ -716,7 +710,7 @@ class Interpreter{
     while ( 0 == 0 ) {
       
       mtokenlist.clear() ;
-      morigintree ;
+      morigintree.clear() ;
       mtokentree = NULL ;
       
       bool err = false ;
@@ -747,9 +741,9 @@ class Interpreter{
       gReading = false ;
       
       if ( !err ) {
-        mtreemaker.Buildtree( mtokenlist, mtokentree ) ; 
-
-        mprinter.Printtree( mtokentree, 1, 0 ) ; 
+        mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
+        mtokentree = SetTree(1) ;
+        mprinter.Printtree( mtokentree ) ; 
       } // if
 
       printf( "\n" ) ;
@@ -788,6 +782,31 @@ class Interpreter{
   vector<Token> mtokenlist ;
   map< int, Token > morigintree ;
   Token * mtokentree ; 
+  
+  Token * NewToken( Token token ) {
+    Token * retoken = new Token ;
+    retoken->str = token.str ;
+    retoken->line = token.line ;
+    retoken->column = token.column ;
+    retoken->intnum = token.intnum ;
+    retoken->floatnum = token.floatnum ;
+    retoken->type = token.type ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+  	
+  	return retoken ;
+  } // NetToken()
+  
+  Token * SetTree( int index ) {
+    if( morigintree.find(index) == morigintree.end() )
+      return NULL ;
+    else {
+      Token * temp = NewToken( morigintree.find(index)->second ) ;
+	    temp->left = SetTree( 2 * index ) ;
+      temp->right = SetTree( 2 * index + 1 ) ;  
+	  return temp ;
+    } // else
+  } // SetTree()	
     
 };
 
