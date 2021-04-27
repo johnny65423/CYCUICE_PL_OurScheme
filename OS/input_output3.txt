@@ -2,5 +2,5 @@ Sort :
 4
 8
 6
-CPU Time¡G1.556306
-Output Time¡G2021-04-27 19:33:48
+CPU Time¡G2.161511
+Output Time¡G2021-04-27 20:44:31

@@ -6,7 +6,7 @@ from numba import jit
 
 
 
-def Bubblesort(data):
+def Bubblesort( data ):
     # 定義資料長度
     n = len(data)
     xxx = n / 1000
@@ -195,7 +195,31 @@ if __name__ == "__main__" :
 
       # 運行多處理程序
     resultlist = pool.map(Bubblesort, m3list)
+    
+    print( len(m3list) )
+    '''
+    while( len(m3list) > 1 ):
+        k = int( len(m3list) / 2 )
+        pool = mp.Pool(k)
+        resultlist = pool.map(Mergelist, ( m3list,  ) )
+        for i in range( int((len(m3list) + 1) / 2 ) ):
+            m2thread2.append(threading.Thread(target = Mergelist, args = (m2list,i, len(m2list) - i - 1)))
 
+        for i in range(len(m2thread2)):
+            m2thread2[i].start()
+        #print(m2list)    
+            
+        for i in range(len(m2thread2)):
+            m2thread2[i].join()
+          
+        
+        num = int(len(m2list) - 1) 
+        endindex = int(((len(m2list) + 1) / 2) - 1 )
+        
+        while( num > endindex ) :
+            del m2list[num]
+            num -= 1
+    '''
     print( resultlist )    
     end = time.time()
 
