@@ -741,7 +741,16 @@ class Interpreter{
       gReading = false ;
       
       if ( !err ) {
+
+            
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
+        
+        for( int i = 0 ; i < 1000 ; i++ )  {
+          if( morigintree.find(i) != morigintree.end() )
+            cout << i << " " << morigintree.find(i)->second.str << endl ;
+          // else cout << i << endl ;
+        }
+        
         mtokentree = SetTree(1) ;
         mprinter.Printtree( mtokentree ) ; 
       } // if
