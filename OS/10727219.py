@@ -188,7 +188,7 @@ if __name__ == "__main__" :
     start = time.time()    
       
     m3list = Makelist( numlist, k )
-    print( m3list )
+    #print( m3list )
 
       # 設定處理程序數量
     pool = mp.Pool(k)
