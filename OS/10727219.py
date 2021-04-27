@@ -17,7 +17,7 @@ def Bubblesort( data ):
         for j in range(n-i-1):             # 從第1個開始比較直到最後一個還沒到最終位置的數字 
             if data[j] > data[j+1]:        # 比大小然後互換
                 data[j], data[j+1] = data[j+1], data[j]
-    return data           
+    return data      
     
 def Merge(list1, list2):
     # 定義資料長度
@@ -44,11 +44,17 @@ def Merge(list1, list2):
   
     return relist
 
-
 def Mergelist( arraylist, num1, num2 ):
-
+    
     if( num1 != num2 ) :
         arraylist[num1] = Merge( arraylist[num1], arraylist[num2] )
+
+def Mergelist2( arraylist, num ):
+    num1 = num[0]
+    num1 = num[1]
+    if( num1 != num2 ) :
+        arraylist[num1] = Merge( arraylist[num1], arraylist[num2] )
+    return arraylist[num1]    
         
 def Makelist( numlist, k ):
 
@@ -75,14 +81,26 @@ def Makelist( numlist, k ):
             add = -1
             step -= 1  
     
-    return relist        
+    return relist  
 
+def Makedouble(temp) :
+    if( len(temp) % 2 != 0 ) :
+        temp.append( [] )
+    
+    relist = []
+    i = 0 
+    while( i < len(temp)/2 ) :
+        relist.append( [temp[i], temp[len(temp)-i-1] ] )
+        i+=1
+    return relist
+    #print(relist)    
+    
 
 if __name__ == "__main__" : 
     #filename = input("請輸入檔案名稱：")
     k = input("請輸入要切成幾份：")
     k = int(k)
-    filename = "input"
+    filename = "input_1w"
     openname = filename + ".txt"
     f = open(openname, "r")
 
@@ -188,49 +206,40 @@ if __name__ == "__main__" :
     start = time.time()    
       
     m3list = Makelist( numlist, k )
-    #print( m3list )
-
-      # 設定處理程序數量
+    plist = []
+    relist = []
+    q = mp.Queue()
+    
     pool = mp.Pool(k)
 
       # 運行多處理程序
-    resultlist = pool.map(Bubblesort, m3list)
+    relist = pool.map(Bubblesort, m3list)
+
     
-    print( len(m3list) )
-    '''
-    while( len(m3list) > 1 ):
-        k = int( len(m3list) / 2 )
+    while ( len(relist) > 1 ):
+        print( len(relist) )
+        k = int((len(relist)) / 2 )
+        relist = Makedouble(relist)
+        
         pool = mp.Pool(k)
-        resultlist = pool.map(Mergelist, ( m3list,  ) )
-        for i in range( int((len(m3list) + 1) / 2 ) ):
-            m2thread2.append(threading.Thread(target = Mergelist, args = (m2list,i, len(m2list) - i - 1)))
-
-        for i in range(len(m2thread2)):
-            m2thread2[i].start()
-        #print(m2list)    
-            
-        for i in range(len(m2thread2)):
-            m2thread2[i].join()
-          
         
-        num = int(len(m2list) - 1) 
-        endindex = int(((len(m2list) + 1) / 2) - 1 )
-        
-        while( num > endindex ) :
-            del m2list[num]
-            num -= 1
-    '''
-    print( resultlist )    
+        temp = []
+        # 運行多處理程序
+        temp = pool.starmap(Merge, relist )
+        del relist
+        relist = temp.copy()
+    
     end = time.time()
-
-
+    
+    #print( relist )
+    
     m3name = filename+"_output3.txt"
     f = open( m3name, "w" )
 
     f.writelines("Sort : \n")
 
-    for i in range(len(m3list[0])):
-        f.writelines(str(m3list[0][i]))
+    for i in range(len(relist[0])):
+        f.writelines(str(relist[0][i]))
         f.writelines("\n")
     print("M3執行時間：%f 秒" % (end - start))
     f.writelines("CPU Time：%f\n" % (end - start))
