@@ -18,8 +18,6 @@ def Bubblesort(data, num):
             if data[j] > data[j+1]:        # 比大小然後互換
                 data[j], data[j+1] = data[j+1], data[j]
     
-    #print(num,"done")
-    
 def Merge(list1, list2):
     # 定義資料長度
     i1 = 0
@@ -50,13 +48,38 @@ def Mergelist( arraylist, num1, num2 ):
 
     if( num1 != num2 ) :
         arraylist[num1] = Merge( arraylist[num1], arraylist[num2] )
-        #print( "len", len(arraylist), "num", num1, num2 )
-        #del arraylist[num2]
+        
+def Makelist( numlist, k ):
+
+    step = int(len(numlist) / k)+1
+    
+    if len(numlist) % k == 0 :
+        add = -1
+        step -= 1
+    else:
+        add = len(numlist) % k
+
+    relist = []
+    index = 0  
+    
+    while ( index < len(numlist) ) :
+
+        if( add > 0 ):
+            relist.append(numlist[index: index + step])
+            add-=1
+        else:
+            relist.append(numlist[index: index + step])
+        index = index + step 
+        if( add == 0 ):
+            add = -1
+            step -= 1  
+    
+    return relist        
 
 #filename = input("請輸入檔案名稱：")
 k = input("請輸入要切成幾份：")
 k = int(k)
-filename = "input"
+filename = "input_1w"
 openname = filename + ".txt"
 f = open(openname, "r")
 
@@ -71,6 +94,7 @@ while num != '':
 f.close()
 
 #====================================Mission1====================================
+
 '''
 m1list = numlist.copy()
 
@@ -95,36 +119,16 @@ f.writelines(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ))
 
 f.writelines("\n")
 f.close()
-'''
+
 #====================================Mission1====================================
 
 #====================================Mission2====================================
-
-step = int(len(numlist) / k)+1
-
-if len(numlist) % k == 0 :
-    add = -1
-    step -= 1
-else:
-    add = len(numlist) % k
     
 start = time.time()    
-    
-index = 0
-m2list=[]
-while ( index < len(numlist) ) :
-
-    if( add > 0 ):
-        m2list.append(numlist[index: index + step])
-        add-=1
-    else:
-        m2list.append(numlist[index: index + step])
-    index = index + step 
-    if( add == 0 ):
-        add = -1
-        step -= 1  
-        
-m2thread = []    
+  
+m2list = Makelist( numlist, k )
+m2thread = []  
+  
 for i in range(len(m2list)):
     #print("list", i, ":", m2list[i])
     m2thread.append(threading.Thread(target = Bubblesort, args = (m2list[i],i)))
@@ -132,9 +136,6 @@ for i in range(len(m2list)):
 
 for i in range(len(m2thread)):
     m2thread[i].join()
-
-#del m2thread 
-
 
 while( len(m2list) > 1 ):
     m2thread2 = []
@@ -145,15 +146,13 @@ while( len(m2list) > 1 ):
         m2thread2[i].start()
     for i in range(len(m2thread2)):
         m2thread2[i].join()
-    print( m2list )    
-    num = len(m2list) - 1 
-    print(num, int(((len(m2list) + 1) / 2) - 1 ) )
-    while( num > int(((len(m2list) + 1) / 2) - 1 ) ) :
-        print("del", num)
+
+    num = int(len(m2list) - 1) 
+    endindex = int(((len(m2list) + 1) / 2) - 1 )
+    
+    while( num > endindex ) :
         del m2list[num]
         num -= 1
-    print( m2list )
-    print( len(m2list) )
     
 end = time.time()
 
@@ -174,5 +173,34 @@ f.writelines(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ))
 f.writelines("\n")
 f.close()
 
-
+'''
 #====================================Mission2====================================
+
+#====================================Mission3====================================
+    
+start = time.time()    
+  
+m3list = Makelist( numlist, k )
+
+    
+end = time.time()
+
+
+m3name = filename+"_output3.txt"
+f = open( m3name, "w" )
+
+f.writelines("Sort : \n")
+
+for i in range(len(m3list[0])):
+    f.writelines(str(m3list[0][i]))
+    f.writelines("\n")
+print("M3執行時間：%f 秒" % (end - start))
+f.writelines("CPU Time：%f\n" % (end - start))
+f.writelines("Output Time：")
+f.writelines(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ))
+
+f.writelines("\n")
+f.close()
+
+
+#====================================Mission3====================================
