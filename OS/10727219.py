@@ -100,7 +100,7 @@ if __name__ == "__main__" :
     #filename = input("請輸入檔案名稱：")
     k = input("請輸入要切成幾份：")
     k = int(k)
-    filename = "input_1w"
+    filename = "input_100w"
     openname = filename + ".txt"
     f = open(openname, "r")
 
@@ -198,7 +198,7 @@ if __name__ == "__main__" :
     f.writelines("\n")
     f.close()
 
-    ''' 
+    
 #====================================Mission2====================================
 
 #====================================Mission3====================================
@@ -249,5 +249,50 @@ if __name__ == "__main__" :
     f.writelines("\n")
     f.close()
 
+    ''' 
 
 #====================================Mission3====================================
+
+#====================================Mission2====================================
+    
+    start = time.time()    
+      
+    m4list = Makelist( numlist, k )
+     
+    for i in range(len(m4list)):
+        Bubblesort(m4list[i])
+
+    while( len(m4list) > 1 ):
+        for i in range( int((len(m4list) + 1) / 2 ) ):
+            Mergelist( m4list, i, len(m4list) - i - 1 )
+ 
+          
+        
+        num = int(len(m4list) - 1) 
+        endindex = int(((len(m4list) + 1) / 2) - 1 )
+        
+        while( num > endindex ) :
+            del m4list[num]
+            num -= 1
+        
+    end = time.time()
+
+
+    m2name = filename+"_output4.txt"
+    f = open( m2name, "w" )
+
+    f.writelines("Sort : \n")
+
+    for i in range(len(m4list[0])):
+        f.writelines(str(m4list[0][i]))
+        f.writelines("\n")
+    print("M4執行時間：%f 秒" % (end - start))
+    f.writelines("CPU Time：%f\n" % (end - start))
+    f.writelines("Output Time：")
+    f.writelines(str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) ))
+
+    f.writelines("\n")
+    f.close()
+
+    
+#====================================Mission4====================================
