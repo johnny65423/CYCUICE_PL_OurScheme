@@ -97,10 +97,10 @@ def Makedouble(temp) :
     
 
 if __name__ == "__main__" : 
-    #filename = input("請輸入檔案名稱：")
+    filename = input("請輸入檔案名稱：")
     k = input("請輸入要切成幾份：")
     k = int(k)
-    filename = "input_100w"
+    #filename = "input_100w"
     openname = filename + ".txt"
     f = open(openname, "r")
 
@@ -116,7 +116,7 @@ if __name__ == "__main__" :
 
 #====================================Mission1====================================
 
-    '''
+    
     m1list = numlist.copy()
 
     start = time.time()
@@ -249,11 +249,11 @@ if __name__ == "__main__" :
     f.writelines("\n")
     f.close()
 
-    ''' 
+    
 
 #====================================Mission3====================================
 
-#====================================Mission2====================================
+#====================================Mission4====================================
     
     start = time.time()    
       
