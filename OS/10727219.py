@@ -9,11 +9,8 @@ from numba import jit
 def Bubblesort( data ):
     # 定義資料長度
     n = len(data)
-    xxx = n / 1000
-    count = 0
+
     for i in range(n-1):                   # 有 n 個資料長度，但只要執行 n-1 次
-        if( i % xxx == 0 ):
-            count+= 1
         for j in range(n-i-1):             # 從第1個開始比較直到最後一個還沒到最終位置的數字 
             if data[j] > data[j+1]:        # 比大小然後互換
                 data[j], data[j+1] = data[j+1], data[j]
@@ -115,7 +112,7 @@ if __name__ == "__main__" :
     f.close()
 
 #====================================Mission1====================================
-
+    
     
     m1list = numlist.copy()
 
@@ -140,7 +137,7 @@ if __name__ == "__main__" :
 
     f.writelines("\n")
     f.close()
-
+    
 #====================================Mission1====================================
 
 #====================================Mission2====================================
@@ -151,8 +148,8 @@ if __name__ == "__main__" :
     m2thread = []  
      
     for i in range(len(m2list)):
-        #print("list", i, ":", m2list[i])
-        m2thread.append(threading.Thread(target = Bubblesort, args = (m2list[i])))
+        print(i)
+        m2thread.append(threading.Thread(target = Bubblesort, args = ( m2list[i], ) ))
         m2thread[i].start()
         
 
@@ -160,6 +157,7 @@ if __name__ == "__main__" :
         m2thread[i].join()
 
     while( len(m2list) > 1 ):
+        print(len(m2list))
         m2thread2 = []
         for i in range( int((len(m2list) + 1) / 2 ) ):
             m2thread2.append(threading.Thread(target = Mergelist, args = (m2list,i, len(m2list) - i - 1)))
@@ -214,14 +212,14 @@ if __name__ == "__main__" :
 
       # 運行多處理程序
     relist = pool.map(Bubblesort, m3list)
-
+    tempnum = k
     
     while ( len(relist) > 1 ):
         print( len(relist) )
-        k = int((len(relist)) / 2 )
+        tempnum = int((len(relist)) / 2 )
         relist = Makedouble(relist)
         
-        pool = mp.Pool(k)
+        pool = mp.Pool(tempnum)
         
         temp = []
         # 運行多處理程序
@@ -258,10 +256,11 @@ if __name__ == "__main__" :
     start = time.time()    
       
     m4list = Makelist( numlist, k )
-     
+    #print(len(m4list))
     for i in range(len(m4list)):
+        print(i)
         Bubblesort(m4list[i])
-
+    print("done")
     while( len(m4list) > 1 ):
         for i in range( int((len(m4list) + 1) / 2 ) ):
             Mergelist( m4list, i, len(m4list) - i - 1 )
