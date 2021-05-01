@@ -1,8 +1,8 @@
 import time
 import threading
 import multiprocessing as mp
-from numba import jit
-@jit()
+#from numba import jit
+#@jit()
 
 
 
