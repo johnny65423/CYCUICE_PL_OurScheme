@@ -39,11 +39,11 @@ struct checkSRTF{
 
 struct checkPPRR{
 	bool operator() (const Process& x, const Process& y){
-		if( x.priority != y.priority )
-			return x.priority > y.priority ;
-		else {
-			return x.id > y.id ;
-		}
+		//if( x.priority != y.priority )
+		return x.priority > y.priority ;
+		//else {
+		//	return x.id > y.id ;
+		//}
 	}
 };
 
