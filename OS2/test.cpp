@@ -37,15 +37,6 @@ struct checkSRTF{
 	}
 };
 
-struct checkPPRR{
-	bool operator() (const Process& x, const Process& y){
-		if( x.priority != y.priority )
-			return x.priority > y.priority ;
-		else {
-			return x.id > y.id ;
-		}
-	}
-};
 
 char getid( int num ) {
 	if ( num > 35 || num < 0 )
@@ -94,7 +85,7 @@ class Scheduler {
 				case 3 :
 					SRTF();
 				case 6 :
-					PPRR() ;	
+					SRTF() ;	
 				/*
 				
 				case 4 :
@@ -252,8 +243,8 @@ class Scheduler {
 						i = -1 ;
 					}
 				}
-				//if( !pqueue.empty() )
-				//	cout << "*" << pqueue.size() << endl;
+				if( !pqueue.empty() )
+					cout << "*" << pqueue.size() << endl;
 				if( !pqueue.empty() && nowwork != -1 && remaindertime > pqueue.top().cpuburst ) {
 					// cout << "cut" << endl ;
 					Process temp ;
@@ -296,98 +287,6 @@ class Scheduler {
 			}
 
 		}
-		
-		void PPRR(){
-			cout << "PPRR" << endl ;
-			int time = 0 ;
-			vector< Process > list ;
-			list.assign( processlist.begin(), processlist.end() );
-			sort( list.begin(),list.end(), check ) ;
-			// queue<Process> pqueue ;
-			priority_queue<Process, vector<Process>, checkPPRR > pqueue;
-			int nowwork = -1 ;
-			int remaindertime = 0 ;
-			int runtime = 0 ;
-			int arrtime ;
-			int p ;
-			while ( !pqueue.empty() || !list.empty() ) {
-				for ( int i = 0 ; i < list.size() ; i++ ) {
-					if( list.at(i).arrivaltime == time ) {
-						pqueue.push( list.at(i) ) ;
-						list.erase(list.begin() + i) ;
-						i = -1 ;
-					}
-				}
-				//if( !pqueue.empty() )
-				//	cout << p << " " << pqueue.top().priority << endl; 
-				if( runtime == timeslice && remaindertime != 0 && p == pqueue.top().priority ) {
-					//cout << "***" ;
-					Process temp, temp2 ;
-					temp.id = nowwork ;
-					temp.cpuburst = remaindertime ;
-					temp.priority = p ;
-					temp.arrivaltime = arrtime ;
-					
-					runtime = 0 ;
-					temp2 = pqueue.top() ;
-					pqueue.pop() ;
-					remaindertime = temp2.cpuburst ;	
-					nowwork = temp2.id ;
-					p = temp2.priority ;
-					arrtime = temp2.arrivaltime ;
-					pqueue.push( temp ) ;
-				}	
-				
-				else if( !pqueue.empty() && nowwork != -1 && p > pqueue.top().priority ) {
-					Process temp ;
-					temp.id = nowwork ;
-					temp.cpuburst = remaindertime ;
-					temp.arrivaltime = arrtime ;
-					temp.arrivaltime = arrtime ;
-					pqueue.push( temp ) ;
-					temp = pqueue.top() ;
-					pqueue.pop() ;
-					remaindertime = temp.cpuburst ;	
-					nowwork = temp.id ;
-				}
-				
-				
-				if( remaindertime == 0 && !pqueue.empty() ) {
-					Process temp = pqueue.top() ;
-					pqueue.pop() ;
-					remaindertime = temp.cpuburst ;	
-					nowwork = temp.id ;
-					arrtime = temp.arrivaltime ;
-					p = temp.priority ;
-					runtime = 0 ;
-				}
-				else if( remaindertime == 0 && pqueue.empty() )
-					nowwork = -1 ;
-					
-				if( nowwork != -1 )
-					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
-
-				time++ ;
-				runtime++ ;
-				if( nowwork != -1 )
-					remaindertime-- ;
-			}
-
-			while( remaindertime > 0 ) {
-				if( nowwork != -1 )
-					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
-				remaindertime-- ;
-			}
-
-		}
-		
-		
-		
-		
 } ;
 
 int main() {
@@ -395,21 +294,20 @@ int main() {
 	string filename ;
 	int method ;
 	int timeslice ;
-	cout << "½Ð¿é¤JÀÉ¦W¡G" ;
-	cin >> filename;
-
-	string name = filename + ".txt" ;
+	priority_queue<Process, vector<Process>, checkSRTF > pqueue;
+	Process temp ;
+	temp.id = 6 ;
+  	temp.cpuburst = 5 ;
+	temp.arrivaltime = 1 ;
+	pqueue.push(temp) ;
+	temp.id = 9 ;
+  	temp.cpuburst = 4 ;
+	temp.arrivaltime = 1 ;
+	pqueue.push(temp) ;
 	
-	file.open( name.c_str(), ios::in ) ;
-	if(file) {
-		scheduler.readfile() ;
-		scheduler.setfile() ;
-		scheduler.makeschedule() ;
-	}
-	else {
-		cout << "File open Error" ;
-	}	
+	cout << pqueue.top().id ;
+	cout << pqueue.top().id ;
 	
-
 } // main()	
+
 
