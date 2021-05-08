@@ -319,36 +319,37 @@ class Scheduler {
 					}
 				}
 				//if( !pqueue.empty() )
-				//	cout << p << " " << pqueue.top().priority << endl; 
+				//	cout << endl << "*"<< pqueue.top().id << endl; 
 				if( runtime == timeslice && remaindertime != 0 && p == pqueue.top().priority ) {
-					//cout << "***" ;
-					Process temp, temp2 ;
+					Process temp ;
 					temp.id = nowwork ;
 					temp.cpuburst = remaindertime ;
 					temp.priority = p ;
 					temp.arrivaltime = arrtime ;
-					
-					runtime = 0 ;
-					temp2 = pqueue.top() ;
-					pqueue.pop() ;
-					remaindertime = temp2.cpuburst ;	
-					nowwork = temp2.id ;
-					p = temp2.priority ;
-					arrtime = temp2.arrivaltime ;
 					pqueue.push( temp ) ;
+					runtime = 0 ;
+					temp = pqueue.top() ;
+					pqueue.pop() ;
+					remaindertime = temp.cpuburst ;	
+					nowwork = temp.id ;
+					p = temp.priority ;
+					arrtime = temp.arrivaltime ;
+					//cout << endl << p << " " << nowwork << endl; 
 				}	
 				
-				else if( !pqueue.empty() && nowwork != -1 && p > pqueue.top().priority ) {
+				if( !pqueue.empty() && nowwork != -1 && p > pqueue.top().priority ) {
 					Process temp ;
 					temp.id = nowwork ;
 					temp.cpuburst = remaindertime ;
-					temp.arrivaltime = arrtime ;
+					temp.priority = p ;
 					temp.arrivaltime = arrtime ;
 					pqueue.push( temp ) ;
 					temp = pqueue.top() ;
 					pqueue.pop() ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
+					p = temp.priority ;
+					arrtime = temp.arrivaltime ;
 				}
 				
 				
