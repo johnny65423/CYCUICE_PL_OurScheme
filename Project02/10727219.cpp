@@ -106,6 +106,29 @@ bool Isend( map< int, Token > tokentree ) {
   
 } // Isend()
 
+Type Gettype( string str ) {
+  Type numtype = Numtype( str ) ;
+  if ( str == "(" ) return LPAREN ;
+  else if ( str == ")" ) return RPAREN ;
+  else if ( str == "." ) return DOT ;
+  else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
+  else if ( str == "t" || str == "#t" ) return T ;
+  else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
+  else if ( str == "'" ) return QUOTE ;
+  else if ( numtype == INT || numtype == FLOAT ) return numtype ;
+  else if ( str == ";" ) return COMMENT ;
+  else return SYMBOL ;  
+    
+} // Gettype()
+  
+string Setstr( string str ) {
+  
+  if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
+  else if ( str == "t" || str == "#t" ) return "#t" ;
+  else return str ; 
+  
+} // Setstr()
+
 int Decodeint( string str ) {
   int positive = 1 ;
   if ( str[0] == '+' )
@@ -198,6 +221,50 @@ public:
   } // EndOfFileError()
 };
 
+class Evaler {
+  private:
+  	
+  	Token * NewToken( string str ) {
+	    Token * retoken = new Token ;
+	    retoken->str = Setstr(str) ;
+	    retoken->type = Gettype(retoken->str) ;
+	    retoken->left = NULL ;
+	    retoken->right = NULL ;
+	  	
+	  	return retoken ;
+  	} // NetToken()
+  	
+    int Getsize( Token * temp ) {
+    	if( temp == NULL || temp->type == NIL )
+ 			  return 0 ;
+ 			else
+			  return 1 + Getsize( temp->right ) ;
+    	
+		} // Getsize()
+		
+		Token * Cons( Token * temp ) {
+			if(Getsize(temp) != 2)
+			  return temp ;
+			
+			Token * retoken = NewToken(".") ;
+			retoken->left = temp->left ;
+			retoken->right = temp->right->left ;
+			return retoken ;  
+		} // Cons()
+  
+  public:
+	  Token * Evalexp( Token * temp ) {
+	  	cout << Getsize(temp->right) << endl ;
+	  	if( temp->left->str == "cons" )
+ 			  return Cons(temp->right) ;
+ 			else  
+				return temp ;
+	  	
+	  	
+		} // Evalexp()
+  
+};
+
 class Printer {
   private:
   void Printtoken( Token * token ) {
@@ -220,8 +287,7 @@ class Printer {
   	if( temp->right == NULL && temp->left == NULL ){
   	  Printtoken(temp);
   	  printf( "\n" );
-    }
-  	  
+    } 
   	else  
     	PrintRe( temp, 0 ) ;
   } // Printtree()
@@ -668,29 +734,6 @@ class Treemaker {
       
     return retoken ;
   } // Maktoken()
-
-  Type Gettype( string str ) {
-    Type numtype = Numtype( str ) ;
-    if ( str == "(" ) return LPAREN ;
-    else if ( str == ")" ) return RPAREN ;
-    else if ( str == "." ) return DOT ;
-    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
-    else if ( str == "t" || str == "#t" ) return T ;
-    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if ( str == "'" ) return QUOTE ;
-    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
-    else if ( str == ";" ) return COMMENT ;
-    else return SYMBOL ;  
-      
-  } // Gettype()
-  
-  string Setstr( string str ) {
-    
-    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
-    else if ( str == "t" || str == "#t" ) return "#t" ;
-    else return str ; 
-    
-  } // Setstr()
     
 };
 
@@ -743,16 +786,18 @@ class Interpreter{
       if ( !err ) {
   
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
-        
-        /*
-        for( int i = 0 ; i < 1000 ; i++ )  {
-          if( morigintree.find(i) != morigintree.end() )
-            cout << i << " " << morigintree.find(i)->second.str << endl ;
-          // else cout << i << endl ;
-        }
-        */
         mtokentree = SetTree(1) ;
-        mprinter.Printtree( mtokentree ) ; 
+        
+        try {
+        	Token * outtree ;
+        	outtree = mevaler.Evalexp(mtokentree) ;
+        	mprinter.Printtree( outtree ) ; 
+        	
+				}
+				catch ( Stringerror e ) {
+
+      	} // catch
+        
       } // if
 
       printf( "\n" ) ;
@@ -787,6 +832,7 @@ class Interpreter{
   
   Printer mprinter ;
   Scanner mscanner ;
+  Evaler mevaler ;
   Treemaker mtreemaker ;
   vector<Token> mtokenlist ;
   map< int, Token > morigintree ;
