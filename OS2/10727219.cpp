@@ -295,14 +295,30 @@ class Scheduler {
 
 		}
 		
+		void ins( vector<Process> & list, Process temp ) {
+			if( list.empty() )
+					list.push_back(temp) ;
+			else {
+				int index = list.size() - 1 ;
+				while ( index >= 0 && list.at(index).priority > temp.priority ) {
+					index-- ;
+				}
+				index++ ;
+				list.insert( list.begin()+index, temp ) ;
+				
+			}		
+			
+			
+		}
+		
 		void PPRR(){
 			cout << "PPRR" << endl ;
 			int time = 0 ;
 			vector< Process > list ;
 			list.assign( processlist.begin(), processlist.end() );
 			sort( list.begin(),list.end(), check ) ;
-			// queue<Process> pqueue ;
-			priority_queue<Process, vector<Process>, checkPPRR > pqueue;
+			// priority_queue<Process, vector<Process>, checkPPRR > pqueue;
+			vector< Process > pqueue ;
 			int nowwork = -1 ;
 			int remaindertime = 0 ;
 			int runtime = 0 ;
@@ -316,16 +332,19 @@ class Scheduler {
 			}
 			
 			while ( !pqueue.empty() || !list.empty() ) {
+				//for ( int i = 0 ; i < pqueue.size() ; i++ )
+				//  cout << getid(pqueue.at(i).id) << " " << pqueue.at(i).priority << ", " ;
+				//cout << endl ;  
 				for ( int i = 0 ; i < list.size() ; i++ ) {
 					if( list.at(i).arrivaltime == time ) {
 						//cout << "push :" << list.at(i).id << endl ;
-						pqueue.push( list.at(i) ) ;
+						ins(pqueue, list.at(i) ) ;
 						list.erase(list.begin() + i) ;
 						i = -1 ;
 					}
 				}
-
-								if( time == 29 ) {
+				/*
+				if( time == 29 ) {
 					while(!pqueue.empty()) {
 						cout << getid(pqueue.top().id) << " " << pqueue.top().priority << endl ;
 						pqueue.pop() ; 
@@ -333,19 +352,19 @@ class Scheduler {
 					}
 					
 				}
-
+				*/
 				
-				if( runtime == timeslice && remaindertime != 0 && p == pqueue.top().priority ) {
+				if( runtime == timeslice && remaindertime != 0 && !pqueue.empty() && p == pqueue.at(0).priority ) {
 					Process temp ;
 					temp.id = nowwork ;
 					temp.cpuburst = remaindertime ;
 					temp.priority = p ;
 					temp.arrivaltime = arrtime ;
 					//cout << "push :" << temp.id << endl ;
-					pqueue.push( temp ) ;
+					ins(pqueue, temp ) ;
 					runtime = 0 ;
-					temp = pqueue.top() ;
-					pqueue.pop() ;
+					temp = pqueue.at(0) ;
+					pqueue.erase(pqueue.begin()) ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 					p = temp.priority ;
@@ -353,16 +372,16 @@ class Scheduler {
 					//cout << endl << p << " " << nowwork << endl; 
 				}	
 				
-				else if( !pqueue.empty() && nowwork != -1 && p > pqueue.top().priority ) {
+				else if( !pqueue.empty() && nowwork != -1 && p > pqueue.at(0).priority ) {
 					Process temp ;
 					temp.id = nowwork ;
 					temp.cpuburst = remaindertime ;
 					temp.priority = p ;
 					temp.arrivaltime = arrtime ;
 					
-					pqueue.push( temp ) ;
-					temp = pqueue.top() ;
-					pqueue.pop() ;
+					ins(pqueue, temp ) ;
+					temp = pqueue.at(0) ;
+					pqueue.erase(pqueue.begin()) ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 					p = temp.priority ;
@@ -371,8 +390,8 @@ class Scheduler {
 				
 				
 				if( remaindertime == 0 && !pqueue.empty() ) {
-					Process temp = pqueue.top() ;
-					pqueue.pop() ;
+					Process temp = pqueue.at(0) ;
+					pqueue.erase(pqueue.begin()) ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 					arrtime = temp.arrivaltime ;

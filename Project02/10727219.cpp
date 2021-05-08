@@ -221,6 +221,28 @@ public:
   } // EndOfFileError()
 };
 
+class ArgNumError : public Exception {
+public:
+  ArgNumError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (incorrect number of arguments) : " << str ;
+
+    merrorstr = ss.str() ;
+  } // EndOfFileError()
+};
+
+class UnboundError : public Exception {
+public:
+  UnboundError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (unbound symbol) : " << str ;
+
+    merrorstr = ss.str() ;
+  } // EndOfFileError()
+};
+
 class Evaler {
   private:
   	
@@ -242,23 +264,44 @@ class Evaler {
     	
 		} // Getsize()
 		
+		Token * Quote( Token * temp ) {
+			return temp->left ; 
+		} // Cons()
+		
 		Token * Cons( Token * temp ) {
 			if(Getsize(temp) != 2)
-			  return temp ;
+			  throw ArgNumError("cons") ;
 			
 			Token * retoken = NewToken(".") ;
-			retoken->left = temp->left ;
-			retoken->right = temp->right->left ;
+			retoken->left = Evalexp(temp->left) ;
+			retoken->right = Evalexp(temp->right->left);
+			return retoken ;  
+		} // Cons()
+		
+		Token * List( Token * temp ) {
+			//if(Getsize(temp) != 2)
+			//  throw ArgNumError("cons") ;
+			// not done
+			Token * retoken = NewToken(".") ;
+			retoken->left = Evalexp(temp->left) ;
+			retoken->right = Evalexp(temp->right);
 			return retoken ;  
 		} // Cons()
   
   public:
 	  Token * Evalexp( Token * temp ) {
-	  	cout << Getsize(temp->right) << endl ;
-	  	if( temp->left->str == "cons" )
+	  	// cout << Getsize(temp->right) << endl ;
+	  	if ( temp->type != DOT )
+	  	  return temp ;
+	  	else if( temp->left->type == QUOTE )
+ 			  return Quote(temp->right) ;   
+	  	else if( temp->left->str == "cons" )
  			  return Cons(temp->right) ;
- 			else  
-				return temp ;
+ 			else if( temp->left->str == "list" )
+ 			  return List(temp->right) ;  
+ 			else 
+			  return temp ; 
+				// throw UnboundError( temp->left->str ) ;
 	  	
 	  	
 		} // Evalexp()
@@ -784,19 +827,28 @@ class Interpreter{
       gReading = false ;
       
       if ( !err ) {
-  
+        bool evalerr = false ;
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
         mtokentree = SetTree(1) ;
-        
+        Token * outtree ;
         try {
-        	Token * outtree ;
+        	
         	outtree = mevaler.Evalexp(mtokentree) ;
-        	mprinter.Printtree( outtree ) ; 
+        	 
         	
 				}
-				catch ( Stringerror e ) {
-
+				catch ( ArgNumError e ) {
+					printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
       	} // catch
+      	catch ( UnboundError e ) {
+					printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+      	} // catch
+      	
+      	
+      	if( !evalerr )
+      	  mprinter.Printtree( outtree ) ; 
         
       } // if
 
