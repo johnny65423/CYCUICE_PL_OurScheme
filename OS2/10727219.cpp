@@ -39,11 +39,9 @@ struct checkSRTF{
 
 struct checkPPRR{
 	bool operator() (const Process& x, const Process& y){
-		//if( x.priority != y.priority )
-		return x.priority > y.priority ;
-		//else {
-		//	return x.id > y.id ;
-		//}
+
+		  return x.priority > y.priority ;
+ 
 	}
 };
 
@@ -310,22 +308,40 @@ class Scheduler {
 			int runtime = 0 ;
 			int arrtime ;
 			int p ;
+			for ( int i = 0 ; i < list.size() ; i++ ) {
+				cout << getid(list.at(i).id) << "\t" ;
+				cout << list.at(i).cpuburst << "\t" ;
+				cout << list.at(i).arrivaltime << "\t" ;
+				cout << list.at(i).priority << endl ;
+			}
+			
 			while ( !pqueue.empty() || !list.empty() ) {
 				for ( int i = 0 ; i < list.size() ; i++ ) {
 					if( list.at(i).arrivaltime == time ) {
+						//cout << "push :" << list.at(i).id << endl ;
 						pqueue.push( list.at(i) ) ;
 						list.erase(list.begin() + i) ;
 						i = -1 ;
 					}
 				}
-				//if( !pqueue.empty() )
-				//	cout << endl << "*"<< pqueue.top().id << endl; 
+
+								if( time == 29 ) {
+					while(!pqueue.empty()) {
+						cout << getid(pqueue.top().id) << " " << pqueue.top().priority << endl ;
+						pqueue.pop() ; 
+						
+					}
+					
+				}
+
+				
 				if( runtime == timeslice && remaindertime != 0 && p == pqueue.top().priority ) {
 					Process temp ;
 					temp.id = nowwork ;
 					temp.cpuburst = remaindertime ;
 					temp.priority = p ;
 					temp.arrivaltime = arrtime ;
+					//cout << "push :" << temp.id << endl ;
 					pqueue.push( temp ) ;
 					runtime = 0 ;
 					temp = pqueue.top() ;
@@ -337,12 +353,13 @@ class Scheduler {
 					//cout << endl << p << " " << nowwork << endl; 
 				}	
 				
-				if( !pqueue.empty() && nowwork != -1 && p > pqueue.top().priority ) {
+				else if( !pqueue.empty() && nowwork != -1 && p > pqueue.top().priority ) {
 					Process temp ;
 					temp.id = nowwork ;
 					temp.cpuburst = remaindertime ;
 					temp.priority = p ;
 					temp.arrivaltime = arrtime ;
+					
 					pqueue.push( temp ) ;
 					temp = pqueue.top() ;
 					pqueue.pop() ;
@@ -370,10 +387,13 @@ class Scheduler {
 				else 
 					cout << '-' ;	
 
+
 				time++ ;
 				runtime++ ;
 				if( nowwork != -1 )
 					remaindertime-- ;
+					
+					
 			}
 
 			while( remaindertime > 0 ) {
