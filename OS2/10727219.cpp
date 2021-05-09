@@ -13,6 +13,8 @@ struct Process{
 	int cpuburst ;
 	int arrivaltime ;
 	int priority ;
+	int waiting ;
+	float ratio ;
 	
 };
 
@@ -21,6 +23,19 @@ bool check(const Process& x, const Process& y){
 		return x.arrivaltime < y.arrivaltime ;
 	else 
 		return x.id < y.id ;
+	
+}
+
+bool checkHRRN(const Process& x, const Process& y){
+	if( x.ratio != y.ratio )
+		return x.ratio > y.ratio ;
+	else {
+		if( x.arrivaltime != y.arrivaltime )
+			return x.arrivaltime < y.arrivaltime ;
+		else 
+			return x.id < y.id ;
+	}
+
 	
 }
 
@@ -91,17 +106,13 @@ class Scheduler {
 					RR() ;
 				case 3 :
 					SRTF();
-				case 6 :
-					PPRR() ;	
-				/*
-				
 				case 4 :
 					PPRR();
 				case 5 :
 					HRRN();
 				case 6 :
-					allmethod() ;
-				*/
+					HRRN();
+				
 			
 			} // switch
 			
@@ -116,6 +127,8 @@ class Scheduler {
 			Process temp ;
 			
 			file >> temp.id >> temp.cpuburst >> temp.arrivaltime >> temp.priority ;
+			temp.ratio = 0 ;
+			temp.waiting = 0 ;
 			if (!file.eof())
 				processlist.push_back( temp ) ;
 			
@@ -425,6 +438,63 @@ class Scheduler {
 
 		}
 		
+		void HRRN(){
+			cout << "HRRN" << endl ;
+			int time = 0 ;
+			vector< Process > list ;
+			list.assign( processlist.begin(), processlist.end() );
+			sort( list.begin(),list.end(), check ) ;
+			vector<Process> pqueue ;
+			int nowwork = -1 ;
+			int remaindertime = 0 ;
+			while ( !pqueue.empty() || !list.empty() ) {
+				for ( int i = 0 ; i < list.size() ; i++ ) {
+					if( list.at(i).arrivaltime == time ) {
+						pqueue.push_back( list.at(i) ) ;
+						list.erase(list.begin() + i) ;
+						i = -1 ;
+					}
+				}
+				
+				for( int i = 0 ; i < pqueue.size() ; i++ ) {
+					pqueue.at(i).ratio = (float) ( pqueue.at(i).waiting + pqueue.at(i).cpuburst ) / pqueue.at(i).cpuburst ;
+					//cout << "*" << pqueue.at(i).ratio << " " << getid(pqueue.at(i).id) << endl ;
+				} 	
+				sort( pqueue.begin(),pqueue.end(), checkHRRN ) ;
+					
+				
+				if( remaindertime == 0 && !pqueue.empty() ) {
+					Process temp = pqueue.at(0) ;
+					pqueue.erase( pqueue.begin() ) ;
+					remaindertime = temp.cpuburst ;	
+					nowwork = temp.id ;
+				}
+				else if( remaindertime == 0 && pqueue.empty() )
+					nowwork = -1 ;
+					
+				if( nowwork != -1 )
+					cout << getid(nowwork) ;
+				else 
+					cout << '-' ;	
+
+				time++ ;
+				for( int i = 0 ; i < pqueue.size() ; i++ ) {
+					pqueue.at(i).waiting += 1 ;
+					
+				} 
+				if( nowwork != -1 )
+					remaindertime-- ;
+			}
+
+			while( remaindertime > 0 ) {
+				if( nowwork != -1 )
+					cout << getid(nowwork) ;
+				else 
+					cout << '-' ;	
+				remaindertime-- ;
+			}
+
+		}
 		
 		
 		

@@ -176,7 +176,7 @@ bool Justdot() {
 } // Justdot()
 
 bool Isprimitivepredicates( string str ) {
-	if( str == "atom?" ) return true ;
+  if( str == "atom?" ) return true ;
   else if ( str == "pair?" ) return true ;
   else if ( str == "list?" ) return true ;
   else if ( str == "null?" ) return true ;
@@ -395,12 +395,17 @@ class Evaler {
   	if ( Getsize( temp ) != 1 )
       throw ArgNumError( "***" ) ;
   	
-  	if( str == "atom?" ){
+  	if( str == "atom?" ) {
       if( Evalexp(temp->left)->type != DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
-		}
-    else if ( str == "pair?" ) return NewToken( "#t" ) ;
+    } // if
+    else if ( str == "pair?" ) {
+      Token * check = Evalexp(temp->left) ;
+      if( check->type == DOT && check->right->type != NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
     else if ( str == "list?" ) return NewToken( "#t" ) ;
     else if ( str == "null?" ) return NewToken( "#t" ) ;
     else if ( str == "integer?" ) return NewToken( "#t" ) ;
