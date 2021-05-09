@@ -175,20 +175,6 @@ bool Justdot() {
     return false ;  
 } // Justdot()
 
-bool Isprimitivepredicates( string str ) {
-	if( str == "atom?" ) return true ;
-  else if ( str == "pair?" ) return true ;
-  else if ( str == "list?" ) return true ;
-  else if ( str == "null?" ) return true ;
-  else if ( str == "integer?" ) return true ;
-  else if ( str == "real?" ) return true ;
-  else if ( str == "number?" ) return true ;
-  else if ( str == "string?" ) return true ;
-  else if ( str == "boolean?" ) return true ;
-  else if ( str == "symbol?" ) return true ;
-	else return false ;
-}
-
 class Exception {
 public:
   string merrorstr;
@@ -390,28 +376,7 @@ class Evaler {
     return Evalexp( temp->left )->right ;
     
   } // Cdr()
-  
-  Token * Primitivepredicates( Token * temp, string str ) {
-  	if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "***" ) ;
-  	
-  	if( str == "atom?" ){
-      if( Evalexp(temp->left)->type != DOT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-		}
-    else if ( str == "pair?" ) return NewToken( "#t" ) ;
-    else if ( str == "list?" ) return NewToken( "#t" ) ;
-    else if ( str == "null?" ) return NewToken( "#t" ) ;
-    else if ( str == "integer?" ) return NewToken( "#t" ) ;
-    else if ( str == "real?" ) return NewToken( "#t" ) ;
-    else if ( str == "number?" ) return NewToken( "#t" ) ;
-    else if ( str == "string?" ) return NewToken( "#t" ) ;
-    else if ( str == "boolean?" ) return NewToken( "#t" ) ;
-    else if ( str == "symbol?" ) return NewToken( "#t" ) ;
-  	else return NewToken( "nil" ) ;
-  	
-  } // Primitivepredicates()
+
   Token * Func( Token * temp ) {
     string str = Symbols( temp->left )->str ;
     throw NonFuncError( str ) ;
@@ -438,8 +403,6 @@ class Evaler {
         return Car( temp->right ) ;  
       else if ( temp->left->str == "cdr" )
         return Cdr( temp->right ) ; 
-      else if ( Isprimitivepredicates( temp->left->str ) ) 
-			  return Primitivepredicates( temp->right, temp->left->str ) ; 
       else
         throw NonFuncError( Symbols( temp->left )->str ) ;
     } // if 
