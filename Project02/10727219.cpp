@@ -211,62 +211,6 @@ bool IsArith( string str ) {
   else return false ;
 } // IsArith()
 
-float Add( Token * temp ) {
-  if ( temp->left != NULL ) {
-    if ( temp->left->type == INT )
-      return ( ( float ) temp->left->intnum )+ Add( temp->right ) ;
-    else if ( temp->left->type == FLOAT )
-      return temp->left->floatnum + Add( temp->right ) ;
-
-  } // if
-  else {
-    float z = 0 ;
-    return z ;
-  } // else    
-} // Add()
-
-float Sub( Token * temp ) {
-  if ( temp->left != NULL ) {
-    if ( temp->left->type == INT )
-      return ( ( float ) temp->left->intnum ) - Sub( temp->right ) ;
-    else if ( temp->left->type == FLOAT )
-      return temp->left->floatnum - Sub( temp->right ) ;
-
-  } // if
-  else {
-    float z = 0 ;
-    return z ;
-  } // else    
-} // Sub()
-
-float Mul( Token * temp ) {
-  if ( temp->left != NULL ) {
-    if ( temp->left->type == INT )
-      return ( ( float ) temp->left->intnum ) * Mul( temp->right ) ;
-    else if ( temp->left->type == FLOAT )
-      return temp->left->floatnum * Mul( temp->right ) ;
-
-  } // if
-  else {
-    float z = 1 ;
-    return z ;
-  } // else    
-} // Mul()
-
-float Div( Token * temp ) {
-  if ( temp->left != NULL ) {
-    if ( temp->left->type == INT )
-      return (  Div( temp->right ) / ( float ) temp->left->intnum ) ;
-    else if ( temp->left->type == FLOAT )
-      return  Div( temp->right ) / temp->left->floatnum ;
-
-  } // if
-  else {
-    float z = 1 ;
-    return z ;
-  } // else    
-} // Div()
-
 class Exception {
 public:
   string merrorstr;
@@ -624,6 +568,66 @@ class Evaler {
     throw NonFuncError( str ) ;
 
   } // Func()
+ 
+  float Add( Token * temp ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT )
+        return ( ( float ) check->intnum )+ Add( temp->right ) ;
+      else if ( check->type == FLOAT )
+        return check->floatnum + Add( temp->right ) ;
+
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else    
+  } // Add()
+
+  float Sub( Token * temp ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT )
+        return ( ( float ) check->intnum ) - Sub( temp->right ) ;
+      else if ( check->type == FLOAT )
+        return check->floatnum - Sub( temp->right ) ;
+
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else    
+  } // Sub()
+
+  float Mul( Token * temp ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT )
+        return ( ( float ) temp->left->intnum ) * Mul( temp->right ) ;
+      else if ( check->type == FLOAT )
+        return check->floatnum * Mul( temp->right ) ;
+
+    } // if
+    else {
+      float z = 1 ;
+      return z ;
+    } // else    
+  } // Mul()
+
+  float Div( Token * temp ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT )
+        return (  Div( temp->right ) / ( float ) check->intnum ) ;
+      else if ( check->type == FLOAT )
+        return  Div( temp->right ) / check->floatnum ;
+
+    } // if
+    else {
+      float z = 1 ;
+      return z ;
+    } // else    
+  } // Div()
 
   public:
   Token * Evalexp( Token * temp ) {
