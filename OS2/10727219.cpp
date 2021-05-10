@@ -7,7 +7,7 @@
 using namespace std ;
 
 static fstream file ;
-
+static fstream out ;
 struct Process{
 	int id ;
 	int cpuburst ;
@@ -16,7 +16,14 @@ struct Process{
 	int waiting ;
 	float ratio ;
 	
+	int waittime[5] ;
+	int turntime[5] ;
+	
 };
+
+bool checkre(const Process& x, const Process& y){
+		return x.id < y.id ;
+}
 
 bool check(const Process& x, const Process& y){
 	if( x.arrivaltime != y.arrivaltime )
@@ -98,23 +105,200 @@ class Scheduler {
 		}	
 
 		void makeschedule(){
-			// cout << method ;
+			cout << method ;
 			switch ( method ) {
 				case 1 :
+					out << "FCFS" << endl ;
 					FCFS() ;
+					break ;
 				case 2 :
+					out << "RR" << endl ;
 					RR() ;
+					break ;
 				case 3 :
+					out << "SRTF" << endl ;
 					SRTF();
+					break ;
 				case 4 :
+					out << "PPRR" << endl ;
 					PPRR();
+					break ;
 				case 5 :
+					out << "HRRN" << endl ;
 					HRRN();
+					break ;
 				case 6 :
-					HRRN();
+					out << "All" << endl ;
+					FCFS() ;
+					RR() ;
+					SRTF() ;
+					PPRR() ;
+					HRRN() ;
+					break ;
 				
 			
 			} // switch
+			cout << "done"<< endl ;
+			sort(processlist.begin(),processlist.end(), checkre) ;
+			
+			for(int i = 0 ; i < 59 ; i++ )
+				out << "=" ;
+			out << endl << endl ;
+			cout << endl ;
+			
+			out << "waiting" << endl ;
+			switch ( method ) {
+				case 1 :
+					out << "ID	FCFS" << endl ;
+					break ;
+				case 2 :
+					out << "ID	RR" << endl ;
+					break ;
+				case 3 :
+					out << "ID	SRTF" << endl ;
+					break ;
+				case 4 :
+					out << "ID	PPRR" << endl ;
+					break ;
+				case 5 :
+					out << "ID	HRRN" << endl ;
+					break ;
+				case 6 :
+					out << "ID	FCFS	RR	SRTF	PPRR	HRRN" << endl ;
+					break ;
+					
+			} // switch
+			for(int i = 0 ; i < 59 ; i++ )
+				out << "=" ;
+			out << endl ;
+			switch ( method ) {
+				case 1 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).waittime[0] ;
+						out << endl ;
+					}
+					break ;
+				case 2 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).waittime[1] ;
+						out << endl ;
+					}
+					break ;
+				case 3 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).waittime[2] ;
+						out << endl ;
+					}
+					break ;
+				case 4 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).waittime[3] ;
+						out << endl ;
+					}
+					break ;
+				case 5 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).waittime[4] ;
+						out << endl ;
+					}
+					break ;
+				case 6 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						for( int j = 0 ; j < 5 ; j++ )
+							out << "\t" <<  processlist.at(i).waittime[j] ;
+						out << endl ;
+					}
+					break ;
+					
+			} // switch
+			
+			for(int i = 0 ; i < 59 ; i++ )
+				out << "=" ;
+			out << endl << endl ;
+			cout << endl ;
+			
+			out << "Turnaround Time" << endl ;
+			switch ( method ) {
+				case 1 :
+					out << "ID	FCFS" << endl ;
+					break ;
+				case 2 :
+					out << "ID	RR" << endl ;
+					break ;
+				case 3 :
+					out << "ID	SRTF" << endl ;
+					break ;
+				case 4 :
+					out << "ID	PPRR" << endl ;
+					break ;
+				case 5 :
+					out << "ID	HRRN" << endl ;
+					break ;
+				case 6 :
+					out << "ID	FCFS	RR	SRTF	PPRR	HRRN" << endl ;
+					break ;
+					
+			} // switch
+			for(int i = 0 ; i < 59 ; i++ )
+				out << "=" ;
+			out << endl ;
+			switch ( method ) {
+				case 1 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).turntime[0] ;
+						out << endl ;
+					}
+					break ;
+				case 2 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).turntime[1] ;
+						out << endl ;
+					}
+					break ;
+				case 3 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).turntime[2] ;
+						out << endl ;
+					}
+					break ;
+				case 4 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).turntime[3] ;
+						out << endl ;
+					}
+					break ;
+				case 5 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						out << "\t" <<  processlist.at(i).turntime[4] ;
+						out << endl ;
+					}
+					break ;
+				case 6 :
+					for ( int i = 0 ; i < processlist.size() ; i++ ) {
+						out << processlist.at(i).id ;
+						for( int j = 0 ; j < 5 ; j++ )
+							out << "\t" <<  processlist.at(i).turntime[j] ;
+						out << endl ;
+					}
+					break ;
+					
+			} // switch
+			if( method == 6 ) {
+				for(int i = 0 ; i < 59 ; i++ )
+					out << "=" ;
+				out << endl << endl ;
+			}
 			
 		}
 
@@ -135,7 +319,10 @@ class Scheduler {
 		}	
 
 		void FCFS(){
+			
 			cout << "FCFS" << endl ;
+			if( method == 6 )
+				out << "==        FCFS==" << endl ;
 			int time = 0 ;
 			vector< Process > list ;
 			list.assign( processlist.begin(), processlist.end() );
@@ -153,36 +340,54 @@ class Scheduler {
 				}
 				
 				if( remaindertime == 0 && !pqueue.empty() ) {
+					insertresult( nowwork, time, 0 ) ;
 					Process temp = pqueue.front() ;
 					pqueue.pop() ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() )
+				else if( remaindertime == 0 && pqueue.empty() ) {
+					insertresult( nowwork, time, 0 ) ;
 					nowwork = -1 ;
+				}
 					
-				if( nowwork != -1 )
+					
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
-
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}
 				time++ ;
 				if( nowwork != -1 )
 					remaindertime-- ;
 			}
 
 			while( remaindertime > 0 ) {
-				if( nowwork != -1 )
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}	
+				time++ ;
 				remaindertime-- ;
 			}
-
+			insertresult( nowwork, time, 0 ) ;
+			out << endl ;
+			cout << endl ;
 		}
 		
 		void RR(){
 			cout << "RR" << endl ;
+			if( method == 6 )
+				out << "==          RR==" << endl ;
 			int time = 0 ;
 			vector< Process > list ;
 			list.assign( processlist.begin(), processlist.end() );
@@ -214,19 +419,28 @@ class Scheduler {
 				}	
 				
 				if( remaindertime == 0 && !pqueue.empty() ) {
+					insertresult( nowwork, time, 1 ) ;
 					Process temp = pqueue.front() ;
 					pqueue.pop() ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 					runtime = 0 ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() )
+				else if( remaindertime == 0 && pqueue.empty() ){
+					insertresult( nowwork, time, 1 ) ;
 					nowwork = -1 ;
+				}
 					
-				if( nowwork != -1 )
+					
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}	
 
 				time++ ;
 				runtime++ ;
@@ -235,17 +449,28 @@ class Scheduler {
 			}
 
 			while( remaindertime > 0 ) {
-				if( nowwork != -1 )
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}
+				time++ ;				
 				remaindertime-- ;
 			}
-
+			insertresult( nowwork, time, 1 ) ;
+			
+			out << endl ;
+			cout << endl ;
 		}
 		
 		void SRTF(){
 			cout << "SRTF" << endl ;
+			if( method == 6 )
+				out << "==        SRTF==" << endl ;
 			int time = 0 ;
 			vector< Process > list ;
 			list.assign( processlist.begin(), processlist.end() );
@@ -279,19 +504,27 @@ class Scheduler {
 				}	
 				
 				if( remaindertime == 0 && !pqueue.empty() ) {
+					insertresult( nowwork, time, 2 ) ;
 					Process temp = pqueue.top() ;
 					pqueue.pop() ;
 					remaindertime = temp.cpuburst ;	
 					arrtime = temp.arrivaltime ;
 					nowwork = temp.id ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() )
+				else if( remaindertime == 0 && pqueue.empty() ){
+					insertresult( nowwork, time, 2 ) ;
 					nowwork = -1 ;
+				}
 					
-				if( nowwork != -1 )
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}		
 
 				time++ ;
 				if( nowwork != -1 )
@@ -299,13 +532,21 @@ class Scheduler {
 			}
 
 			while( remaindertime > 0 ) {
-				if( nowwork != -1 )
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}		
 				remaindertime-- ;
+				time++ ;
 			}
-
+			insertresult( nowwork, time, 2 ) ;
+			out << endl ;
+			cout << endl ;
 		}
 		
 		void ins( vector<Process> & list, Process temp ) {
@@ -326,6 +567,8 @@ class Scheduler {
 		
 		void PPRR(){
 			cout << "PPRR" << endl ;
+			if( method == 6 )
+				out << "==        PPRR==" << endl ;
 			int time = 0 ;
 			vector< Process > list ;
 			list.assign( processlist.begin(), processlist.end() );
@@ -337,17 +580,10 @@ class Scheduler {
 			int runtime = 0 ;
 			int arrtime ;
 			int p ;
-			for ( int i = 0 ; i < list.size() ; i++ ) {
-				cout << getid(list.at(i).id) << "\t" ;
-				cout << list.at(i).cpuburst << "\t" ;
-				cout << list.at(i).arrivaltime << "\t" ;
-				cout << list.at(i).priority << endl ;
-			}
+
 			
 			while ( !pqueue.empty() || !list.empty() ) {
-				//for ( int i = 0 ; i < pqueue.size() ; i++ )
-				//  cout << getid(pqueue.at(i).id) << " " << pqueue.at(i).priority << ", " ;
-				//cout << endl ;  
+ 
 				for ( int i = 0 ; i < list.size() ; i++ ) {
 					if( list.at(i).arrivaltime == time ) {
 						//cout << "push :" << list.at(i).id << endl ;
@@ -356,16 +592,7 @@ class Scheduler {
 						i = -1 ;
 					}
 				}
-				/*
-				if( time == 29 ) {
-					while(!pqueue.empty()) {
-						cout << getid(pqueue.top().id) << " " << pqueue.top().priority << endl ;
-						pqueue.pop() ; 
-						
-					}
-					
-				}
-				*/
+
 				
 				if( runtime == timeslice && remaindertime != 0 && !pqueue.empty() && p == pqueue.at(0).priority ) {
 					Process temp ;
@@ -403,6 +630,7 @@ class Scheduler {
 				
 				
 				if( remaindertime == 0 && !pqueue.empty() ) {
+					insertresult( nowwork, time, 3 ) ;
 					Process temp = pqueue.at(0) ;
 					pqueue.erase(pqueue.begin()) ;
 					remaindertime = temp.cpuburst ;	
@@ -411,13 +639,19 @@ class Scheduler {
 					p = temp.priority ;
 					runtime = 0 ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() )
+				else if( remaindertime == 0 && pqueue.empty() ) {
+					insertresult( nowwork, time, 3 ) ;
 					nowwork = -1 ;
-					
-				if( nowwork != -1 )
+				}
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}	
 
 
 				time++ ;
@@ -429,17 +663,28 @@ class Scheduler {
 			}
 
 			while( remaindertime > 0 ) {
-				if( nowwork != -1 )
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}		
+				time++ ;
 				remaindertime-- ;
 			}
-
+			
+			insertresult( nowwork, time, 3 ) ;
+			out << endl ;
+			cout << endl ;
 		}
 		
 		void HRRN(){
 			cout << "HRRN" << endl ;
+			if( method == 6 )
+				out << "==        HRRN==" << endl ;
 			int time = 0 ;
 			vector< Process > list ;
 			list.assign( processlist.begin(), processlist.end() );
@@ -464,18 +709,26 @@ class Scheduler {
 					
 				
 				if( remaindertime == 0 && !pqueue.empty() ) {
+					insertresult( nowwork, time, 4 ) ;
 					Process temp = pqueue.at(0) ;
 					pqueue.erase( pqueue.begin() ) ;
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() )
+				else if( remaindertime == 0 && pqueue.empty() ) {
+					insertresult( nowwork, time, 4 ) ;
 					nowwork = -1 ;
-					
-				if( nowwork != -1 )
+				}
+				
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}		
 
 				time++ ;
 				for( int i = 0 ; i < pqueue.size() ; i++ ) {
@@ -487,20 +740,36 @@ class Scheduler {
 			}
 
 			while( remaindertime > 0 ) {
-				if( nowwork != -1 )
+				if( nowwork != -1 ) {
 					cout << getid(nowwork) ;
-				else 
-					cout << '-' ;	
+					out << getid(nowwork) ;
+					
+				}
+				else {
+					cout << '-' ;
+					out << '-' ;
+				}		
+				time++ ;
 				remaindertime-- ;
 			}
-
+			insertresult( nowwork, time, 4 ) ;
+			out << endl ;
+			cout << endl ;
 		}
 		
-		
+		void insertresult( int id, int time, int mode ) {
+			for( int i = 0 ; i < processlist.size() ; i++ ) {
+				if( processlist.at(i).id == id ){
+					processlist.at(i).waittime[mode] = time - processlist.at(i).arrivaltime - processlist.at(i).cpuburst ;
+					processlist.at(i).turntime[mode] = time - processlist.at(i).arrivaltime ;
+				}
+			}
+		}
 		
 } ;
 
 int main() {
+
 	Scheduler scheduler = Scheduler() ;
 	string filename ;
 	int method ;
@@ -512,6 +781,10 @@ int main() {
 	
 	file.open( name.c_str(), ios::in ) ;
 	if(file) {
+		name = "out_" + name ;
+		out.open( name.c_str(), ios::out ) ;
+		//out << "A11" << endl ;
+		
 		scheduler.readfile() ;
 		scheduler.setfile() ;
 		scheduler.makeschedule() ;
