@@ -176,7 +176,7 @@ bool Justdot() {
 } // Justdot()
 
 bool Isprimitivepredicates( string str ) {
-  if( str == "atom?" ) return true ;
+  if ( str == "atom?" ) return true ;
   else if ( str == "pair?" ) return true ;
   else if ( str == "list?" ) return true ;
   else if ( str == "null?" ) return true ;
@@ -186,8 +186,86 @@ bool Isprimitivepredicates( string str ) {
   else if ( str == "string?" ) return true ;
   else if ( str == "boolean?" ) return true ;
   else if ( str == "symbol?" ) return true ;
-	else return false ;
-}
+  else return false ;
+} // Isprimitivepredicates()
+
+bool IsArith( string str ) {
+  if ( str == "atom?" ) return true ;
+  else if ( str == "+" ) return true ;
+  else if ( str == "-" ) return true ;
+  else if ( str == "*" ) return true ;
+  else if ( str == "/" ) return true ;
+  // else if ( str == "not" ) return true ;
+  else if ( str == "and?" ) return true ;
+  else if ( str == "or" ) return true ;
+  else if ( str == ">" ) return true ;
+  else if ( str == ">=" ) return true ;
+  else if ( str == "<" ) return true ;
+  else if ( str == "<=" ) return true ;
+  else if ( str == "=" ) return true ;
+  else if ( str == "string-append" ) return true ;
+  else if ( str == "string>?" ) return true ;
+  else if ( str == "string<?" ) return true ;
+  else if ( str == " string=?" ) return true ;
+
+  else return false ;
+} // IsArith()
+
+float Add( Token * temp ) {
+  if ( temp->left != NULL ) {
+    if ( temp->left->type == INT )
+      return ( ( float ) temp->left->intnum )+ Add( temp->right ) ;
+    else if ( temp->left->type == FLOAT )
+      return temp->left->floatnum + Add( temp->right ) ;
+
+  } // if
+  else {
+    float z = 0 ;
+    return z ;
+  } // else    
+} // Add()
+
+float Sub( Token * temp ) {
+  if ( temp->left != NULL ) {
+    if ( temp->left->type == INT )
+      return ( ( float ) temp->left->intnum ) - Sub( temp->right ) ;
+    else if ( temp->left->type == FLOAT )
+      return temp->left->floatnum - Sub( temp->right ) ;
+
+  } // if
+  else {
+    float z = 0 ;
+    return z ;
+  } // else    
+} // Sub()
+
+float Mul( Token * temp ) {
+  if ( temp->left != NULL ) {
+    if ( temp->left->type == INT )
+      return ( ( float ) temp->left->intnum ) * Mul( temp->right ) ;
+    else if ( temp->left->type == FLOAT )
+      return temp->left->floatnum * Mul( temp->right ) ;
+
+  } // if
+  else {
+    float z = 1 ;
+    return z ;
+  } // else    
+} // Mul()
+
+float Div( Token * temp ) {
+  if ( temp->left != NULL ) {
+    if ( temp->left->type == INT )
+      return (  Div( temp->right ) / ( float ) temp->left->intnum ) ;
+    else if ( temp->left->type == FLOAT )
+      return  Div( temp->right ) / temp->left->floatnum ;
+
+  } // if
+  else {
+    float z = 1 ;
+    return z ;
+  } // else    
+} // Div()
 
 class Exception {
 public:
@@ -283,6 +361,8 @@ class Evaler {
     Token * retoken = new Token ;
     retoken->str = Setstr( str ) ;
     retoken->type = Gettype( retoken->str ) ;
+    retoken->intnum = Decodeint( retoken->str ) ;
+    retoken->floatnum = Decodefloat( retoken->str ) ;
     retoken->left = NULL ;
     retoken->right = NULL ;
       
@@ -391,32 +471,154 @@ class Evaler {
     
   } // Cdr()
   
+  Token * Not( Token * temp ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "not" ) ;
+    
+    if ( Evalexp( temp->left )->type == NIL ) 	
+      return NewToken("#t") ;
+    else 
+      return NewToken("nil") ;
+    
+  } // Not()
+  
   Token * Primitivepredicates( Token * temp, string str ) {
-  	if ( Getsize( temp ) != 1 )
+    if ( Getsize( temp ) != 1 )
       throw ArgNumError( "***" ) ;
-  	
-  	if( str == "atom?" ) {
-      if( Evalexp(temp->left)->type != DOT )
+    
+    if ( str == "atom?" ) {
+      if ( Evalexp( temp->left )->type != DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // if
     else if ( str == "pair?" ) {
-      Token * check = Evalexp(temp->left) ;
-      if( check->type == DOT && check->right->type != NIL )
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
-    else if ( str == "list?" ) return NewToken( "#t" ) ;
-    else if ( str == "null?" ) return NewToken( "#t" ) ;
-    else if ( str == "integer?" ) return NewToken( "#t" ) ;
-    else if ( str == "real?" ) return NewToken( "#t" ) ;
-    else if ( str == "number?" ) return NewToken( "#t" ) ;
-    else if ( str == "string?" ) return NewToken( "#t" ) ;
-    else if ( str == "boolean?" ) return NewToken( "#t" ) ;
-    else if ( str == "symbol?" ) return NewToken( "#t" ) ;
-  	else return NewToken( "nil" ) ;
-  	
+    else if ( str == "list?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      while ( check->right != NULL ) 
+        check = check->right ;    
+      if ( check->type == NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "null?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "integer?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "real?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "number?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "string?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == STRING )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "boolean?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == NIL || check->type == T )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "symbol?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == SYMBOL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else return NewToken( "nil" ) ;
+
   } // Primitivepredicates()
+
+  Token * Arith( Token * temp, string str ) {
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "***" ) ;
+    stringstream ss;
+    if ( str == "+" ) {
+      float num = 0 ;
+	    num = Add( temp ) ;
+	    ss << num ;
+      return NewToken( ss.str() ) ;
+    } // if
+    else if ( str == "-" ) {
+      float num = 0 ;
+	    num = Sub( temp ) ;
+	    ss << num ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "*" ) {
+      float num = 0 ;
+	    num = Mul( temp ) ;
+	    ss << num ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "/" ) {
+      float num = 0 ;
+	    num = Div( temp ) ;
+	    ss << num ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "integer?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "real?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "number?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "string?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == STRING )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "boolean?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == NIL || check->type == T )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "symbol?" ) {
+      Token * check = Evalexp( temp->left ) ;
+      if ( check->type == SYMBOL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else return NewToken( "nil" ) ;
+
+  } // Primitivepredicates()
+  
   Token * Func( Token * temp ) {
     string str = Symbols( temp->left )->str ;
     throw NonFuncError( str ) ;
@@ -443,8 +645,12 @@ class Evaler {
         return Car( temp->right ) ;  
       else if ( temp->left->str == "cdr" )
         return Cdr( temp->right ) ; 
+      else if ( temp->left->str == "not" )
+        return Not( temp->right ) ; 
       else if ( Isprimitivepredicates( temp->left->str ) ) 
-			  return Primitivepredicates( temp->right, temp->left->str ) ; 
+        return Primitivepredicates( temp->right, temp->left->str ) ; 
+      else if ( IsArith( temp->left->str ) ) 
+        return Arith( temp->right, temp->left->str ) ; 
       else
         throw NonFuncError( Symbols( temp->left )->str ) ;
     } // if 
@@ -1068,7 +1274,7 @@ class Interpreter{
       temp->right = SetTree( 2 * index + 1 ) ;  
       return temp ;
     } // else
-  } // SetTree()	
+  } // SetTree()  
     
 };
 
