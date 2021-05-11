@@ -6,6 +6,7 @@
 # include <map>
 # include <sstream>
 # include <iomanip>
+# include <math.h>
 
  
 using namespace std;
@@ -210,6 +211,15 @@ bool IsArith( string str ) {
 
   else return false ;
 } // IsArith()
+
+float Getnum( Token * temp ) {
+  if ( temp->type == INT )
+    return ( float ) temp->intnum ;
+  else if ( temp->type == FLOAT )
+    return temp->floatnum ; 
+  else return 0.0 ;
+
+} // Getnum()
 
 class Exception {
 public:
@@ -419,12 +429,77 @@ class Evaler {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "not" ) ;
     
-    if ( Evalexp( temp->left )->type == NIL ) 	
-      return NewToken("#t") ;
+    if ( Evalexp( temp->left )->type == NIL )     
+      return NewToken( "#t" ) ;
     else 
-      return NewToken("nil") ;
+      return NewToken( "nil" ) ;
     
   } // Not()
+  
+  Token * Greater( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      if ( Getnum( temp->left ) <= Getnum( temp->right->left ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Greater()
+
+  Token * Less( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      if ( Getnum( temp->left ) >= Getnum( temp->right->left ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Less()  
+
+  Token * Nogreater( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      if ( Getnum( temp->left ) > Getnum( temp->right->left ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Nogreater()
+
+  Token * Noless( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      if ( Getnum( temp->left ) < Getnum( temp->right->left ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Noless()
+  
+  Token * Equal( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      if ( Getnum( temp->left ) != Getnum( temp->right->left ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Noless()
   
   Token * Primitivepredicates( Token * temp, string str ) {
     if ( Getsize( temp ) != 1 )
@@ -499,59 +574,57 @@ class Evaler {
     if ( Getsize( temp ) < 2 )
       throw ArgNumError( "***" ) ;
     stringstream ss;
+    bool isfloat = false ;
     if ( str == "+" ) {
       float num = 0 ;
-	    num = Add( temp ) ;
-	    ss << num ;
+      num = Add( temp, isfloat ) ;
+      if ( !isfloat || roundf(num) == num )
+        ss << ( int ) num ;
+      else
+        ss << num ;
       return NewToken( ss.str() ) ;
     } // if
     else if ( str == "-" ) {
       float num = 0 ;
-	    num = Sub( temp ) ;
-	    ss << num ;
+      num = Sub( temp, isfloat ) ;
+      if ( !isfloat || roundf(num) == num )
+        ss << ( int ) num ;
+      else
+        ss << num ;
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == "*" ) {
       float num = 0 ;
-	    num = Mul( temp ) ;
-	    ss << num ;
+      num = Mul( temp, isfloat ) ;
+      if ( !isfloat || roundf(num) == num )
+        ss << ( int ) num ;
+      else
+        ss << num ;
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == "/" ) {
       float num = 0 ;
-	    num = Div( temp ) ;
-	    ss << num ;
+      num = Div( temp, isfloat ) ;
+      if ( !isfloat || roundf(num) == num )
+        ss << ( int ) num ;
+      else
+        ss << num ;
       return NewToken( ss.str() ) ;
     } // else if
-    else if ( str == "integer?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
+    else if ( str == ">" ) {
+      return Greater( temp ) ;
     } // else if
-    else if ( str == "real?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT || check->type == FLOAT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
+    else if ( str == "<" ) {
+      return Less( temp ) ;
     } // else if
-    else if ( str == "number?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT || check->type == FLOAT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
+    else if ( str == ">=" ) {
+      return Noless( temp ) ;
     } // else if
-    else if ( str == "string?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == STRING )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
+    else if ( str == "<=" ) {
+      return Nogreater( temp ) ;
     } // else if
-    else if ( str == "boolean?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == NIL || check->type == T )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
+    else if ( str == "=" ) {
+      return Equal( temp ) ;
     } // else if
     else if ( str == "symbol?" ) {
       Token * check = Evalexp( temp->left ) ;
@@ -561,7 +634,7 @@ class Evaler {
     } // else if
     else return NewToken( "nil" ) ;
 
-  } // Primitivepredicates()
+  } // Arith()
   
   Token * Func( Token * temp ) {
     string str = Symbols( temp->left )->str ;
@@ -569,14 +642,12 @@ class Evaler {
 
   } // Func()
  
-  float Add( Token * temp ) {
+  float Add( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
       Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT )
-        return ( ( float ) check->intnum )+ Add( temp->right ) ;
-      else if ( check->type == FLOAT )
-        return check->floatnum + Add( temp->right ) ;
-
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      return Getnum( check ) + Add( temp->right, isfloat ) ;
     } // if
     else {
       float z = 0 ;
@@ -584,13 +655,24 @@ class Evaler {
     } // else    
   } // Add()
 
-  float Sub( Token * temp ) {
+  float Sub( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
       Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT )
-        return ( ( float ) check->intnum ) - Sub( temp->right ) ;
-      else if ( check->type == FLOAT )
-        return check->floatnum - Sub( temp->right ) ;
+      float num = Getnum( check ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      check = temp->right ;
+      while ( check != NULL && check->type != NIL ) {
+        Token * check2 = Evalexp( check->left ) ;
+        if ( check2->type == FLOAT )
+          isfloat = true ;
+        num -= Getnum( check2 ) ;
+
+        check = check->right ;
+        
+      } // while
+
+      return num ;
 
     } // if
     else {
@@ -599,34 +681,43 @@ class Evaler {
     } // else    
   } // Sub()
 
-  float Mul( Token * temp ) {
+  float Mul( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
       Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT )
-        return ( ( float ) temp->left->intnum ) * Mul( temp->right ) ;
-      else if ( check->type == FLOAT )
-        return check->floatnum * Mul( temp->right ) ;
-
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      return Getnum( check ) * Mul( temp->right, isfloat ) ;
     } // if
     else {
       float z = 1 ;
       return z ;
-    } // else    
+    } // else   
   } // Mul()
 
-  float Div( Token * temp ) {
+  float Div( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
       Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT )
-        return (  Div( temp->right ) / ( float ) check->intnum ) ;
-      else if ( check->type == FLOAT )
-        return  Div( temp->right ) / check->floatnum ;
+      float num = Getnum( check ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      check = temp->right ;
+      while ( check != NULL && check->type != NIL ) {
+        Token * check2 = Evalexp( check->left ) ;
+        if ( check2->type == FLOAT )
+          isfloat = true ;
+        num /= Getnum( check2 ) ;
+
+        check = check->right ;
+        
+      } // while
+
+      return num ;
 
     } // if
     else {
-      float z = 1 ;
+      float z = 0 ;
       return z ;
-    } // else    
+    } // else      
   } // Div()
 
   public:
