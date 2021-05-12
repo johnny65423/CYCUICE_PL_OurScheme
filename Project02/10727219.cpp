@@ -136,6 +136,17 @@ string Setstr( string str ) {
   
 } // Setstr()
 
+string Tofloat( float num ) {
+  stringstream ss ;
+  ss << num ; 
+  if ( ss.str().find( "." ) != -1 )
+    return ss.str() ;
+  else {
+    ss << "." ;
+    return ss.str() ;
+  } // else
+} // Tofloat()
+
 int Decodeint( string str ) {
   int positive = 1 ;
   if ( str[0] == '+' )
@@ -556,7 +567,8 @@ class Evaler {
       throw ArgNumError( "equ?" ) ;
     Token * check1 = Evalexp( temp->left ) ;
     Token * check2 = Evalexp( temp->right->left ) ;
-    if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) ) {
+    if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
+         check1->type != STRING && check2->type != STRING ) {
       if ( check1->str.compare( check2->str ) == 0 )
         return NewToken( "#t" ) ;
       else 
@@ -676,7 +688,7 @@ class Evaler {
       if ( !isfloat )
         ss << ( int ) num ;
       else
-        ss << num ;
+        ss << Tofloat( num ) ;
       return NewToken( ss.str() ) ;
     } // if
     else if ( str == "-" ) {
@@ -685,7 +697,7 @@ class Evaler {
       if ( !isfloat )
         ss << ( int ) num ;
       else
-        ss << num ;
+        ss << Tofloat( num ) ;
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == "*" ) {
@@ -694,7 +706,7 @@ class Evaler {
       if ( !isfloat )
         ss << ( int ) num ;
       else
-        ss << num ;
+        ss << Tofloat( num ) ;
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == "/" ) {
@@ -703,7 +715,7 @@ class Evaler {
       if ( !isfloat )
         ss << ( int ) num ;
       else
-        ss << num ;
+        ss << Tofloat( num ) ;
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == ">" ) {
