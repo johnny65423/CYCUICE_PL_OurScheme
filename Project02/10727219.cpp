@@ -607,6 +607,78 @@ class Evaler {
       return NewToken( "nil" ) ;
 
   } // Equal()
+  
+  Token * If( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( size != 2 && size != 3 )
+      throw ArgNumError( "if" ) ;
+    
+    Token * check = Evalexp( temp->left ) ;
+    Token * result ;
+
+    if ( check->type != NIL ) {
+      result = Evalexp( temp->right->left ) ;
+    } // if
+    else {
+      if ( size == 2 )
+        throw ArgNumError( "if" ) ;
+      else {
+        result = Evalexp( temp->right->right->left ) ;
+      } // else
+
+    } // else
+
+    return result ;
+
+  } // If()
+
+  Token * Decide( Token * temp, bool last, bool & done ) {
+
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "Cond" ) ;
+
+    Token * check ;
+    Token * result ;
+    if ( ( last && temp->left->str == "else" ) || Evalexp( temp->left )->type != NIL ) {
+      done = true ;
+      return Evalexp( temp->right->left ) ;
+    } // if
+    else {
+      done = false ;
+      return NewToken( "nil" ) ;
+    } // else
+
+  } // Decide()
+
+  Token * Cond( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw ArgNumError( "Cond" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t->type != NIL ) {
+      if ( t->right->type == NIL ) {
+        result = Decide( t->left, true, done ) ;
+      } // if
+      else {
+        result = Decide( t->left, false, done ) ; 
+      } // else
+        
+
+      
+      if ( done ) {
+        return result ;
+      } // if
+
+      t = t->right ;
+    } // while
+
+    throw ArgNumError( "noreturn" ) ;
+
+  } // Cond()
 
   Token * Primitivepredicates( Token * temp, string str ) {
     if ( Getsize( temp ) != 1 )
@@ -878,6 +950,12 @@ class Evaler {
       } // else if
       else if ( temp->left->str == "equal?" ) {
         return Equal( temp->right ) ;
+      } // else if
+      else if ( temp->left->str == "if" ) {
+        return If( temp->right ) ;
+      } // else if
+      else if ( temp->left->str == "cond" ) {
+        return Cond( temp->right ) ;
       } // else if
       else
         throw NonFuncError( Symbols( temp->left )->str ) ;
