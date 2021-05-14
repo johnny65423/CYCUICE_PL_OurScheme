@@ -208,7 +208,7 @@ bool IsArith( string str ) {
   else if ( str == "*" ) return true ;
   else if ( str == "/" ) return true ;
   // else if ( str == "not" ) return true ;
-  else if ( str == "and?" ) return true ;
+  else if ( str == "and" ) return true ;
   else if ( str == "or" ) return true ;
   else if ( str == ">" ) return true ;
   else if ( str == ">=" ) return true ;
@@ -634,14 +634,14 @@ class Evaler {
 
   Token * Decide( Token * temp, bool last, bool & done ) {
 
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "Cond" ) ;
+    if ( Getsize( temp ) < 1 )
+      throw ArgNumError( "cond" ) ;
 
     Token * check ;
     Token * result ;
     if ( ( last && temp->left->str == "else" ) || Evalexp( temp->left )->type != NIL ) {
       done = true ;
-      return Evalexp( temp->right->left ) ;
+      return Begin( temp->right ) ;
     } // if
     else {
       done = false ;
@@ -653,7 +653,7 @@ class Evaler {
   Token * Cond( Token * temp ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "Cond" ) ;
+      throw ArgNumError( "cond" ) ;
     
     Token * t = temp ;
     bool check, done ;
@@ -679,6 +679,67 @@ class Evaler {
     throw ArgNumError( "noreturn" ) ;
 
   } // Cond()
+  
+  Token * Begin( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw ArgNumError( "Begin" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left ) ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Begin()
+
+  Token * Or( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "Or" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left ) ;
+      if ( result->type != NIL )
+        return result ;
+
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Or()
+
+  Token * And( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "Begin" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left ) ;
+      if ( result->type == NIL )
+        return result ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // And()
 
   Token * Primitivepredicates( Token * temp, string str ) {
     if ( Getsize( temp ) != 1 )
@@ -816,6 +877,12 @@ class Evaler {
     } // else if
     else if ( str == "string=?" ) {
       return Strequal( temp ) ;
+    } // else if
+    else if ( str == "or" ) {
+      return Or( temp ) ;
+    } // else if
+    else if ( str == "and" ) {
+      return And( temp ) ;
     } // else if
     else return NewToken( "nil" ) ;
 
@@ -956,6 +1023,9 @@ class Evaler {
       } // else if
       else if ( temp->left->str == "cond" ) {
         return Cond( temp->right ) ;
+      } // else if
+      else if ( temp->left->str == "begin" ) {
+        return Begin( temp->right ) ;
       } // else if
       else
         throw NonFuncError( Symbols( temp->left )->str ) ;
