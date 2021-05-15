@@ -1017,16 +1017,12 @@ class Evaler {
   } // Mergestr()
 
   bool Islist( Token * temp ) {
-    Token * check = temp ;
+    Token * check= temp ;
     while ( check->right != NULL ) 
       check = check->right ;    
-    if ( check->type == NIL ) {
-      // cout << "islist" ;
-      return true ;
-    } // if
-    else {
+    if ( check->type == NIL )
       return false ;
-    } // else
+    else return true ;
   } // Islist()
   
   bool Isinternalfunc( string str ) {
@@ -1055,19 +1051,6 @@ class Evaler {
     else 
       return false ;
   } // Isinternalfunc()
-
-  bool Isspfunc( string str ) {
-    if ( str == "quote" || str == "\'" || str == "define" ) 
-      return true ;
-    else if ( str == "and" || str == "or" || str == "begin" ) 
-      return true ;
-    else if ( str == "if" || str == "cond" || str == "clean-environment" ) 
-      return true ;
-    else if ( str == "exit" ) 
-      return true ;
-    else 
-      return false ;
-  } // Isspfunc()
 
   public:
   /*
@@ -1195,16 +1178,18 @@ class Evaler {
       if ( !Islist( temp ) ) // (...) is not a (pure) list
         throw NonListError() ;  // (...)要pretty print
       else if ( Isatomtype( temp->left->type ) && temp->left->type != SYMBOL )
-        throw NonFuncError( temp->left->str ) ;
-      else if ( temp->left->type == SYMBOL || temp->left->type == QUOTE ) {
+          throw NonFuncError( temp->left->str ) ;
+      else if ( temp->left->type == SYMBOL ) {
         string sym = temp->left->str ;
         // check whether SYM is the name of a function (i.e., check whether 「SYM has a
         //                                binding, and that binding is an internal function」)
         
-        
-        
-        if ( Isinternalfunc( sym ) || Isspfunc( sym ) ) { // SYM is the name of a known function
-          
+        if ( !Findsymbol( sym ) )
+          throw UnboundError( sym ) ;
+        else if ( !Isinternalfunc( sym ) )
+          throw NonFuncError( sym ) ;
+        else { // SYM is the name of a known function
+
           // if ( the current level is not the top level, and SYM is 'clean-environment' or 
           // 'define' or　'exit' ) {
           //   ERROR (level of CLEAN-ENVIRONMENT) / ERROR (level of DEFINE) / ERROR (level of EXIT)
@@ -1212,28 +1197,27 @@ class Evaler {
           else if ( sym == "define" || sym == "set!" || sym == "let" || 
                     sym == "cond" || sym == "lambda" ) { 
                     // SYM is 'define' or 'set!' or 'let' or 'cond' or 'lambda'
-                    
-          // check the format of this expression // 注意：此時尚未check num-of-arg
-          // (define symbol    // 注意：只能宣告或設定 非primitive的symbol (這是final decision!)
-          //         S-expression
-          // )
-          // (define ( one-or-more-symbols )
-          //           one-or-more-S-expressions
-          // )
-          // (set! symbol
-          //       S-expression
-          // )
-          // (lambda (zero-or-more-symbols)
-          //           one-or-more-S-expressions
-          // )
-          // (let (zero-or-more-PAIRs)
-          //        one-or-more-S-expressions
-          // )
-          // (cond one-or-more-AT-LEAST-DOUBLETONs
-          // )
-          // where PAIR df= ( symbol S-expression )
-          //        AT-LEAST-DOUBLETON df= a list of two or more S-expressions
-                    
+
+            // check the format of this expression // 注意：此時尚未check num-of-arg
+            // (define symbol    // 注意：只能宣告或設定 非primitive的symbol (這是final decision!)
+            //         S-expression
+            // )
+            // (define ( one-or-more-symbols )
+            //           one-or-more-S-expressions
+            // )
+            // (set! symbol
+            //       S-expression
+            // )
+            // (lambda (zero-or-more-symbols)
+            //           one-or-more-S-expressions
+            // )
+            // (let (zero-or-more-PAIRs)
+            //        one-or-more-S-expressions
+            // )
+            // (cond one-or-more-AT-LEAST-DOUBLETONs
+            // )
+            // where PAIR df= ( symbol S-expression )
+            //        AT-LEAST-DOUBLETON df= a list of two or more S-expressions
             /*
             if ( 1 == 0 ) { // format error (包括attempting to redefine system primitive)
               ERROR (COND format) : <the main S-exp> 
@@ -1249,7 +1233,7 @@ class Evaler {
             */
             
 
-            return Evaluate( temp, temp->left ) ;
+            return Evalexp( temp ) ;
           } // else if
           else if ( sym == "if" || sym == "and" || sym == "or" ) { // SYM is 'if' or 'and' or 'or'
             /*
@@ -1258,30 +1242,22 @@ class Evaler {
             if number of arguments is NOT correct
               ERROR (incorrect number of arguments) : if
             */
-            return Evaluate( temp, temp->left ) ;
+            return Evalexp( temp ) ;
           } // else if
-          else { // SYM is a known function name 'abc', which is neither 
-                 // 'define' nor 'let' nor 'cond' nor 'lambda'
-
+          else {// SYM is a known function name 'abc', which is neither 
+                // 'define' nor 'let' nor 'cond' nor 'lambda'
             /*
             check whether the number of arguments is correct
 
             if number of arguments is NOT correct
               ERROR (incorrect number of arguments) : abc
-            */     
+             */           
+            return Evalexp( temp ) ;          
+          } //  else
+        } // else ( SYM is the name of a known function )
 
-            return Evaluate( temp, NewToken( sym ) ) ;          
-          } // else
-        } // if ( SYM is the name of a known function )
-        else if ( !Findsymbol( sym ) ) {
-          throw UnboundError( sym ) ;
-        } // else if
-        else {
-          return NewToken( "error" ) ;
-          // throw NonFuncError( sym ) ;
-        } // else
-      } // else if 
-      else { // the first argument of ( ... ) is ( 。。。 ), i.e., it is ( ( 。。。 ) ...... )
+      }
+      else {// the first argument of ( ... ) is ( 。。。 ), i.e., it is ( ( 。。。 ) ...... )
 
         Token * checktemp = Evalexp( temp->left ) ;
 
@@ -1340,12 +1316,8 @@ class Evaler {
       } // if
       */
     } // else what is being evaluated is (...) ; we call it the main S-expression
-    
-    return NewToken( "fail" ) ;
-    
   } // Evalexp()
-  
-};
+  };
 
 class Printer {
   private:
@@ -1886,11 +1858,6 @@ class Interpreter{
         } // catch
         catch ( NonFuncError e ) {
           printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-        } // catch
-        catch ( NonListError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          mprinter.Printtree( mtokentree ) ; 
           evalerr = true ;
         } // catch
         // cout << "done" << endl ;
