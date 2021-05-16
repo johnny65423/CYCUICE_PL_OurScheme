@@ -106,7 +106,7 @@ bool Isend( map< int, Token > tokentree ) {
   
 } // Isend()
 
-<<<<<<< HEAD
+
 Type Gettype( string str ) {
   Type numtype = Numtype( str ) ;
   if ( str == "(" ) return LPAREN ;
@@ -141,8 +141,6 @@ string Tofloat( float num ) {
   } // else
 } // Tofloat()
 
-=======
->>>>>>> parent of 27a5156 (>)
 int Decodeint( string str ) {
   int positive = 1 ;
   if ( str[0] == '+' )
@@ -235,7 +233,7 @@ public:
   } // EndOfFileError()
 };
 
-<<<<<<< HEAD
+
 class ArgNumError : public Exception {
 public:
   ArgNumError( string str ) {
@@ -1876,7 +1874,7 @@ class Interpreter{
 
             
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
-<<<<<<< HEAD
+
         mtokentree = SetTree( 1 ) ;
         Token * outtree ;
         try {
