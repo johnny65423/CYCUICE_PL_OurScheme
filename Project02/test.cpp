@@ -121,7 +121,7 @@ Type Gettype( string str ) {
   else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
   else if ( str == "t" || str == "#t" ) return T ;
   else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-  else if ( str == "'" ) return QUOTE ;
+  else if ( str == "'" || str == "quote" ) return QUOTE ;
   else if ( numtype == INT || numtype == FLOAT ) return numtype ;
   else if ( str == ";" ) return COMMENT ;
   else return SYMBOL ;  
@@ -406,9 +406,23 @@ class Evaler {
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
-    newsymbol.info = temp->right->left ;
-    msymbollist.push_back( newsymbol ) ;  
-    
+
+    newsymbol.info = Evalexp( temp->right->left ) ;
+
+      
+    if ( !Findsymbol( name ) )
+      msymbollist.push_back( newsymbol ) ;  
+    else {
+      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
+
+        if ( msymbollist.at( i ).name == name ) {
+
+          msymbollist.at( i ).info = temp->right->left ;
+        } // if
+      } // for
+
+    } // else
+
     return NewToken( name + " defined" ) ;
   } // Define()
 
@@ -1146,8 +1160,10 @@ class Evaler {
         return Cdr( temp->right ) ; 
       else if ( check->str == "not" )
         return Not( temp->right ) ; 
-      else if ( Isprimitivepredicates( check->str ) ) 
-        return Primitivepredicates( temp->right, check->str ) ; 
+      else if ( Isprimitivepredicates( check->str ) ) {
+        // cout << "*" << check->str << endl ;
+        return Primitivepredicates( temp->right, check->str ) ;
+      } // else if   
       else if ( IsArith( check->str ) ) 
         return Arith( temp->right, check->str ) ; 
       else if ( check->str == "eqv?" ) {
@@ -1183,7 +1199,7 @@ class Evaler {
       return temp ;
     else if ( temp->type == SYMBOL ) {
       if ( Findsymbol( temp->str ) )
-        return Evalexp( Symbols( temp ) ) ;
+        return Symbols( temp ) ;
       else if ( Isinternalfunc( temp->str ) )
         return Interfunc( temp ) ;
       else 
@@ -1191,7 +1207,7 @@ class Evaler {
       
     } // else if
     else { // what is being evaluated is >>>(...)<<< ; we call it the main S-expression below
-
+      
       if ( !Islist( temp ) ) // (...) is not a (pure) list
         throw NonListError() ;  // (...)要pretty print
       else if ( Isatomtype( temp->left->type ) && temp->left->type != SYMBOL )
@@ -1201,7 +1217,7 @@ class Evaler {
         // check whether SYM is the name of a function (i.e., check whether 「SYM has a
         //                                binding, and that binding is an internal function」)
         
-        
+        // cout << sym ;
         
         if ( Isinternalfunc( sym ) || Isspfunc( sym ) ) { // SYM is the name of a known function
           
@@ -1599,7 +1615,7 @@ class Scanner {
     else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
     else if ( str == "t" || str == "#t" ) return T ;
     else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if ( str == "'" ) return QUOTE ;
+    else if ( str == "'" || str == "quote" ) return QUOTE ;
     else if ( numtype == INT || numtype == FLOAT ) return numtype ;
     else if ( str == ";" ) return COMMENT ;
     else return SYMBOL ;  
@@ -1824,7 +1840,17 @@ class Treemaker {
 
 class Interpreter{
   public:
-   
+  Token * NewToken( string str ) {
+    Token * retoken = new Token ;
+    retoken->str = Setstr( str ) ;
+    retoken->type = Gettype( retoken->str ) ;
+    retoken->intnum = Decodeint( retoken->str ) ;
+    retoken->floatnum = Decodefloat( retoken->str ) ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+      
+    return retoken ;
+  } // NewToken()
   
   Interpreter() {
     // mch = '\0' ;
@@ -1874,7 +1900,7 @@ class Interpreter{
         mtokentree = SetTree( 1 ) ;
         Token * outtree ;
         try {
-          
+
           outtree = mevaler.Evalexp( mtokentree ) ;
            
           
@@ -1897,8 +1923,18 @@ class Interpreter{
           evalerr = true ;
         } // catch
         // cout << "done" << endl ;
-        if ( !evalerr )
-          mprinter.Printtree( outtree ) ; 
+        if ( !evalerr ) {
+          Token * t = outtree ;
+          /*
+          while ( t != NULL ) {
+            cout << t->str << endl;
+            t = t->right ;
+          } // while
+          */
+
+          mprinter.Printtree( outtree ) ;
+        } // if
+           
         
       } // if
 
