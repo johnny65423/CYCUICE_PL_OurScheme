@@ -6,7 +6,6 @@
 # include <map>
 # include <sstream>
 # include <iomanip>
-# include <math.h>
 
  
 using namespace std;
@@ -30,12 +29,6 @@ struct Token {
   
   Token * left ;
   Token * right ;
-};
-
-struct Symbol {
-  string name ;
-  Token * info ;
-  
 };
 
 char Cpeek() {
@@ -113,6 +106,7 @@ bool Isend( map< int, Token > tokentree ) {
   
 } // Isend()
 
+<<<<<<< HEAD
 Type Gettype( string str ) {
   Type numtype = Numtype( str ) ;
   if ( str == "(" ) return LPAREN ;
@@ -147,6 +141,8 @@ string Tofloat( float num ) {
   } // else
 } // Tofloat()
 
+=======
+>>>>>>> parent of 27a5156 (>)
 int Decodeint( string str ) {
   int positive = 1 ;
   if ( str[0] == '+' )
@@ -186,51 +182,6 @@ bool Justdot() {
   else 
     return false ;  
 } // Justdot()
-
-bool Isprimitivepredicates( string str ) {
-  if ( str == "atom?" ) return true ;
-  else if ( str == "pair?" ) return true ;
-  else if ( str == "list?" ) return true ;
-  else if ( str == "null?" ) return true ;
-  else if ( str == "integer?" ) return true ;
-  else if ( str == "real?" ) return true ;
-  else if ( str == "number?" ) return true ;
-  else if ( str == "string?" ) return true ;
-  else if ( str == "boolean?" ) return true ;
-  else if ( str == "symbol?" ) return true ;
-  else return false ;
-} // Isprimitivepredicates()
-
-bool IsArith( string str ) {
-  if ( str == "atom?" ) return true ;
-  else if ( str == "+" ) return true ;
-  else if ( str == "-" ) return true ;
-  else if ( str == "*" ) return true ;
-  else if ( str == "/" ) return true ;
-  // else if ( str == "not" ) return true ;
-  else if ( str == "and" ) return true ;
-  else if ( str == "or" ) return true ;
-  else if ( str == ">" ) return true ;
-  else if ( str == ">=" ) return true ;
-  else if ( str == "<" ) return true ;
-  else if ( str == "<=" ) return true ;
-  else if ( str == "=" ) return true ;
-  else if ( str == "string-append" ) return true ;
-  else if ( str == "string>?" ) return true ;
-  else if ( str == "string<?" ) return true ;
-  else if ( str == "string=?" ) return true ;
-
-  else return false ;
-} // IsArith()
-
-float Getnum( Token * temp ) {
-  if ( temp->type == INT )
-    return ( float ) temp->intnum ;
-  else if ( temp->type == FLOAT )
-    return temp->floatnum ; 
-  else return 0.0 ;
-
-} // Getnum()
 
 class Exception {
 public:
@@ -284,6 +235,7 @@ public:
   } // EndOfFileError()
 };
 
+<<<<<<< HEAD
 class ArgNumError : public Exception {
 public:
   ArgNumError( string str ) {
@@ -1366,6 +1318,8 @@ class Evaler {
   
 };
 
+=======
+>>>>>>> parent of 27a5156 (>)
 class Printer {
   private:
   void Printtoken( Token * token ) {
@@ -1384,13 +1338,14 @@ class Printer {
   
   public:
   void Printtree( Token * tokentree ) {
-    Token * temp = tokentree ;
-    if ( temp->right == NULL && temp->left == NULL ) {
-      Printtoken( temp );
-      printf( "\n" );
-    } // if
-    else  
-      PrintRe( temp, 0 ) ;
+  	Token * temp = tokentree ;
+  	if( temp->right == NULL && temp->left == NULL ){
+  	  Printtoken(temp);
+  	  printf( "\n" );
+    }
+  	  
+  	else  
+    	PrintRe( temp, 0 ) ;
   } // Printtree()
   
   void PrintRe( Token * temp, int spacenum ) {
@@ -1437,7 +1392,7 @@ class Printer {
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
             
-            printf( "." ) ;        
+            printf(".") ;        
             // .Printtoken( Maketoken( "." ) ) ; 
             printf( "\n" ) ;  
           } // if
@@ -1467,7 +1422,7 @@ class Printer {
 
     } // else
 
-  } // PrintRe()  
+  } // Printtree()  
   
   
 };
@@ -1808,10 +1763,10 @@ class Treemaker {
       
       index++ ;
       
-      point = 2 * point + 1 ;
-      tokentree[ point ] = Maktoken( "." ) ;
+	  point = 2 * point + 1 ;
+	  tokentree[ point ] = Maktoken( "." ) ;
       Treerecursion( tokentree, tokenlist, 2 * point, index ) ;
-      tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
+	  tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
       
     } // else if
     else {
@@ -1835,6 +1790,29 @@ class Treemaker {
       
     return retoken ;
   } // Maktoken()
+
+  Type Gettype( string str ) {
+    Type numtype = Numtype( str ) ;
+    if ( str == "(" ) return LPAREN ;
+    else if ( str == ")" ) return RPAREN ;
+    else if ( str == "." ) return DOT ;
+    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
+    else if ( str == "t" || str == "#t" ) return T ;
+    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
+    else if ( str == "'" ) return QUOTE ;
+    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
+    else if ( str == ";" ) return COMMENT ;
+    else return SYMBOL ;  
+      
+  } // Gettype()
+  
+  string Setstr( string str ) {
+    
+    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
+    else if ( str == "t" || str == "#t" ) return "#t" ;
+    else return str ; 
+    
+  } // Setstr()
     
 };
 
@@ -1895,8 +1873,10 @@ class Interpreter{
       gReading = false ;
       
       if ( !err ) {
-        bool evalerr = false ;
+
+            
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
+<<<<<<< HEAD
         mtokentree = SetTree( 1 ) ;
         Token * outtree ;
         try {
@@ -1935,7 +1915,17 @@ class Interpreter{
           mprinter.Printtree( outtree ) ;
         } // if
            
+=======
         
+        for( int i = 0 ; i < 1000 ; i++ )  {
+          if( morigintree.find(i) != morigintree.end() )
+            cout << i << " " << morigintree.find(i)->second.str << endl ;
+          // else cout << i << endl ;
+        }
+>>>>>>> parent of 27a5156 (>)
+        
+        mtokentree = SetTree(1) ;
+        mprinter.Printtree( mtokentree ) ; 
       } // if
 
       printf( "\n" ) ;
@@ -1970,7 +1960,6 @@ class Interpreter{
   
   Printer mprinter ;
   Scanner mscanner ;
-  Evaler mevaler ;
   Treemaker mtreemaker ;
   vector<Token> mtokenlist ;
   map< int, Token > morigintree ;
@@ -1986,20 +1975,20 @@ class Interpreter{
     retoken->type = token.type ;
     retoken->left = NULL ;
     retoken->right = NULL ;
-    
-    return retoken ;
-  } // NewToken()
+  	
+  	return retoken ;
+  } // NetToken()
   
   Token * SetTree( int index ) {
-    if ( morigintree.find( index ) == morigintree.end() )
+    if( morigintree.find(index) == morigintree.end() )
       return NULL ;
     else {
-      Token * temp = NewToken( morigintree.find( index )->second ) ;
-      temp->left = SetTree( 2 * index ) ;
+      Token * temp = NewToken( morigintree.find(index)->second ) ;
+	    temp->left = SetTree( 2 * index ) ;
       temp->right = SetTree( 2 * index + 1 ) ;  
-      return temp ;
+	  return temp ;
     } // else
-  } // SetTree()  
+  } // SetTree()	
     
 };
 
