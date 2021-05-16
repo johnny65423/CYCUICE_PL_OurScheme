@@ -327,9 +327,9 @@ class Evaler {
     int i = msymbollist.size() - 1 ;
     bool find = false ;
     while ( i >= 0 ) {
+      // cout << msymbollist.at(i).name << endl ;
       if ( msymbollist.at( i ).name == temp->str )  {
         find = true ;
-        // cout << msymbollist.at( i ).info->str ;
         return msymbollist.at( i ).info ;
       } // if
       
@@ -356,6 +356,7 @@ class Evaler {
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
+<<<<<<< HEAD
 
     newsymbol.info = Evalexp( temp->right->left ) ;
 
@@ -373,6 +374,11 @@ class Evaler {
 
     } // else
 
+=======
+    newsymbol.info = Evalexp( temp->right->left ) ;
+    msymbollist.push_back( newsymbol ) ;  
+    
+>>>>>>> parent of 829c85e (>)
     return NewToken( name + " defined" ) ;
   } // Define()
 
@@ -1243,10 +1249,7 @@ class Evaler {
           throw UnboundError( sym ) ;
         } // else if
         else {
-          Token * ntemp = NewToken( "." ) ;
-          ntemp->left = Symbols( NewToken( sym ) ) ;
-          ntemp->right = temp->right ;
-          return Evalexp( ntemp ) ;
+          return NewToken( "error" ) ;
           // throw NonFuncError( sym ) ;
         } // else
       } // else if 
