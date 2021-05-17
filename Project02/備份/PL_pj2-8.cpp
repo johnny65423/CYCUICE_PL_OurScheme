@@ -403,17 +403,6 @@ public:
   } // ArgTypeError()
 };
 
-class DivideZeroError : public Exception {
-public:
-  DivideZeroError() {
-    stringstream ss ;
-
-    ss << "ERROR (division by zero) : /" ;
-
-    merrorstr = ss.str() ;
-  } // DivideZeroError()
-};
-
 class Printer {
   private:
   void Printtoken( Token * token ) {
@@ -877,7 +866,7 @@ class Evaler {
 
   Token * Eqv( Token * temp ) {
     if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "eqv?" ) ;
+      throw ArgNumError( "equ?" ) ;
     Token * check1 = Evalexp( temp->left, 1 ) ;
     Token * check2 = Evalexp( temp->right->left, 1 ) ;
     if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
@@ -1056,7 +1045,7 @@ class Evaler {
 
   Token * Primitivepredicates( Token * temp, string str ) {
     if ( Getsize( temp ) != 1 )
-      throw ArgNumError( str ) ;
+      throw ArgNumError( "***" ) ;
     
     if ( str == "atom?" ) {
       if ( Evalexp( temp->left, 1 )->type != DOT )
@@ -1127,7 +1116,7 @@ class Evaler {
 
   Token * Arith( Token * temp, string str ) {
     if ( Getsize( temp ) < 2 )
-      throw ArgNumError( str ) ;
+      throw ArgNumError( "***" ) ;
     stringstream ss;
     bool isfloat = false ;
     if ( str == "+" ) {
@@ -1272,12 +1261,7 @@ class Evaler {
         Token * check2 = Evalexp( check->left, 1 ) ;
         if ( check2->type == FLOAT )
           isfloat = true ;
-        
-        float number = Getnum( check2 ) ;
-        if ( number == 0 )
-          throw DivideZeroError() ;        
-
-        num /= number ;
+        num /= Getnum( check2 ) ;
 
         check = check->right ;
         
@@ -1885,10 +1869,6 @@ class Interpreter{
           mprinter.Printtree( mtokentree ) ; 
         } // catch
         catch ( ArgTypeError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-        } // catch
-        catch ( DivideZeroError e ) {
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
         } // catch

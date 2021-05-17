@@ -283,4 +283,327 @@ Welcome to OurScheme!
   4
 )
 
-> 
+> ( 3
+  4
+)
+
+> 3
+
+> ERROR (car with incorrect argument type) : 3
+
+> ERROR (car with incorrect argument type) : 345
+
+> ERROR (unbound symbol) : WarAndPeace!
+
+> ERROR (car with incorrect argument type) : WarAndPeace!
+
+> WarAndPeace!
+
+> ERROR (cdr with incorrect argument type) : "(War And Peace!)"
+
+> ( 5
+)
+
+> ( "Happy New Year!"
+  .
+  6
+)
+
+> "Merry Christmas!"
+
+> ( 4
+)
+
+> ERROR (incorrect number of arguments) : exit
+
+> ERROR (unbound symbol) : ab
+
+> a defined
+
+> "=============== Problem 9 viewable case ================="
+
+> environment cleaned
+
+> ERROR (unbound symbol) : a
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> ERROR (incorrect number of arguments) : pair?
+
+> ERROR (incorrect number of arguments) : pair?
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> #t
+
+> #t
+
+> #t
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> nil
+
+> ERROR (unbound symbol) : America
+
+> America defined
+
+> nil
+
+> #t
+
+> ERROR (unbound symbol) : American
+
+> nil
+
+> ERROR (incorrect number of arguments) : pair?
+
+> Europe defined
+
+> ERROR (incorrect number of arguments) : pair?
+
+> 20
+
+> -14
+
+> -11.500
+
+> 12
+
+> 0
+
+> 67.500
+
+> 0
+
+> ERROR (incorrect number of arguments) : *
+
+> ERROR (incorrect number of arguments) : *
+
+> 60
+
+> 120
+
+> ERROR (incorrect number of arguments) : /
+
+> ERROR (incorrect number of arguments) : -
+
+> ERROR (incorrect number of arguments) : +
+
+> -13
+
+> a defined
+
+> 3
+
+> 1
+
+> 5.000
+
+> 7
+
+> 7.500
+
+> ERROR (division by zero) : /
+
+> 7.500
+
+> 1
+
+> 19.125
+
+> 50
+
+> nil
+
+> ERROR (incorrect number of arguments) : not
+
+> ERROR (incorrect number of arguments) : not
+
+> nil
+
+> nil
+
+> #t
+
+> #t
+
+> #t
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> nil
+
+> #t
+
+> ""Hello, there!""
+
+> "Hello, there! Wait!"
+
+> ERROR (no closing quote) : END-OF-LINE encountered at Line 1 Column 26
+
+> ERROR (incorrect number of arguments) : string-append
+
+> ERROR (incorrect number of arguments) : string-append
+
+> #t
+
+> nil
+
+> #t
+
+> ERROR (incorrect number of arguments) : string>?
+
+> ERROR (incorrect number of arguments) : string>?
+
+> #t
+
+> nil
+
+> nil
+
+> nil
+
+> ERROR (division by zero) : /
+
+> nil
+
+> nil
+
+> nil
+
+> #t
+
+> ERROR (division by zero) : /
+
+> ERROR (division by zero) : /
+
+> 20
+
+> 15
+
+> nil
+
+> ERROR (unbound symbol) : about
+
+> ERROR (incorrect number of arguments) : eqv?
+
+> ERROR (incorrect number of arguments) : eqv?
+
+> #t
+
+> ERROR (incorrect number of arguments) : eqv?
+
+> a defined
+
+> ( ( 3
+    ( 4
+      5
+    )
+  )
+)
+
+> #t
+
+> nil
+
+> #t
+
+> b defined
+
+> #t
+
+> c defined
+
+> nil
+
+> nil
+
+> nil
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> c defined
+
+> #t
+
+> c defined
+
+> nil
+
+> #t
+
+> ERROR (unexpected token) : atom or '(' expected when token at Line 1 Column 1 is >>.<<
+
+> 30
+
+> ERROR (unexpected token) : atom or '(' expected when token at Line 1 Column 4 is >>.<<
+
+> #<procedure exit>
+
+> ERROR (unexpected token) : atom or '(' expected when token at Line 1 Column 1 is >>)<<
+
+> ERROR (no more input) : END-OF-FILE encountered
+Thanks for using OurScheme!
