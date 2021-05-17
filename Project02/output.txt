@@ -133,17 +133,33 @@ Welcome to OurScheme!
 
 > ERROR (level of DEFINE)
 
-> 5 defined
+> ERROR (DEFINE format) : ( define
+  5
+  10
+)
 
-> cons defined
+> ERROR (DEFINE format) : ( define
+  cons
+  5
+)
 
-> define defined
+> ERROR (DEFINE format) : ( define
+  define
+  5
+)
 
-> ERROR (incorrect number of arguments) : define
+> ERROR (DEFINE format) : ( define
+)
 
-> ERROR (incorrect number of arguments) : define
+> ERROR (DEFINE format) : ( define
+  a
+)
 
-> ERROR (incorrect number of arguments) : define
+> ERROR (DEFINE format) : ( define
+  a
+  b
+  c
+)
 
 > ERROR (level of DEFINE)
 
@@ -200,6 +216,71 @@ Welcome to OurScheme!
     .
     ""CYCU ICE""
   )
+)
+
+> ERROR (non-list) : ( list
+  hello
+  ( cons
+    hello
+    hello
+  )
+  .
+  hello
+)
+
+> ( ""CYCU ICE""
+  400
+  ( 5000
+    600
+  )
+  70
+)
+
+> there defined
+
+> ( ""CYCU ICE""
+  .
+  "Number One!"
+)
+
+> hello defined
+
+> ERROR (DEFINE format) : ( define
+  ( quote
+    hello
+  )
+  ( cons
+    ( quote
+      ( 1
+        2
+        3
+      )
+    )
+    hello
+  )
+)
+
+> ( ( ( 1
+      2
+      3
+    )
+    .
+    ""CYCU ICE""
+  )
+  4
+  hello
+)
+
+> a defined
+
+> 3
+
+> ( 3
+  4
+)
+
+> ( 3
+  4
 )
 
 > 

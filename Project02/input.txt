@@ -125,3 +125,24 @@ hello
 ; stops, and an appropriate error message is issued.
 
 (define a '(3 4))
+
+; 4. Different parts of a list (or a dotted pair) can be 
+;    individually accessed
+
+(car '(3 4))    ; the "left part" of a dotted pair
+(car '((3 4) 5)  )
+(car '((3 4) 5 . 6)  )
+(car '((3 4) . 5)  )
+(car a)
+(car (car a))
+(car 345)
+(car WarAndPeace!)
+(car 'WarAndPeace!)
+(car '(WarAndPeace!))
+(cdr "(War And Peace!)")
+(cdr '((3 4) 5)  )  ; the "right part" of a dotted pair
+(cdr '((3 4) "Happy New Year!" . 6)  )
+(cdr '((3 4) . "Merry Christmas!")  )
+(cdr a)
+
+(exit 0)

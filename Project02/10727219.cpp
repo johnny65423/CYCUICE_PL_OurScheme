@@ -372,13 +372,35 @@ public:
 
 class LevelError : public Exception {
 public:
-  LevelError(string str) {
+  LevelError( string str ) {
     stringstream ss ;
 
     ss << "ERROR (level of " << str << ")" ;
 
     merrorstr = ss.str() ;
   } // LevelError()
+};
+
+class FormatError : public Exception {
+public:
+  FormatError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (" << str << " format) : " ;
+
+    merrorstr = ss.str() ;
+  } // FormatError()
+};
+
+class ArgTypeError : public Exception {
+public:
+  ArgTypeError( string str, string str2 ) {
+    stringstream ss ;
+
+    ss << "ERROR (" << str << " with incorrect argument type) : " << str2 ;
+
+    merrorstr = ss.str() ;
+  } // ArgTypeError()
 };
 
 class Printer {
@@ -593,15 +615,20 @@ class Evaler {
   Token * Define( Token * temp ) {
     
     if ( Getsize( temp ) != 2 ) {
-      throw ArgNumError( "define" ) ;
+      throw FormatError( "DEFINE" ) ;
+      // throw ArgNumError( "define" ) ;
     } // if
+
     
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
     
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE" ) ;
+    } // if
+    
     if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
-      // cout << "dd" ;
       Token * check = Copytoken( temp->right->left ) ;
       Change( check ) ;
       newsymbol.info = check ;
@@ -651,8 +678,11 @@ class Evaler {
   } // Cons()
 
   Token * List( Token * temp ) {
-    if( Getsize( temp ) == 0 )
-     return NewToken( "nil" ) ;
+    if ( Getsize( temp ) == 0 )
+      return NewToken( "nil" ) ;
+    else if ( !Islist( temp ) ) {
+      throw NonListError() ;
+    } // else if
     // not done
     Token * retoken = NewToken( "." ) ;
     Token * ret = retoken ;
@@ -677,6 +707,8 @@ class Evaler {
   Token * Car( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "car" ) ;
+    // else if ( Isatomtype( temp->left->type ) )
+    //   throw ArgTypeError( "car", temp->left->str ) ;
     
     return Evalexp( temp->left, 1 )->left ;
     
@@ -685,6 +717,8 @@ class Evaler {
   Token * Cdr( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "cdr" ) ;
+    // else if ( Isatomtype( temp->left->type ) )
+    //   throw ArgTypeError( "cdr", temp->left->str ) ;
     
     return Evalexp( temp->left, 1 )->right ;
     
@@ -1347,7 +1381,7 @@ class Evaler {
         
         return temp ;
       } // else if
-      else if ( temp->left->type == DOT ){
+      else if ( temp->left->type == DOT ) {
         temp->left = Evalexp( temp->left, 1 ) ;
         return Evalexp( temp, 1 ) ;
       } // else if
@@ -1805,6 +1839,21 @@ class Interpreter{
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
         } // catch
+        catch ( FormatError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( mtokentree ) ; 
+        } // catch
+        catch ( NonListError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( mtokentree ) ; 
+        } // catch
+        catch ( ArgTypeError e ) {
+          printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+        } // catch
+        
         if ( !evalerr ) {
           mprinter.Printtree( outtree ) ; 
         } // if
