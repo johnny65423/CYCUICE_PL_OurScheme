@@ -6,6 +6,7 @@
 # include <map>
 # include <sstream>
 # include <iomanip>
+# include <math.h>
 
  
 using namespace std;
@@ -29,6 +30,12 @@ struct Token {
   
   Token * left ;
   Token * right ;
+};
+
+struct Symbol {
+  string name ;
+  Token * info ;
+  
 };
 
 char Cpeek() {
@@ -106,7 +113,6 @@ bool Isend( map< int, Token > tokentree ) {
   
 } // Isend()
 
-
 Type Gettype( string str ) {
   Type numtype = Numtype( str ) ;
   if ( str == "(" ) return LPAREN ;
@@ -115,7 +121,7 @@ Type Gettype( string str ) {
   else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
   else if ( str == "t" || str == "#t" ) return T ;
   else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-  else if ( str == "'" || str == "quote" ) return QUOTE ;
+  else if ( str == "'" ) return QUOTE ;
   else if ( numtype == INT || numtype == FLOAT ) return numtype ;
   else if ( str == ";" ) return COMMENT ;
   else return SYMBOL ;  
@@ -181,6 +187,51 @@ bool Justdot() {
     return false ;  
 } // Justdot()
 
+bool Isprimitivepredicates( string str ) {
+  if ( str == "atom?" ) return true ;
+  else if ( str == "pair?" ) return true ;
+  else if ( str == "list?" ) return true ;
+  else if ( str == "null?" ) return true ;
+  else if ( str == "integer?" ) return true ;
+  else if ( str == "real?" ) return true ;
+  else if ( str == "number?" ) return true ;
+  else if ( str == "string?" ) return true ;
+  else if ( str == "boolean?" ) return true ;
+  else if ( str == "symbol?" ) return true ;
+  else return false ;
+} // Isprimitivepredicates()
+
+bool IsArith( string str ) {
+  if ( str == "atom?" ) return true ;
+  else if ( str == "+" ) return true ;
+  else if ( str == "-" ) return true ;
+  else if ( str == "*" ) return true ;
+  else if ( str == "/" ) return true ;
+  // else if ( str == "not" ) return true ;
+  else if ( str == "and" ) return true ;
+  else if ( str == "or" ) return true ;
+  else if ( str == ">" ) return true ;
+  else if ( str == ">=" ) return true ;
+  else if ( str == "<" ) return true ;
+  else if ( str == "<=" ) return true ;
+  else if ( str == "=" ) return true ;
+  else if ( str == "string-append" ) return true ;
+  else if ( str == "string>?" ) return true ;
+  else if ( str == "string<?" ) return true ;
+  else if ( str == "string=?" ) return true ;
+
+  else return false ;
+} // IsArith()
+
+float Getnum( Token * temp ) {
+  if ( temp->type == INT )
+    return ( float ) temp->intnum ;
+  else if ( temp->type == FLOAT )
+    return temp->floatnum ; 
+  else return 0.0 ;
+
+} // Getnum()
+
 class Exception {
 public:
   string merrorstr;
@@ -232,7 +283,6 @@ public:
     merrorstr = ss.str() ;
   } // EndOfFileError()
 };
-
 
 class ArgNumError : public Exception {
 public:
@@ -327,9 +377,9 @@ class Evaler {
     int i = msymbollist.size() - 1 ;
     bool find = false ;
     while ( i >= 0 ) {
-      // cout << msymbollist.at(i).name << endl ;
       if ( msymbollist.at( i ).name == temp->str )  {
         find = true ;
+        // cout << msymbollist.at( i ).info->str ;
         return msymbollist.at( i ).info ;
       } // if
       
@@ -356,7 +406,6 @@ class Evaler {
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
-<<<<<<< HEAD
 
     newsymbol.info = Evalexp( temp->right->left ) ;
 
@@ -374,11 +423,6 @@ class Evaler {
 
     } // else
 
-=======
-    newsymbol.info = Evalexp( temp->right->left ) ;
-    msymbollist.push_back( newsymbol ) ;  
-    
->>>>>>> parent of 829c85e (>)
     return NewToken( name + " defined" ) ;
   } // Define()
 
@@ -751,7 +795,9 @@ class Evaler {
       else return NewToken( "nil" ) ;
     } // if
     else if ( str == "pair?" ) {
+
       Token * check = Evalexp( temp->left ) ;
+
       if ( check->type == DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
@@ -1117,7 +1163,7 @@ class Evaler {
       else if ( check->str == "not" )
         return Not( temp->right ) ; 
       else if ( Isprimitivepredicates( check->str ) ) {
-        // cout << "*" << check->str << endl ;
+
         return Primitivepredicates( temp->right, check->str ) ;
       } // else if   
       else if ( IsArith( check->str ) ) 
@@ -1155,7 +1201,7 @@ class Evaler {
       return temp ;
     else if ( temp->type == SYMBOL ) {
       if ( Findsymbol( temp->str ) )
-        return Symbols( temp ) ;
+        return Evalexp( Symbols( temp ) ) ;
       else if ( Isinternalfunc( temp->str ) )
         return Interfunc( temp ) ;
       else 
@@ -1249,7 +1295,10 @@ class Evaler {
           throw UnboundError( sym ) ;
         } // else if
         else {
-          return NewToken( "error" ) ;
+          Token * ntemp = NewToken( "." ) ;
+          ntemp->left = Symbols( NewToken( sym ) ) ;
+          ntemp->right = temp->right ;
+          return Evalexp( ntemp ) ;
           // throw NonFuncError( sym ) ;
         } // else
       } // else if 
@@ -1319,8 +1368,6 @@ class Evaler {
   
 };
 
-=======
->>>>>>> parent of 27a5156 (>)
 class Printer {
   private:
   void Printtoken( Token * token ) {
@@ -1339,20 +1386,24 @@ class Printer {
   
   public:
   void Printtree( Token * tokentree ) {
-  	Token * temp = tokentree ;
-  	if( temp->right == NULL && temp->left == NULL ){
-  	  Printtoken(temp);
-  	  printf( "\n" );
-    }
-  	  
-  	else  
-    	PrintRe( temp, 0 ) ;
+    cout << "sss" ;
+    Token * temp = tokentree ;
+    if ( temp == NULL )
+      cout << temp->str << "<<" ;
+    if ( temp->right == NULL && temp->left == NULL ) {
+      cout <<  "fire"  ;
+      Printtoken( temp );
+      printf( "\n" );
+    } // if
+    else {
+      
+      PrintRe( temp, 0 ) ;
+    } // else  
   } // Printtree()
   
   void PrintRe( Token * temp, int spacenum ) {
 
     Type type = temp->type ;
-
     if ( type == DOT ) {
 
       printf( "( " ) ;
@@ -1366,7 +1417,7 @@ class Printer {
         Printtoken( temp->left ) ;  
         printf( "\n" ) ;
       } // else
-                  
+        
       temp = temp->right ;
       while ( temp != NULL ) {
         type = temp->type ;
@@ -1389,11 +1440,12 @@ class Printer {
         } // if
         else {
           type = temp->type ;
+          
           if ( type != NIL ) {
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
             
-            printf(".") ;        
+            printf( "." ) ;        
             // .Printtoken( Maketoken( "." ) ) ; 
             printf( "\n" ) ;  
           } // if
@@ -1423,7 +1475,7 @@ class Printer {
 
     } // else
 
-  } // Printtree()  
+  } // PrintRe()  
   
   
 };
@@ -1571,7 +1623,7 @@ class Scanner {
     else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
     else if ( str == "t" || str == "#t" ) return T ;
     else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if ( str == "'" || str == "quote" ) return QUOTE ;
+    else if ( str == "'" ) return QUOTE ;
     else if ( numtype == INT || numtype == FLOAT ) return numtype ;
     else if ( str == ";" ) return COMMENT ;
     else return SYMBOL ;  
@@ -1764,10 +1816,10 @@ class Treemaker {
       
       index++ ;
       
-	  point = 2 * point + 1 ;
-	  tokentree[ point ] = Maktoken( "." ) ;
+      point = 2 * point + 1 ;
+      tokentree[ point ] = Maktoken( "." ) ;
       Treerecursion( tokentree, tokenlist, 2 * point, index ) ;
-	  tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
+      tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
       
     } // else if
     else {
@@ -1791,29 +1843,6 @@ class Treemaker {
       
     return retoken ;
   } // Maktoken()
-
-  Type Gettype( string str ) {
-    Type numtype = Numtype( str ) ;
-    if ( str == "(" ) return LPAREN ;
-    else if ( str == ")" ) return RPAREN ;
-    else if ( str == "." ) return DOT ;
-    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
-    else if ( str == "t" || str == "#t" ) return T ;
-    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if ( str == "'" ) return QUOTE ;
-    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
-    else if ( str == ";" ) return COMMENT ;
-    else return SYMBOL ;  
-      
-  } // Gettype()
-  
-  string Setstr( string str ) {
-    
-    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
-    else if ( str == "t" || str == "#t" ) return "#t" ;
-    else return str ; 
-    
-  } // Setstr()
     
 };
 
@@ -1874,10 +1903,8 @@ class Interpreter{
       gReading = false ;
       
       if ( !err ) {
-
-            
+        bool evalerr = false ;
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
-
         mtokentree = SetTree( 1 ) ;
         Token * outtree ;
         try {
@@ -1905,28 +1932,20 @@ class Interpreter{
         } // catch
         // cout << "done" << endl ;
         if ( !evalerr ) {
-          Token * t = outtree ;
           /*
+          Token * t = outtree ;
           while ( t != NULL ) {
             cout << t->str << endl;
             t = t->right ;
           } // while
           */
-
+          cout << "go go power ranger" << endl ;
+          
+          cout << outtree->str ;
           mprinter.Printtree( outtree ) ;
         } // if
            
-=======
         
-        for( int i = 0 ; i < 1000 ; i++ )  {
-          if( morigintree.find(i) != morigintree.end() )
-            cout << i << " " << morigintree.find(i)->second.str << endl ;
-          // else cout << i << endl ;
-        }
->>>>>>> parent of 27a5156 (>)
-        
-        mtokentree = SetTree(1) ;
-        mprinter.Printtree( mtokentree ) ; 
       } // if
 
       printf( "\n" ) ;
@@ -1961,6 +1980,7 @@ class Interpreter{
   
   Printer mprinter ;
   Scanner mscanner ;
+  Evaler mevaler ;
   Treemaker mtreemaker ;
   vector<Token> mtokenlist ;
   map< int, Token > morigintree ;
@@ -1976,20 +1996,20 @@ class Interpreter{
     retoken->type = token.type ;
     retoken->left = NULL ;
     retoken->right = NULL ;
-  	
-  	return retoken ;
-  } // NetToken()
+    
+    return retoken ;
+  } // NewToken()
   
   Token * SetTree( int index ) {
-    if( morigintree.find(index) == morigintree.end() )
+    if ( morigintree.find( index ) == morigintree.end() )
       return NULL ;
     else {
-      Token * temp = NewToken( morigintree.find(index)->second ) ;
-	    temp->left = SetTree( 2 * index ) ;
+      Token * temp = NewToken( morigintree.find( index )->second ) ;
+      temp->left = SetTree( 2 * index ) ;
       temp->right = SetTree( 2 * index + 1 ) ;  
-	  return temp ;
+      return temp ;
     } // else
-  } // SetTree()	
+  } // SetTree()  
     
 };
 

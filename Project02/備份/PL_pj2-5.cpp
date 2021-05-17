@@ -545,7 +545,6 @@ class Evaler {
         find = true ;
         
         Token * retoken = msymbollist.at( i ).info ;
-        // mprinter.Printtree(retoken) ;
         return retoken ;
       } // if
       
@@ -588,23 +587,12 @@ class Evaler {
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
-    
-    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
-      // cout << "dd" ;
+    if ( Isinternalfunc( temp->right->left->str ) )
+      newsymbol.info = temp->right->left ;
+    else {
       Token * check = Copytoken( temp->right->left ) ;
       Change( check ) ;
       newsymbol.info = check ;
-    } // if
-    /*
-    else if ( temp->right->left->left != NULL && Isinternalfunc( temp->right->left->str ) ) { 
-      newsymbol.info = Evalexp(temp->right->left ) ;
-    } // if 
-    else if ( temp->right->left->left != NULL && temp->right->left->left->type == QUOTE ) {
-      newsymbol.info = Evalexp(temp->right->left ) ;
-    } // else if
-    */
-    else { 
-      newsymbol.info = Evalexp( temp->right->left ) ;
       
     } // else 
       
@@ -1253,9 +1241,7 @@ class Evaler {
     if ( Isatomtype( temp->type ) ) {
       if ( temp->type == SYMBOL ) {
         if ( Findsymbol( temp->str ) ) {
-          // return Evalexp( Symbols( temp ) ) ;
-          return Symbols( temp ) ;
-          
+          return Evalexp( Symbols( temp ) ) ;
         } // if
         else if ( Isinternalfunc( temp->str ) ) {
           temp->iscomd = true ;
