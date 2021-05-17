@@ -370,6 +370,17 @@ public:
   } // NonListError()
 };
 
+class LevelError : public Exception {
+public:
+  LevelError(string str) {
+    stringstream ss ;
+
+    ss << "ERROR (level of " << str << ")" ;
+
+    merrorstr = ss.str() ;
+  } // LevelError()
+};
+
 class Printer {
   private:
   void Printtoken( Token * token ) {
@@ -604,7 +615,7 @@ class Evaler {
     } // else if
     */
     else { 
-      newsymbol.info = Evalexp( temp->right->left ) ;
+      newsymbol.info = Evalexp( temp->right->left, 1 ) ;
       
     } // else 
       
@@ -634,21 +645,21 @@ class Evaler {
       throw ArgNumError( "cons" ) ;
     
     Token * retoken = NewToken( "." ) ;
-    retoken->left = Evalexp( temp->left ) ;
-    retoken->right = Evalexp( temp->right->left );
+    retoken->left = Evalexp( temp->left, 1 ) ;
+    retoken->right = Evalexp( temp->right->left, 1 );
     return retoken ;  
   } // Cons()
 
   Token * List( Token * temp ) {
-    // if(Getsize(temp) != 2)
-    //   throw ArgNumError("cons") ;
+    if( Getsize( temp ) == 0 )
+     return NewToken( "nil" ) ;
     // not done
     Token * retoken = NewToken( "." ) ;
     Token * ret = retoken ;
     Token * t = temp ;
 
     while ( t->type != NIL ) {
-      ret->left = Evalexp( t->left ) ; 
+      ret->left = Evalexp( t->left, 1 ) ; 
     
       if ( t->right->type != NIL )
         ret->right = NewToken( "." ) ;
@@ -667,7 +678,7 @@ class Evaler {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "car" ) ;
     
-    return Evalexp( temp->left )->left ;
+    return Evalexp( temp->left, 1 )->left ;
     
   } // Car()
 
@@ -675,7 +686,7 @@ class Evaler {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "cdr" ) ;
     
-    return Evalexp( temp->left )->right ;
+    return Evalexp( temp->left, 1 )->right ;
     
   } // Cdr()
   
@@ -683,7 +694,7 @@ class Evaler {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "not" ) ;
     
-    if ( Evalexp( temp->left )->type == NIL )     
+    if ( Evalexp( temp->left, 1 )->type == NIL )     
       return NewToken( "#t" ) ;
     else 
       return NewToken( "nil" ) ;
@@ -693,7 +704,7 @@ class Evaler {
   Token * Greater( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) <= Getnum( Evalexp( temp->right->left ) ) )
+      if ( Getnum( Evalexp( temp->left, 1 ) ) <= Getnum( Evalexp( temp->right->left, 1 ) ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -706,7 +717,7 @@ class Evaler {
   Token * Less( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) >= Getnum( Evalexp( temp->right->left ) ) )
+      if ( Getnum( Evalexp( temp->left, 1 ) ) >= Getnum( Evalexp( temp->right->left, 1 ) ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -719,7 +730,7 @@ class Evaler {
   Token * Nogreater( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) > Getnum( Evalexp( temp->right->left ) ) )
+      if ( Getnum( Evalexp( temp->left, 1 ) ) > Getnum( Evalexp( temp->right->left, 1 ) ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -732,7 +743,7 @@ class Evaler {
   Token * Noless( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) < Getnum( Evalexp( temp->right->left ) ) )
+      if ( Getnum( Evalexp( temp->left, 1 ) ) < Getnum( Evalexp( temp->right->left, 1 ) ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -745,7 +756,7 @@ class Evaler {
   Token * Equalnum( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) != Getnum( Evalexp( temp->right->left ) ) )
+      if ( Getnum( Evalexp( temp->left, 1 ) ) != Getnum( Evalexp( temp->right->left, 1 ) ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -758,7 +769,7 @@ class Evaler {
   Token * Strappend( Token * temp ) {
     string check = "" ;
     while ( temp->type != NIL && temp != NULL ) {
-      check = Mergestr( check, Evalexp( temp->left )->str ) ;
+      check = Mergestr( check, Evalexp( temp->left, 1 )->str ) ;
       temp = temp->right ;
     } // while
 
@@ -769,7 +780,7 @@ class Evaler {
   Token * Strgreat( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) <= 0 )
+      if ( Evalexp( temp->left, 1 )->str.compare( Evalexp( temp->right->left, 1 )->str ) <= 0 )
         check = "nil" ;
       
       temp = temp->right ;
@@ -782,7 +793,7 @@ class Evaler {
   Token * Strless( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) >= 0 )
+      if ( Evalexp( temp->left, 1 )->str.compare( Evalexp( temp->right->left, 1 )->str ) >= 0 )
         check = "nil" ;
       
       temp = temp->right ;
@@ -795,7 +806,7 @@ class Evaler {
   Token * Strequal( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) != 0 )
+      if ( Evalexp( temp->left, 1 )->str.compare( Evalexp( temp->right->left, 1 )->str ) != 0 )
         check = "nil" ;
       
       temp = temp->right ;
@@ -808,8 +819,8 @@ class Evaler {
   Token * Eqv( Token * temp ) {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "equ?" ) ;
-    Token * check1 = Evalexp( temp->left ) ;
-    Token * check2 = Evalexp( temp->right->left ) ;
+    Token * check1 = Evalexp( temp->left, 1 ) ;
+    Token * check2 = Evalexp( temp->right->left, 1 ) ;
     if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
          check1->type != STRING && check2->type != STRING ) {
       if ( check1->str.compare( check2->str ) == 0 )
@@ -842,8 +853,8 @@ class Evaler {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "equ?" ) ;
     
-    Token * check1 = Evalexp( temp->left ) ;
-    Token * check2 = Evalexp( temp->right->left ) ;
+    Token * check1 = Evalexp( temp->left, 1 ) ;
+    Token * check2 = Evalexp( temp->right->left, 1 ) ;
     if ( Issame( check1, check2 ) ) 
       return NewToken( "#t" ) ;
     else 
@@ -856,17 +867,17 @@ class Evaler {
     if ( size != 2 && size != 3 )
       throw ArgNumError( "if" ) ;
     
-    Token * check = Evalexp( temp->left ) ;
+    Token * check = Evalexp( temp->left, 1 ) ;
     Token * result ;
 
     if ( check->type != NIL ) {
-      result = Evalexp( temp->right->left ) ;
+      result = Evalexp( temp->right->left, 1 ) ;
     } // if
     else {
       if ( size == 2 )
         throw ArgNumError( "if" ) ;
       else {
-        result = Evalexp( temp->right->right->left ) ;
+        result = Evalexp( temp->right->right->left, 1 ) ;
       } // else
 
     } // else
@@ -882,7 +893,7 @@ class Evaler {
 
     Token * check ;
     Token * result ;
-    if ( ( last && temp->left->str == "else" ) || Evalexp( temp->left )->type != NIL ) {
+    if ( ( last && temp->left->str == "else" ) || Evalexp( temp->left, 1 )->type != NIL ) {
       done = true ;
       return Begin( temp->right ) ;
     } // if
@@ -934,7 +945,7 @@ class Evaler {
 
     while ( t != NULL && t->type != NIL ) {
 
-      result = Evalexp( t->left ) ;
+      result = Evalexp( t->left, 1 ) ;
       t = t->right ;
     } // while
 
@@ -952,7 +963,7 @@ class Evaler {
     Token * result ;
     while ( t != NULL && t->type != NIL ) {
 
-      result = Evalexp( t->left ) ;
+      result = Evalexp( t->left, 1 ) ;
       if ( result->type != NIL )
         return result ;
 
@@ -974,7 +985,7 @@ class Evaler {
 
     while ( t != NULL && t->type != NIL ) {
 
-      result = Evalexp( t->left ) ;
+      result = Evalexp( t->left, 1 ) ;
       if ( result->type == NIL )
         return result ;
       t = t->right ;
@@ -989,20 +1000,20 @@ class Evaler {
       throw ArgNumError( "***" ) ;
     
     if ( str == "atom?" ) {
-      if ( Evalexp( temp->left )->type != DOT )
+      if ( Evalexp( temp->left, 1 )->type != DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // if
     else if ( str == "pair?" ) {
 
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
 
       if ( check->type == DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "list?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       while ( check->right != NULL ) 
         check = check->right ;    
       if ( check->type == NIL )
@@ -1010,43 +1021,43 @@ class Evaler {
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "null?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == NIL )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "integer?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "real?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT || check->type == FLOAT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "number?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT || check->type == FLOAT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "string?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == STRING )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "boolean?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == NIL || check->type == T )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "symbol?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == SYMBOL )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
@@ -1141,7 +1152,7 @@ class Evaler {
  
   float Add( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       return Getnum( check ) + Add( temp->right, isfloat ) ;
@@ -1154,13 +1165,13 @@ class Evaler {
 
   float Sub( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       float num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
       while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left ) ;
+        Token * check2 = Evalexp( check->left, 1 ) ;
         if ( check2->type == FLOAT )
           isfloat = true ;
         num -= Getnum( check2 ) ;
@@ -1180,7 +1191,7 @@ class Evaler {
 
   float Mul( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       return Getnum( check ) * Mul( temp->right, isfloat ) ;
@@ -1193,13 +1204,13 @@ class Evaler {
 
   float Div( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       float num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
       while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left ) ;
+        Token * check2 = Evalexp( check->left, 1 ) ;
         if ( check2->type == FLOAT )
           isfloat = true ;
         num /= Getnum( check2 ) ;
@@ -1248,7 +1259,7 @@ class Evaler {
 
   public:
   
-  Token * Evalexp( Token * temp ) {
+  Token * Evalexp( Token * temp, int head ) {
     
     if ( Isatomtype( temp->type ) ) {
       if ( temp->type == SYMBOL ) {
@@ -1269,11 +1280,17 @@ class Evaler {
     } // if
     else if ( temp->left != NULL ) {
       if ( temp->left->str == "clean-environment" ) {
+        if ( head != 0 )
+          throw LevelError( "CLEAN-ENVIRONMENT" ) ;
+        // else if ( Getsize( temp->right ) != 0 )
         msymbollist.clear() ;
         return NewToken( "environment cleaned" ) ;  
       } // if
-      else if ( temp->left->str == "define" )
+      else if ( temp->left->str == "define" ) {
+        if ( head != 0 )
+          throw LevelError( "DEFINE" ) ;
         return Define( temp->right ) ;    
+      } // else if
       else if ( temp->left->type == QUOTE || temp->left->str == "quote" )
         return Quote( temp->right ) ;   
       else if ( temp->left->str == "cons" )
@@ -1314,7 +1331,7 @@ class Evaler {
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
             
-            return Evalexp( ntemp ) ;
+            return Evalexp( ntemp, 1 ) ;
           } // if
           else {
             throw NonFuncError( Symbols( temp->left )->str ) ;
@@ -1330,11 +1347,13 @@ class Evaler {
         
         return temp ;
       } // else if
+      else if ( temp->left->type == DOT ){
+        temp->left = Evalexp( temp->left, 1 ) ;
+        return Evalexp( temp, 1 ) ;
+      } // else if
       else {
-        temp->left = Evalexp( temp->left ) ;
-        return Evalexp( temp ) ;
-      } // else 
-        
+        throw NonFuncError( temp->left->str ) ;
+      } // else
     } // else if         
     else 
       return temp ;
@@ -1766,7 +1785,7 @@ class Interpreter{
         Token * outtree ;
         try {
           
-          outtree = mevaler.Evalexp( mtokentree ) ;
+          outtree = mevaler.Evalexp( mtokentree, 0 ) ;
            
           
         }
@@ -1782,7 +1801,10 @@ class Interpreter{
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
         } // catch
-        // cout << "done" << endl ;
+        catch ( LevelError e ) {
+          printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+        } // catch
         if ( !evalerr ) {
           mprinter.Printtree( outtree ) ; 
         } // if

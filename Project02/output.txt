@@ -10,7 +10,7 @@ Welcome to OurScheme!
 
 > ERROR (unbound symbol) : a
 
-> ERROR (unbound symbol) : a
+> ERROR (level of CLEAN-ENVIRONMENT)
 
 > 3
 
@@ -56,7 +56,7 @@ Welcome to OurScheme!
   3
 )
 
-> .
+> nil
 
 > ( nil
   2
@@ -81,10 +81,125 @@ Welcome to OurScheme!
 
 > ERROR (incorrect number of arguments) : cons
 
-> ( environment cleaned
-)
+> ERROR (level of CLEAN-ENVIRONMENT)
 
 > ERROR (incorrect number of arguments) : cons
 
-> ERROR (no more input) : END-OF-FILE encountered
-Thanks for using OurScheme!
+> ERROR (attempt to apply non-function) : 3
+
+> ( 3
+  4
+  5
+)
+
+> 3
+
+> ERROR (unexpected token) : atom or '(' expected when token at Line 1 Column 2 is >>.<<
+
+> ( 3
+  ( 4
+    5
+  )
+)
+
+> ERROR (attempt to apply non-function) : 4321
+
+> ( 3
+  4321
+  5
+)
+
+> ERROR (attempt to apply non-function) : 4
+
+> ( 3
+  ( 4
+    5
+  )
+)
+
+> ( 3
+  ( 4
+    5
+  )
+  6
+  ( 7
+    8
+  )
+)
+
+> ERROR (unbound symbol) : abc
+
+> a defined
+
+> ERROR (level of DEFINE)
+
+> 5 defined
+
+> cons defined
+
+> define defined
+
+> ERROR (incorrect number of arguments) : define
+
+> ERROR (incorrect number of arguments) : define
+
+> ERROR (incorrect number of arguments) : define
+
+> ERROR (level of DEFINE)
+
+> ERROR (incorrect number of arguments) : cons
+
+> ERROR (level of CLEAN-ENVIRONMENT)
+
+> bcd defined
+
+> ( 3
+  .
+  5
+)
+
+> 5
+
+> x defined
+
+> ( ( 3
+    4
+  )
+  5
+)
+
+> hello defined
+
+> ( 1
+  2
+  .
+  3
+)
+
+> ( ( 1
+    2
+    .
+    3
+  )
+  .
+  4
+)
+
+> ( ( 1
+    2
+    .
+    3
+  )
+  4
+)
+
+> hello defined
+
+> ( ""CYCU ICE""
+  ( ""CYCU ICE""
+    .
+    ""CYCU ICE""
+  )
+)
+
+> 
