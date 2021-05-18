@@ -1456,7 +1456,7 @@ class Evaler {
   public:
   
   Token * Evalexp( Token * temp, int head ) {
-
+    
     if ( Isatomtype( temp->type ) ) {
       if ( temp->type == SYMBOL ) {
         if ( Findsymbol( temp->str ) ) {
@@ -1475,10 +1475,6 @@ class Evaler {
         return temp ;
     } // if
     else if ( temp->left != NULL ) {
-      if ( !Islist( temp ) ) {
-        throw NonListError() ;
-      } // if
-
       if ( temp->left->str == "clean-environment" ) {
         if ( head != 0 )
           throw LevelError( "CLEAN-ENVIRONMENT" ) ;
@@ -2129,9 +2125,10 @@ int main() {
   char t ;
   scanf( "%d",  &gTestNum  ) ;
   scanf( "%c",  &t ) ;
-  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
-    interpreter.Gettokenlist() ;
+    if ( gTestNum != 999 )
+      interpreter.Gettokenlist() ;
   } // try
   catch ( Callend e ) {
     ;
