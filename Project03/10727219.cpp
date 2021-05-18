@@ -26,6 +26,7 @@ struct Token {
   int column ;
   int intnum ;
   float floatnum ;
+  bool iscomd ;
   Type type ;
   
   Token * left ;
@@ -33,6 +34,7 @@ struct Token {
 };
 
 struct Symbol {
+
   string name ;
   Token * info ;
   
@@ -187,6 +189,46 @@ bool Justdot() {
     return false ;  
 } // Justdot()
 
+bool Isinternalfunc( string str ) {
+  if ( str == "cons" || str == "list" || str == "car" ) 
+    return true ;
+  else if ( str == "cdr" || str == "atom?" || str == "pair?" ) 
+    return true ;
+  else if ( str == "list?" || str == "null?" || str == "integer?" ) 
+    return true ;
+  else if ( str == "real?" || str == "number?" || str == "string?" ) 
+    return true ;
+  else if ( str == "boolean?" || str == "symbol?" || str == "+" ) 
+    return true ;
+  else if ( str == "-" || str == "*" || str == "/" ) 
+    return true ;
+  else if ( str == "not" || str == ">" || str == ">=" ) 
+    return true ;
+  else if ( str == "<" || str == "<=" || str == "=" ) 
+    return true ;
+  else if ( str == "string-append" || str == "string>?" || str == "string<?" ) 
+    return true ;
+  else if ( str == "string=?" || str == "eqv?" || str == "equal?" ) 
+    return true ;
+  else if ( str == "exit" ) 
+    return true ;
+  else 
+    return false ;
+} // Isinternalfunc()
+
+bool Isspfunc( string str ) {
+  if ( str == "quote" || str == "\'" || str == "define" ) 
+    return true ;
+  else if ( str == "and" || str == "or" || str == "begin" ) 
+    return true ;
+  else if ( str == "if" || str == "cond" || str == "clean-environment" ) 
+    return true ;
+  else if ( str == "exit" ) 
+    return true ;
+  else 
+    return false ;
+} // Isspfunc()
+
 bool Isprimitivepredicates( string str ) {
   if ( str == "atom?" ) return true ;
   else if ( str == "pair?" ) return true ;
@@ -235,6 +277,7 @@ float Getnum( Token * temp ) {
 class Exception {
 public:
   string merrorstr;
+  Token * mhead ;
   
   Exception() {  }
 
@@ -292,6 +335,7 @@ public:
     ss << "ERROR (incorrect number of arguments) : " << str ;
 
     merrorstr = ss.str() ;
+
   } // ArgNumError()
 };
 
@@ -308,738 +352,88 @@ public:
 
 class NonFuncError : public Exception {
 public:
-  NonFuncError( string str ) {
+  NonFuncError( Token * temp ) {
     stringstream ss ;
 
-    ss << "ERROR (attempt to apply non-function) : " << str ;
+    ss << "ERROR (attempt to apply non-function) : " ;
 
     merrorstr = ss.str() ;
+    mhead = temp ;
   } // NonFuncError()
 };
 
-class Evaler {
-  private:
-    
-  vector< Symbol > msymbollist ;
-    
-  Token * NewToken( string str ) {
-    Token * retoken = new Token ;
-    retoken->str = Setstr( str ) ;
-    retoken->type = Gettype( retoken->str ) ;
-    retoken->intnum = Decodeint( retoken->str ) ;
-    retoken->floatnum = Decodefloat( retoken->str ) ;
-    retoken->left = NULL ;
-    retoken->right = NULL ;
-      
-    return retoken ;
-  } // NewToken()
-    
-  int Getsize( Token * temp ) {
-    if ( temp == NULL || temp->type == NIL )
-      return 0 ;
-    else
-      return 1 + Getsize( temp->right ) ;
-    
-  } // Getsize()
-    
-  Token * Symbols( Token * temp ) {
-    
-    int i = msymbollist.size() - 1 ;
-    bool find = false ;
-    while ( i >= 0 ) {
-      // cout << msymbollist.at(i).name << endl ;
-      if ( msymbollist.at( i ).name == temp->str )  {
-        find = true ;
-        return msymbollist.at( i ).info ;
-      } // if
-      
-    
-      i-- ;  
-      
-    } // while
-    
-    if ( !find ) {
-    
-      throw UnboundError( temp->str ) ;
-    
-    } // if 
-    
-    return NULL ;
-  } // Symbols()
-
-  Token * Define( Token * temp ) {
-    
-    if ( Getsize( temp ) != 2 ) {
-      throw ArgNumError( "define" ) ;
-    } // if
-    
-    Symbol newsymbol ;
-    string name = temp->left->str ;
-    newsymbol.name = name ;
-    newsymbol.info = Evalexp( temp->right->left ) ;
-    msymbollist.push_back( newsymbol ) ;  
-    
-    return NewToken( name + " defined" ) ;
-  } // Define()
-
-  Token * Quote( Token * temp ) {
-    return temp->left ; 
-  } // Quote()
-
-  Token * Cons( Token * temp ) {
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "cons" ) ;
-    
-    Token * retoken = NewToken( "." ) ;
-    retoken->left = Evalexp( temp->left ) ;
-    retoken->right = Evalexp( temp->right->left );
-    return retoken ;  
-  } // Cons()
-
-  Token * List( Token * temp ) {
-    // if(Getsize(temp) != 2)
-    //   throw ArgNumError("cons") ;
-    // not done
-    Token * retoken = NewToken( "." ) ;
-    Token * ret = retoken ;
-    Token * t = temp ;
-
-    while ( t->type != NIL ) {
-      ret->left = Evalexp( t->left ) ; 
-    
-      if ( t->right->type != NIL )
-        ret->right = NewToken( "." ) ;
-      else 
-        ret->right = NewToken( "nil" ) ;
-    
-      ret = ret->right ;
-      t = t->right ;
-
-    } // while
-    
-    return retoken ;  
-  } // List()
-
-  Token * Car( Token * temp ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "car" ) ;
-    
-    return Evalexp( temp->left )->left ;
-    
-  } // Car()
-
-  Token * Cdr( Token * temp ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "cdr" ) ;
-    
-    return Evalexp( temp->left )->right ;
-    
-  } // Cdr()
-  
-  Token * Not( Token * temp ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "not" ) ;
-    
-    if ( Evalexp( temp->left )->type == NIL )     
-      return NewToken( "#t" ) ;
-    else 
-      return NewToken( "nil" ) ;
-    
-  } // Not()
-  
-  Token * Greater( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) <= Getnum( Evalexp( temp->right->left ) ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Greater()
-
-  Token * Less( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) >= Getnum( Evalexp( temp->right->left ) ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Less()  
-
-  Token * Nogreater( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) > Getnum( Evalexp( temp->right->left ) ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Nogreater()
-
-  Token * Noless( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) < Getnum( Evalexp( temp->right->left ) ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Noless()
-  
-  Token * Equalnum( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) != Getnum( Evalexp( temp->right->left ) ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Equalnum()
-
-  Token * Strappend( Token * temp ) {
-    string check = "" ;
-    while ( temp->type != NIL && temp != NULL ) {
-      check = Mergestr( check, Evalexp( temp->left )->str ) ;
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strappend()
-
-  Token * Strgreat( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) <= 0 )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strgreat()
-
-  Token * Strless( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) >= 0 )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strless()
-
-  Token * Strequal( Token * temp ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) != 0 )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strequal()
-
-  Token * Eqv( Token * temp ) {
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "equ?" ) ;
-    Token * check1 = Evalexp( temp->left ) ;
-    Token * check2 = Evalexp( temp->right->left ) ;
-    if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
-         check1->type != STRING && check2->type != STRING ) {
-      if ( check1->str.compare( check2->str ) == 0 )
-        return NewToken( "#t" ) ;
-      else 
-        return NewToken( "nil" ) ;
-    } // if
-    else {
-      if ( check1 == check2 )
-        return NewToken( "#t" ) ;
-      else 
-        return NewToken( "nil" ) ;
-    } // else
-
-    
-
-  } // Eqv()
-
-  bool Issame( Token * t1, Token * t2 ) {
-    if ( t1 == NULL && t2 == NULL )
-      return true ;
-    else if ( t1->str.compare( t2->str ) != 0 )
-      return false ;
-    else 
-      return Issame( t1->left, t2->left ) && Issame( t1->right, t2->right ) ;
-
-  } // Issame()
-
-  Token * Equal( Token * temp ) {
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "equ?" ) ;
-    
-    Token * check1 = Evalexp( temp->left ) ;
-    Token * check2 = Evalexp( temp->right->left ) ;
-    if ( Issame( check1, check2 ) ) 
-      return NewToken( "#t" ) ;
-    else 
-      return NewToken( "nil" ) ;
-
-  } // Equal()
-  
-  Token * If( Token * temp ) {
-    int size = Getsize( temp ) ;
-    if ( size != 2 && size != 3 )
-      throw ArgNumError( "if" ) ;
-    
-    Token * check = Evalexp( temp->left ) ;
-    Token * result ;
-
-    if ( check->type != NIL ) {
-      result = Evalexp( temp->right->left ) ;
-    } // if
-    else {
-      if ( size == 2 )
-        throw ArgNumError( "if" ) ;
-      else {
-        result = Evalexp( temp->right->right->left ) ;
-      } // else
-
-    } // else
-
-    return result ;
-
-  } // If()
-
-  Token * Decide( Token * temp, bool last, bool & done ) {
-
-    if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "cond" ) ;
-
-    Token * check ;
-    Token * result ;
-    if ( ( last && temp->left->str == "else" ) || Evalexp( temp->left )->type != NIL ) {
-      done = true ;
-      return Begin( temp->right ) ;
-    } // if
-    else {
-      done = false ;
-      return NewToken( "nil" ) ;
-    } // else
-
-  } // Decide()
-
-  Token * Cond( Token * temp ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "cond" ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-
-    while ( t->type != NIL ) {
-      if ( t->right->type == NIL ) {
-        result = Decide( t->left, true, done ) ;
-      } // if
-      else {
-        result = Decide( t->left, false, done ) ; 
-      } // else
-        
-
-      
-      if ( done ) {
-        return result ;
-      } // if
-
-      t = t->right ;
-    } // while
-
-    throw ArgNumError( "noreturn" ) ;
-
-  } // Cond()
-  
-  Token * Begin( Token * temp ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "Begin" ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-
-    while ( t != NULL && t->type != NIL ) {
-
-      result = Evalexp( t->left ) ;
-      t = t->right ;
-    } // while
-
-    return result ;
-
-  } // Begin()
-
-  Token * Or( Token * temp ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "Or" ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-    while ( t != NULL && t->type != NIL ) {
-
-      result = Evalexp( t->left ) ;
-      if ( result->type != NIL )
-        return result ;
-
-      t = t->right ;
-    } // while
-
-    return result ;
-
-  } // Or()
-
-  Token * And( Token * temp ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "Begin" ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-
-    while ( t != NULL && t->type != NIL ) {
-
-      result = Evalexp( t->left ) ;
-      if ( result->type == NIL )
-        return result ;
-      t = t->right ;
-    } // while
-
-    return result ;
-
-  } // And()
-
-  Token * Primitivepredicates( Token * temp, string str ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "***" ) ;
-    
-    if ( str == "atom?" ) {
-      if ( Evalexp( temp->left )->type != DOT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // if
-    else if ( str == "pair?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == DOT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "list?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      while ( check->right != NULL ) 
-        check = check->right ;    
-      if ( check->type == NIL )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "null?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == NIL )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "integer?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "real?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT || check->type == FLOAT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "number?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == INT || check->type == FLOAT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "string?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == STRING )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "boolean?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == NIL || check->type == T )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "symbol?" ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == SYMBOL )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else return NewToken( "nil" ) ;
-
-  } // Primitivepredicates()
-
-  Token * Arith( Token * temp, string str ) {
-    if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "***" ) ;
-    stringstream ss;
-    bool isfloat = false ;
-    if ( str == "+" ) {
-      float num = 0 ;
-      num = Add( temp, isfloat ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // if
-    else if ( str == "-" ) {
-      float num = 0 ;
-      num = Sub( temp, isfloat ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // else if
-    else if ( str == "*" ) {
-      float num = 0 ;
-      num = Mul( temp, isfloat ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // else if
-    else if ( str == "/" ) {
-      float num = 0 ;
-      num = Div( temp, isfloat ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // else if
-    else if ( str == ">" ) {
-      return Greater( temp ) ;
-    } // else if
-    else if ( str == "<" ) {
-      return Less( temp ) ;
-    } // else if
-    else if ( str == ">=" ) {
-      return Noless( temp ) ;
-    } // else if
-    else if ( str == "<=" ) {
-      return Nogreater( temp ) ;
-    } // else if
-    else if ( str == "=" ) {
-      return Equalnum( temp ) ;
-    } // else if
-    else if ( str == "string-append" ) {
-      return Strappend( temp ) ;
-    } // else if
-    else if ( str == "string>?" ) {
-      return Strgreat( temp ) ;
-    } // else if
-    else if ( str == "string<?" ) {
-      return Strless( temp ) ;
-    } // else if
-    else if ( str == "string=?" ) {
-      return Strequal( temp ) ;
-    } // else if
-    else if ( str == "or" ) {
-      return Or( temp ) ;
-    } // else if
-    else if ( str == "and" ) {
-      return And( temp ) ;
-    } // else if
-    else return NewToken( "nil" ) ;
-
-  } // Arith()
-  
-  Token * Func( Token * temp ) {
-    string str = Symbols( temp->left )->str ;
-    throw NonFuncError( str ) ;
-
-  } // Func()
- 
-  float Add( Token * temp, bool & isfloat ) {
-    if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      return Getnum( check ) + Add( temp->right, isfloat ) ;
-    } // if
-    else {
-      float z = 0 ;
-      return z ;
-    } // else    
-  } // Add()
-
-  float Sub( Token * temp, bool & isfloat ) {
-    if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
-      float num = Getnum( check ) ;
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      check = temp->right ;
-      while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left ) ;
-        if ( check2->type == FLOAT )
-          isfloat = true ;
-        num -= Getnum( check2 ) ;
-
-        check = check->right ;
-        
-      } // while
-
-      return num ;
-
-    } // if
-    else {
-      float z = 0 ;
-      return z ;
-    } // else    
-  } // Sub()
-
-  float Mul( Token * temp, bool & isfloat ) {
-    if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      return Getnum( check ) * Mul( temp->right, isfloat ) ;
-    } // if
-    else {
-      float z = 1 ;
-      return z ;
-    } // else   
-  } // Mul()
-
-  float Div( Token * temp, bool & isfloat ) {
-    if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
-      float num = Getnum( check ) ;
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      check = temp->right ;
-      while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left ) ;
-        if ( check2->type == FLOAT )
-          isfloat = true ;
-        num /= Getnum( check2 ) ;
-
-        check = check->right ;
-        
-      } // while
-
-      return num ;
-
-    } // if
-    else {
-      float z = 0 ;
-      return z ;
-    } // else      
-  } // Div()
-
-  string Mergestr( string str1, string str2 ) {
-    if ( str1.size() == 0 )
-      return str2 ;      
-    else if ( str2.size() == 0 )
-      return str1 ;      
-    else {
-      str1.erase( str1.size() - 1, 1 ) ;
-      str2.erase( 0, 1 ) ;
-      return str1 + str2 ;
-    } // else
-
-    
-  } // Mergestr()
-
-  public:
-  Token * Evalexp( Token * temp ) {
-    
-    if ( temp->left != NULL ) {
-      if ( temp->left->str == "clean-environment" ) {
-        msymbollist.clear() ;
-        return NewToken( "environment cleaned" ) ;  
-      } // if
-      else if ( temp->left->str == "define" )
-        return Define( temp->right ) ;    
-      else if ( temp->left->type == QUOTE || temp->left->str == "quote" )
-        return Quote( temp->right ) ;   
-      else if ( temp->left->str == "cons" )
-        return Cons( temp->right ) ;
-      else if ( temp->left->str == "list" )
-        return List( temp->right ) ;
-      else if ( temp->left->str == "car" )
-        return Car( temp->right ) ;  
-      else if ( temp->left->str == "cdr" )
-        return Cdr( temp->right ) ; 
-      else if ( temp->left->str == "not" )
-        return Not( temp->right ) ; 
-      else if ( Isprimitivepredicates( temp->left->str ) ) 
-        return Primitivepredicates( temp->right, temp->left->str ) ; 
-      else if ( IsArith( temp->left->str ) ) 
-        return Arith( temp->right, temp->left->str ) ; 
-      else if ( temp->left->str == "eqv?" ) {
-        return Eqv( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "equal?" ) {
-        return Equal( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "if" ) {
-        return If( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "cond" ) {
-        return Cond( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "begin" ) {
-        return Begin( temp->right ) ;
-      } // else if
-      else
-        throw NonFuncError( Symbols( temp->left )->str ) ;
-    } // if 
-    else if ( temp->type == SYMBOL ) {
-      return Symbols( temp );
-    } // else if
-            
-    else 
-      return temp ;
-      
-      
-  } // Evalexp()
-  
+class NonListError : public Exception {
+public:
+  NonListError() {
+    stringstream ss ;
+
+    ss << "ERROR (non-list) : " ;
+
+    merrorstr = ss.str() ;
+  } // NonListError()
+};
+
+class LevelError : public Exception {
+public:
+  LevelError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (level of " << str << ")" ;
+
+    merrorstr = ss.str() ;
+  } // LevelError()
+};
+
+class FormatError : public Exception {
+public:
+  FormatError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (" << str << " format) : " ;
+
+    merrorstr = ss.str() ;
+  } // FormatError()
+};
+
+class ArgTypeError : public Exception {
+public:
+  ArgTypeError( string str, Token * temp ) {
+    stringstream ss ;
+
+    ss << "ERROR (" << str << " with incorrect argument type) : " ;
+
+    merrorstr = ss.str() ;
+    mhead = temp ;
+  } // ArgTypeError()
+};
+
+class DivideZeroError : public Exception {
+public:
+  DivideZeroError() {
+    stringstream ss ;
+
+    ss << "ERROR (division by zero) : /" ;
+
+    merrorstr = ss.str() ;
+  } // DivideZeroError()
+};
+
+class NoReturnError : public Exception {
+public:
+  NoReturnError( Token * temp ) {
+    stringstream ss ;
+
+    ss << "ERROR (no return value) : " ;
+    mhead = temp ;
+    merrorstr = ss.str() ;
+  } // NoReturnError()
+};
+
+class ReE : public Exception {
+public:
+  ReE() {
+    ;
+  } // ReE()
 };
 
 class Printer {
@@ -1053,6 +447,8 @@ class Printer {
       printf( "%.3f", token->floatnum ) ;
     else if ( type == QUOTE )
       printf( "%s", "quote" ) ;
+    else if ( token->iscomd )
+      printf( "#<procedure %s>", token->str.c_str() ) ;      
     else 
       printf( "%s", token->str.c_str() ) ;
          
@@ -1145,6 +541,1045 @@ class Printer {
 
   } // PrintRe()  
   
+  
+};
+
+
+class Evaler {
+  private:
+    
+  vector< Symbol > msymbollist ;
+    
+  Token * NewToken( string str ) {
+    Token * retoken = new Token ;
+    retoken->str = Setstr( str ) ;
+    retoken->type = Gettype( retoken->str ) ;
+    retoken->intnum = Decodeint( retoken->str ) ;
+    retoken->floatnum = Decodefloat( retoken->str ) ;
+    retoken->iscomd = false ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+      
+    return retoken ;
+  } // NewToken()
+    
+  int Getsize( Token * temp ) {
+    if ( temp == NULL || temp->type == NIL )
+      return 0 ;
+    else
+      return 1 + Getsize( temp->right ) ;
+    
+  } // Getsize()
+  
+  bool Findsymbol( string str ) {
+    int i = msymbollist.size() - 1 ;
+    
+    while ( i >= 0 ) {
+      if ( msymbollist.at( i ).name == str )
+        return true ;
+      i-- ;  
+      
+    } // while
+    
+    return false ;
+  } // Findsymbol()
+  
+  Token * Interfunc( Token * temp ) {
+    stringstream ss ;
+    ss << "#<procedure " << temp->str << ">" ;
+    return NewToken( ss.str() ) ;
+  } // Interfunc()
+  
+  Token * Exit( Token * temp ) {
+
+    if ( Getsize( temp ) != 0 )
+      throw ArgNumError( "exit" ) ;
+    else if ( Getsize( temp ) == 0 )
+      throw Callend() ;
+  
+    return NewToken( "exit" ) ;
+  } // Exit()
+
+  Token * Copytoken( Token * temp ) {
+    if ( temp != NULL ) {
+      Token * ntemp = NewToken( temp->str ) ;
+      ntemp->left = Copytoken( temp->left ) ;
+      ntemp->right = Copytoken( temp->right ) ;
+      return ntemp ;
+    } // if
+    else 
+      return NULL ;
+  } // Copytoken()
+  
+  Token * Symbols( Token * temp ) {
+    
+    int i = msymbollist.size() - 1 ;
+    bool find = false ;
+    while ( i >= 0 ) {
+
+      if ( msymbollist.at( i ).name == temp->str )  {
+        find = true ;
+        
+        Token * retoken = msymbollist.at( i ).info ;
+        // mprinter.Printtree(retoken) ;
+        return retoken ;
+      } // if
+      
+    
+      i-- ;  
+      
+    } // while
+    
+    if ( !find ) {
+    
+      throw UnboundError( temp->str ) ;
+    
+    } // if 
+    
+    return NULL ;
+  } // Symbols()
+
+  void Change( Token * temp ) {
+    if ( temp != NULL ) {
+      if ( temp->left != NULL && Findsymbol( temp->left->str ) ) {
+        temp->left = Copytoken( Symbols( temp->left ) ) ;
+      } // if
+
+      if ( temp->right != NULL && Findsymbol( temp->right->str ) ) {
+        temp->right = Copytoken( Symbols( temp->right ) ) ;
+      } // if    
+
+      Change( temp->left ) ;
+      Change( temp->right ) ;
+    } // if
+
+  }  // Change()
+
+  Token * Define( Token * temp ) {
+    
+    if ( Getsize( temp ) != 2 ) {
+      throw FormatError( "DEFINE" ) ;
+      // throw ArgNumError( "define" ) ;
+    } // if
+
+    
+    Symbol newsymbol ;
+    string name = temp->left->str ;
+    newsymbol.name = name ;
+    
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE" ) ;
+    } // if
+    
+    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
+      Token * check = Copytoken( temp->right->left ) ;
+      Change( check ) ;
+      newsymbol.info = check ;
+    } // if
+    /*
+    else if ( temp->right->left->left != NULL && Isinternalfunc( temp->right->left->str ) ) { 
+      newsymbol.info = Evalexp(temp->right->left ) ;
+    } // if 
+    else if ( temp->right->left->left != NULL && temp->right->left->left->type == QUOTE ) {
+      newsymbol.info = Evalexp(temp->right->left ) ;
+    } // else if
+    */
+    else { 
+      newsymbol.info = Evalexp( temp->right->left, 1 ) ;
+      
+    } // else 
+      
+
+    if ( !Findsymbol( name ) )
+      msymbollist.push_back( newsymbol ) ;  
+    else {
+      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
+
+        if ( msymbollist.at( i ).name == name ) {
+
+          msymbollist.at( i ).info = newsymbol.info ;
+        } // if
+      } // for
+
+    } // else
+
+    return NewToken( name + " defined" ) ;
+  } // Define()
+
+  Token * Quote( Token * temp ) {
+    return temp->left ; 
+  } // Quote()
+
+  Token * Cons( Token * temp ) {
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "cons" ) ;
+    
+    Token * retoken = NewToken( "." ) ;
+    retoken->left = Evalexp( temp->left, 1 ) ;
+    retoken->right = Evalexp( temp->right->left, 1 );
+    return retoken ;  
+  } // Cons()
+
+  Token * List( Token * temp ) {
+    if ( Getsize( temp ) == 0 )
+      return NewToken( "nil" ) ;
+    else if ( !Islist( temp ) ) {
+      throw NonListError() ;
+    } // else if
+    // not done
+    Token * retoken = NewToken( "." ) ;
+    Token * ret = retoken ;
+    Token * t = temp ;
+
+    while ( t->type != NIL ) {
+      ret->left = Evalexp( t->left, 1 ) ; 
+    
+      if ( t->right->type != NIL )
+        ret->right = NewToken( "." ) ;
+      else 
+        ret->right = NewToken( "nil" ) ;
+    
+      ret = ret->right ;
+      t = t->right ;
+
+    } // while
+    
+    return retoken ;  
+  } // List()
+
+  Token * Car( Token * temp ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "car" ) ;
+    Token * check = Evalexp( temp->left, 1 ) ;
+    
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "car", check ) ;
+      
+    return check->left ;
+    
+  } // Car()
+
+  Token * Cdr( Token * temp ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "cdr" ) ;
+    Token * check = Evalexp( temp->left, 1 ) ;
+    
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "cdr", check ) ;
+      
+    return check->right ;
+    
+  } // Cdr()
+  
+  Token * Not( Token * temp ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "not" ) ;
+    
+
+    if ( Evalexp( temp->left, 1 )->type == NIL )     
+      return NewToken( "#t" ) ;
+    else 
+      return NewToken( "nil" ) ;
+    
+  } // Not()
+  
+  Token * Greater( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( ">", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( ">", check2 ) ;
+
+      if ( Getnum( check1 ) <= Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Greater()
+
+  Token * Less( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "<", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "<", check2 ) ;
+
+      if ( Getnum( check1 ) >= Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Less()  
+
+  Token * Nogreater( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "<=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "<=", check2 ) ;
+
+      if ( Getnum( check1 ) > Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Nogreater()
+
+  Token * Noless( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( ">=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( ">=", check2 ) ;
+
+      if ( Getnum( check1 ) < Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Noless()
+  
+  Token * Equalnum( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "=", check2 ) ;
+      if ( Getnum( check1 ) != Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Equalnum()
+
+  Token * Strappend( Token * temp ) {
+    string check = "" ;
+    while ( temp->type != NIL && temp != NULL ) {
+      Token * nstr = Evalexp( temp->left, 1 ) ;
+      if ( nstr->type != STRING )
+        throw ArgTypeError( "string-append", nstr ) ;
+
+      check = Mergestr( check, nstr->str ) ;
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strappend()
+
+  Token * Strgreat( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string>?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string>?", check2 ) ;
+      if ( check1->str.compare( check2->str ) <= 0 )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strgreat()
+
+  Token * Strless( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string<?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string<?", check2 ) ;
+      if ( check1->str.compare( check2->str ) >= 0 )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strless()
+
+  Token * Strequal( Token * temp ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string=?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string=?", check2 ) ;
+      if ( check1->str.compare( check2->str ) != 0 )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strequal()
+
+  Token * Eqv( Token * temp ) {
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "eqv?" ) ;
+    Token * check1 = Evalexp( temp->left, 1 ) ;
+    Token * check2 = Evalexp( temp->right->left, 1 ) ;
+    if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
+         check1->type != STRING && check2->type != STRING ) {
+      if ( check1->str.compare( check2->str ) == 0 )
+        return NewToken( "#t" ) ;
+      else 
+        return NewToken( "nil" ) ;
+    } // if
+    else {
+      if ( check1 == check2 )
+        return NewToken( "#t" ) ;
+      else 
+        return NewToken( "nil" ) ;
+    } // else
+
+    
+
+  } // Eqv()
+
+  bool Issame( Token * t1, Token * t2 ) {
+    if ( t1 == NULL && t2 == NULL )
+      return true ;
+    else if ( t1->str.compare( t2->str ) != 0 )
+      return false ;
+    else 
+      return Issame( t1->left, t2->left ) && Issame( t1->right, t2->right ) ;
+
+  } // Issame()
+
+  Token * Equal( Token * temp ) {
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "equ?" ) ;
+    
+    Token * check1 = Evalexp( temp->left, 1 ) ;
+    Token * check2 = Evalexp( temp->right->left, 1 ) ;
+    if ( Issame( check1, check2 ) ) 
+      return NewToken( "#t" ) ;
+    else 
+      return NewToken( "nil" ) ;
+
+  } // Equal()
+  
+  Token * If( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( size != 2 && size != 3 )
+      throw ArgNumError( "if" ) ;
+    
+    Token * check = Evalexp( temp->left, 1 ) ;
+    Token * result ;
+
+    if ( check->type != NIL ) {
+      result = Evalexp( temp->right->left, 1 ) ;
+    } // if
+    else {
+      if ( size == 2 )
+        throw ReE() ;
+      else {
+        result = Evalexp( temp->right->right->left, 1 ) ;
+      } // else
+
+    } // else
+
+    return result ;
+
+  } // If()
+
+  Token * Decide( Token * temp, bool last, bool & done ) {
+
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND" ) ;
+    else if ( Isatomtype( temp->type ) ) {
+      throw FormatError( "COND" ) ;
+    } // else if
+    else if ( ( last && temp->left->str == "else" ) ) {
+      done = true ;
+      return Begincond( temp->right ) ;
+    } // if
+
+    Token * check = Evalexp( temp->left, 1 );
+    Token * result ;
+
+    if ( check->type != NIL ) {
+      done = true ;
+      return Begincond( temp->right ) ;
+    } // if
+    else {
+      done = false ;
+      return NewToken( "nil" ) ;
+    } // else
+
+  } // Decide()
+
+  Token * Cond( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t->type != NIL ) {
+      if ( Isatomtype( t->left->type ) ) {
+        throw FormatError( "COND" ) ;
+      } // if
+      else if ( Getsize( t->left ) < 2 ) {
+        throw FormatError( "COND" ) ;
+      } // else if
+
+      t = t->right ;
+    } // while
+
+    t = temp ;
+
+    while ( t->type != NIL ) {
+      if ( t->right->type == NIL ) {
+        result = Decide( t->left, true, done ) ;
+      } // if
+      else {
+        result = Decide( t->left, false, done ) ; 
+      } // else
+        
+
+      
+      if ( done ) {
+        return result ;
+      } // if
+
+      t = t->right ;
+    } // while
+
+    throw ReE() ;
+
+  } // Cond()
+  
+  Token * Begin( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw ArgNumError( "begin" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left, 1 ) ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Begin()
+
+  Token * Begincond( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left, 1 ) ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Begincond()
+
+  Token * Or( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "Or" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left, 1 ) ;
+      if ( result->type != NIL )
+        return result ;
+
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Or()
+
+  Token * And( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "And" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left, 1 ) ;
+      if ( result->type == NIL )
+        return result ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // And()
+
+  Token * Primitivepredicates( Token * temp, string str ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( str ) ;
+    
+    if ( str == "atom?" ) {
+      if ( Evalexp( temp->left, 1 )->type != DOT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // if
+    else if ( str == "pair?" ) {
+
+      Token * check = Evalexp( temp->left, 1 ) ;
+
+      if ( check->type == DOT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "list?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      while ( check->right != NULL ) 
+        check = check->right ;    
+      if ( check->type == NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "null?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "integer?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == INT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "real?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "number?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "string?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == STRING )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "boolean?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == NIL || check->type == T )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "symbol?" ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == SYMBOL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else return NewToken( "nil" ) ;
+
+  } // Primitivepredicates()
+
+  Token * Arith( Token * temp, string str ) {
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( str ) ;
+    stringstream ss;
+    bool isfloat = false ;
+    if ( str == "+" ) {
+      float num = 0 ;
+      num = Add( temp, isfloat ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // if
+    else if ( str == "-" ) {
+      float num = 0 ;
+      num = Sub( temp, isfloat ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "*" ) {
+      float num = 0 ;
+      num = Mul( temp, isfloat ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "/" ) {
+      float num = 0 ;
+      num = Div( temp, isfloat ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == ">" ) {
+      return Greater( temp ) ;
+    } // else if
+    else if ( str == "<" ) {
+      return Less( temp ) ;
+    } // else if
+    else if ( str == ">=" ) {
+      return Noless( temp ) ;
+    } // else if
+    else if ( str == "<=" ) {
+      return Nogreater( temp ) ;
+    } // else if
+    else if ( str == "=" ) {
+      return Equalnum( temp ) ;
+    } // else if
+    else if ( str == "string-append" ) {
+      return Strappend( temp ) ;
+    } // else if
+    else if ( str == "string>?" ) {
+      return Strgreat( temp ) ;
+    } // else if
+    else if ( str == "string<?" ) {
+      return Strless( temp ) ;
+    } // else if
+    else if ( str == "string=?" ) {
+      return Strequal( temp ) ;
+    } // else if
+    else if ( str == "or" ) {
+      return Or( temp ) ;
+    } // else if
+    else if ( str == "and" ) {
+      return And( temp ) ;
+    } // else if
+    else return NewToken( "nil" ) ;
+
+  } // Arith()
+  
+  Token * Func( Token * temp ) {
+    // string str = Symbols( temp->left )->str ;
+    throw NonFuncError( Symbols( temp->left ) ) ;
+
+  } // Func()
+ 
+  float Add( Token * temp, bool & isfloat ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "+", check ) ;
+      return Getnum( check ) + Add( temp->right, isfloat ) ;
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else    
+  } // Add()
+
+  float Sub( Token * temp, bool & isfloat ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      float num = Getnum( check ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      check = temp->right ;
+      while ( check != NULL && check->type != NIL ) {
+        Token * check2 = Evalexp( check->left, 1 ) ;
+        if ( check2->type == FLOAT )
+          isfloat = true ;
+        else if ( check2->type != INT && check2->type != FLOAT )
+          throw ArgTypeError( "-", check2 ) ;
+        num -= Getnum( check2 ) ;
+
+        check = check->right ;
+        
+      } // while
+
+      return num ;
+
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else    
+  } // Sub()
+
+  float Mul( Token * temp, bool & isfloat ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "*", check ) ;
+
+      return Getnum( check ) * Mul( temp->right, isfloat ) ;
+    } // if
+    else {
+      float z = 1 ;
+      return z ;
+    } // else   
+  } // Mul()
+
+  float Div( Token * temp, bool & isfloat ) {
+    if ( temp->left != NULL ) {
+      Token * check = Evalexp( temp->left, 1 ) ;
+      float num = Getnum( check ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      check = temp->right ;
+      while ( check != NULL && check->type != NIL ) {
+        Token * check2 = Evalexp( check->left, 1 ) ;
+        if ( check2->type == FLOAT )
+          isfloat = true ;
+        else if ( check2->type != INT && check2->type != FLOAT )
+          throw ArgTypeError( "/", check2 ) ;
+
+        float number = Getnum( check2 ) ;
+        if ( number == 0 )
+          throw DivideZeroError() ;        
+
+        num /= number ;
+
+        check = check->right ;
+        
+      } // while
+
+      return num ;
+
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else      
+  } // Div()
+
+  string Mergestr( string str1, string str2 ) {
+    if ( str1.size() == 0 )
+      return str2 ;      
+    else if ( str2.size() == 0 )
+      return str1 ;      
+    else {
+      str1.erase( str1.size() - 1, 1 ) ;
+      str2.erase( 0, 1 ) ;
+      return str1 + str2 ;
+    } // else
+
+    
+  } // Mergestr()
+
+  bool Islist( Token * temp ) {
+    Token * check = temp ;
+    while ( check->right != NULL ) 
+      check = check->right ;    
+    if ( check->type == NIL ) {
+      // cout << "islist" ;
+      return true ;
+    } // if
+    else {
+      return false ;
+    } // else
+  } // Islist()
+
+  Printer mprinter ;
+
+  public:
+  
+  Token * Evalexp( Token * temp, int head ) {
+
+    if ( Isatomtype( temp->type ) ) {
+      if ( temp->type == SYMBOL ) {
+        if ( Findsymbol( temp->str ) ) {
+          // return Evalexp( Symbols( temp ) ) ;
+          return Symbols( temp ) ;
+          
+        } // if
+        else if ( Isinternalfunc( temp->str ) ) {
+          temp->iscomd = true ;
+          return temp ;
+        }  // else if
+        else 
+          throw UnboundError( temp->str ) ;
+      } // if
+      else
+        return temp ;
+    } // if
+    else if ( temp->left != NULL ) {
+      if ( !Islist( temp ) ) {
+        throw NonListError() ;
+      } // if
+
+      if ( temp->left->str == "clean-environment" ) {
+        if ( head != 0 )
+          throw LevelError( "CLEAN-ENVIRONMENT" ) ;
+        // else if ( Getsize( temp->right ) != 0 )
+        msymbollist.clear() ;
+        return NewToken( "environment cleaned" ) ;  
+      } // if
+      else if ( temp->left->str == "define" ) {
+        if ( head != 0 )
+          throw LevelError( "DEFINE" ) ;
+        return Define( temp->right ) ;    
+      } // else if
+      else if ( temp->left->str == "exit" ) {
+        if ( head != 0 )
+          throw LevelError( "EXIT" ) ;
+        return Exit( temp->right ) ;    
+      } // else if
+      else if ( temp->left->type == QUOTE || temp->left->str == "quote" )
+        return Quote( temp->right ) ;   
+      else if ( temp->left->str == "cons" )
+        return Cons( temp->right ) ;
+      else if ( temp->left->str == "list" )
+        return List( temp->right ) ;
+      else if ( temp->left->str == "car" )
+        return Car( temp->right ) ;  
+      else if ( temp->left->str == "cdr" )
+        return Cdr( temp->right ) ; 
+      else if ( temp->left->str == "not" )
+        return Not( temp->right ) ; 
+      else if ( Isprimitivepredicates( temp->left->str ) ) 
+        return Primitivepredicates( temp->right, temp->left->str ) ; 
+      else if ( IsArith( temp->left->str ) ) 
+        return Arith( temp->right, temp->left->str ) ; 
+      else if ( temp->left->str == "eqv?" ) {
+        return Eqv( temp->right ) ;
+      } // else if
+      else if ( temp->left->str == "equal?" ) {
+        return Equal( temp->right ) ;
+      } // else if
+      else if ( temp->left->str == "if" ) {
+        try {
+          return If( temp->right ) ;
+        } // try
+        catch ( ReE e ) {
+          throw NoReturnError( temp ) ;
+        } // catch
+        
+      } // else if
+      else if ( temp->left->str == "cond" ) {
+        try {
+          return Cond( temp->right ) ;
+        } // try
+        catch ( ReE e ) {
+          throw NoReturnError( temp ) ;
+        } // catch
+      } // else if
+      else if ( temp->left->str == "begin" ) {
+        return Begin( temp->right ) ;
+      } // else if
+      else if ( temp->left->type == SYMBOL ) {
+        
+        if ( Findsymbol( temp->left->str ) ) {
+          
+          if ( Isinternalfunc( Symbols( temp->left )->str ) ) {
+            Token * ntemp = NewToken( "." ) ;
+            ntemp->left = Symbols( temp->left ) ;
+            ntemp->right = temp->right ;
+            
+            return Evalexp( ntemp, 1 ) ;
+          } // if
+          else {
+            throw NonFuncError( Symbols( temp->left ) ) ;
+          } // else
+        } // if
+        else {
+          // cout << Evalexp( temp->left )->str ;
+          string str = temp->left->str ;
+          throw UnboundError( str ) ;
+          // return temp ;
+        } // else
+        
+        
+        return temp ;
+      } // else if
+      else if ( temp->left->type == DOT ) {
+        Token * check = Evalexp( temp->left, 1 ) ;
+        temp->left = check ;
+        if ( !Isinternalfunc( check->str ) )
+          throw NonFuncError( temp->left ) ;
+        
+        return Evalexp( temp, 1 ) ;
+      } // else if
+      else {
+        throw NonFuncError( temp->left ) ;
+      } // else
+    } // else if         
+    else 
+      return temp ;
+      
+      
+  } // Evalexp()
   
 };
 
@@ -1279,6 +1714,8 @@ class Scanner {
       retoken.intnum = Decodeint( retoken.str ) ;
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
+
+    retoken.iscomd = false ;
 
     return retoken ;
   } // Gettoken()
@@ -1438,8 +1875,8 @@ class Treemaker {
       Treerecursion( tokentree, tokenlist, point, index ) ;
     } // else
     
-    if ( Isend( tokentree ) )
-      throw Callend() ; 
+    // if ( Isend( tokentree ) )
+    //   throw Callend() ; 
     
     // printer.Printtree( tokentree, point, 0 ) ;
   
@@ -1502,6 +1939,7 @@ class Treemaker {
     retoken.column = -1 ;
     retoken.line = -1 ;
     retoken.str = str ;
+    retoken.iscomd = false ;
     retoken.type = Gettype( retoken.str ) ;
     retoken.str = Setstr( retoken.str ) ;
     if ( retoken.type == INT )
@@ -1567,7 +2005,7 @@ class Interpreter{
         Token * outtree ;
         try {
           
-          outtree = mevaler.Evalexp( mtokentree ) ;
+          outtree = mevaler.Evalexp( mtokentree, 0 ) ;
            
           
         }
@@ -1580,12 +2018,43 @@ class Interpreter{
           evalerr = true ;
         } // catch
         catch ( NonFuncError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( e.mhead ) ; 
+        } // catch
+        catch ( LevelError e ) {
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
         } // catch
-        // cout << "done" << endl ;
-        if ( !evalerr )
+        catch ( FormatError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( mtokentree ) ; 
+        } // catch
+        catch ( NonListError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( mtokentree ) ; 
+        } // catch
+        catch ( ArgTypeError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( e.mhead ) ; 
+        } // catch
+        catch ( DivideZeroError e ) {
+          printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+        } // catch
+        catch ( NoReturnError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          mprinter.Printtree( e.mhead ) ; 
+          evalerr = true ;
+        } // catch
+        
+        if ( !evalerr ) {
           mprinter.Printtree( outtree ) ; 
+        } // if
+          
         
       } // if
 
@@ -1600,7 +2069,7 @@ class Interpreter{
       
       ch = mscanner.Getch() ;
       if ( ch == ';' ) {
-        while ( ch != '\n' ) {
+        while ( ch != '\n' && !gEnd ) {
           mscanner.Getchar() ;
           ch = mscanner.Getch() ;
         } // while
@@ -1635,6 +2104,7 @@ class Interpreter{
     retoken->intnum = token.intnum ;
     retoken->floatnum = token.floatnum ;
     retoken->type = token.type ;
+    retoken->iscomd = false ;
     retoken->left = NULL ;
     retoken->right = NULL ;
     
@@ -1659,7 +2129,7 @@ int main() {
   char t ;
   scanf( "%d",  &gTestNum  ) ;
   scanf( "%c",  &t ) ;
-  printf( "Welcome to OurScheme!\n\n" ) ;
+  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
   try {
     interpreter.Gettokenlist() ;
   } // try
