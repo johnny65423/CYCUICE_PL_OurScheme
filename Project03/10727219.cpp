@@ -544,7 +544,6 @@ class Printer {
   
 };
 
-
 class Evaler {
   private:
     
@@ -676,14 +675,6 @@ class Evaler {
       Change( check ) ;
       newsymbol.info = check ;
     } // if
-    /*
-    else if ( temp->right->left->left != NULL && Isinternalfunc( temp->right->left->str ) ) { 
-      newsymbol.info = Evalexp(temp->right->left ) ;
-    } // if 
-    else if ( temp->right->left->left != NULL && temp->right->left->left->type == QUOTE ) {
-      newsymbol.info = Evalexp(temp->right->left ) ;
-    } // else if
-    */
     else { 
       newsymbol.info = Evalexp( temp->right->left, 1 ) ;
       
@@ -2129,7 +2120,7 @@ int main() {
   char t ;
   scanf( "%d",  &gTestNum  ) ;
   scanf( "%c",  &t ) ;
-  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     interpreter.Gettokenlist() ;
   } // try
