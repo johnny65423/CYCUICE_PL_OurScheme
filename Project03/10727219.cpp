@@ -36,6 +36,7 @@ struct Token {
 struct Symbol {
 
   string name ;
+  Token * args ;
   Token * info ;
   
 };
@@ -665,6 +666,7 @@ class Evaler {
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
+    newsymbol.args = NULL ;
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
       throw FormatError( "DEFINE" ) ;
