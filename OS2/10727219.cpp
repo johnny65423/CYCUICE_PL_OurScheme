@@ -86,7 +86,6 @@ class Scheduler {
 			// cout << method << " " << timeslice << endl ;
 			getline( file, info ) ;
 			getline( file, info ) ;
-
 			while( !file.eof() ) {
 				readprocess() ;
 			}	
