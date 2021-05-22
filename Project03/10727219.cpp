@@ -571,17 +571,23 @@ class Evaler {
     
   } // Getsize()
   
-  bool Findsymbol( string str ) {
+  int Findsymbol( string str ) {
     int i = msymbollist.size() - 1 ;
     
     while ( i >= 0 ) {
-      if ( msymbollist.at( i ).name == str )
-        return true ;
+      if ( msymbollist.at( i ).name == str ) {
+        if ( msymbollist.at( i ).args == NULL )
+          return 1 ;
+        else 
+          return 2 ;
+
+      } // if
+        
       i-- ;  
       
     } // while
     
-    return false ;
+    return 0 ;
   } // Findsymbol()
   
   Token * Interfunc( Token * temp ) {
@@ -641,11 +647,11 @@ class Evaler {
 
   void Change( Token * temp ) {
     if ( temp != NULL ) {
-      if ( temp->left != NULL && Findsymbol( temp->left->str ) ) {
+      if ( temp->left != NULL && Findsymbol( temp->left->str ) == 1 ) {
         temp->left = Copytoken( Symbols( temp->left ) ) ;
       } // if
 
-      if ( temp->right != NULL && Findsymbol( temp->right->str ) ) {
+      if ( temp->right != NULL && Findsymbol( temp->right->str ) == 1 ) {
         temp->right = Copytoken( Symbols( temp->right ) ) ;
       } // if    
 
@@ -657,16 +663,17 @@ class Evaler {
 
   Token * Define( Token * temp ) {
     
-    if ( Getsize( temp ) != 2 ) {
+    if ( Getsize( temp ) != 2 )
       throw FormatError( "DEFINE" ) ;
-      // throw ArgNumError( "define" ) ;
-    } // if
 
+    if ( temp->left->type == DOT )
+      return Definefunc( temp ) ;    
     
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
     newsymbol.args = NULL ;
+    
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
       throw FormatError( "DEFINE" ) ;
@@ -677,13 +684,30 @@ class Evaler {
       Change( check ) ;
       newsymbol.info = check ;
     } // if
-    else { 
+    /*
+    else if ( temp->right->left->type == SYMBOL && Findsymbol( temp->right->left->str ) == 2 ) { 
+      string str = temp->right->left->str ;
+      bool find = false ;
       newsymbol.info = Evalexp( temp->right->left, 1 ) ;
       
+      int i = msymbollist.size() - 1 ;
+      while ( i >= 0 && !find ) {
+        cout << msymbollist.at( i ).name << str << endl ;
+        if ( msymbollist.at( i ).name == str ) {
+          newsymbol.args = msymbollist.at( i ).args ;
+        } // if
+        i-- ;  
+      } // while
+      
+      
+    } // else if
+    */
+    else { 
+      newsymbol.info = Evalexp( temp->right->left, 1 ) ;
     } // else 
       
 
-    if ( !Findsymbol( name ) )
+    if ( Findsymbol( name ) == 0 )
       msymbollist.push_back( newsymbol ) ;  
     else {
       for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
@@ -698,6 +722,96 @@ class Evaler {
 
     return NewToken( name + " defined" ) ;
   } // Define()
+
+  Token * Definefunc( Token * temp ) {
+    
+    if ( Getsize( temp ) != 2 )
+      throw FormatError( "DEFINE" ) ;  
+    
+    Symbol newsymbol ;
+    string name = temp->left->left->str ;
+    newsymbol.name = name ;
+    newsymbol.args = temp->left->right ;
+    
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE" ) ;
+    } // if
+    
+    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
+      Token * check = Copytoken( temp->right->left ) ;
+      Change( check ) ;
+      newsymbol.info = check ;
+    } // if
+    else { 
+      newsymbol.info = temp->right->left ;
+      
+    } // else 
+      
+
+    if ( Findsymbol( name ) == 0 )
+      msymbollist.push_back( newsymbol ) ;  
+    else {
+      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
+
+        if ( msymbollist.at( i ).name == name ) {
+          msymbollist.at( i ).info = newsymbol.info ;
+          msymbollist.at( i ).args = newsymbol.args ;
+          
+        } // if
+      } // for
+
+    } // else
+
+    return NewToken( name + " defined" ) ;
+  } // Definefunc()
+  
+  Token * Customfunc( Token * temp ) {
+    int i = msymbollist.size() - 1 ;
+    string str = temp->left->str ;
+    bool find = false ;
+    Token * argname ;
+    Token * method ;
+    Token * args ;
+    while ( i >= 0 && !find ) {
+      if ( msymbollist.at( i ).name == str )  {
+        argname = msymbollist.at( i ).args ;
+        method = msymbollist.at( i ).info ;
+        find = true ;
+      } // if
+      
+      i-- ;  
+    } // while
+    
+    args = temp->right ;
+    int argsnum = Getsize( argname ) ;
+    
+    if ( argsnum != Getsize( args ) )
+      throw ArgNumError( str ) ;
+      
+    vector < Symbol > templist ;  
+    while ( argname->type != NIL ) {
+      Symbol sym ;
+      sym.name = argname->left->str ;
+      sym.args = NULL ;
+      sym.info = Evalexp( args->left, 1 ) ;
+      templist.push_back( sym ) ;
+      
+      argname = argname->right ;
+      args = args->right ;
+    } // while  
+    
+    for ( int i = 0 ; i < templist.size() ; i++ ) {
+      msymbollist.push_back( templist.at( i ) ) ;
+    } // for
+
+    Token * retoken = Evalexp( method, 1 ) ;
+    
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    
+    return retoken ;
+  } // Customfunc()
 
   Token * Quote( Token * temp ) {
     return temp->left ; 
@@ -1452,12 +1566,13 @@ class Evaler {
 
     if ( Isatomtype( temp->type ) ) {
       if ( temp->type == SYMBOL ) {
-        if ( Findsymbol( temp->str ) ) {
+      	// cout << "**" << temp->str << Findsymbol( temp->str ) << endl ;
+        if ( Findsymbol( temp->str ) == 1 ) {
           // return Evalexp( Symbols( temp ) ) ;
           return Symbols( temp ) ;
           
         } // if
-        else if ( Isinternalfunc( temp->str ) ) {
+        else if ( Isinternalfunc( temp->str ) || Findsymbol( temp->str ) == 2 ) {
           temp->iscomd = true ;
           return temp ;
         }  // else if
@@ -1532,16 +1647,27 @@ class Evaler {
         return Begin( temp->right ) ;
       } // else if
       else if ( temp->left->type == SYMBOL ) {
+        string str = temp->left->str ;
+        int mode = Findsymbol( str ) ;
         
-        if ( Findsymbol( temp->left->str ) ) {
-          
-          if ( Isinternalfunc( Symbols( temp->left )->str ) ) {
+        if ( mode != 0 ) {
+          if ( mode == 2 ) {
+            return Customfunc( temp ) ;
+          } // if
+          else if ( Findsymbol( Symbols( temp->left )->str ) == 2 ) {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
             
             return Evalexp( ntemp, 1 ) ;
-          } // if
+          } // else if
+          else if ( Isinternalfunc( Symbols( temp->left )->str ) ) {
+            Token * ntemp = NewToken( "." ) ;
+            ntemp->left = Symbols( temp->left ) ;
+            ntemp->right = temp->right ;
+            
+            return Evalexp( ntemp, 1 ) ;
+          } // else if
           else {
             throw NonFuncError( Symbols( temp->left ) ) ;
           } // else
@@ -1868,10 +1994,6 @@ class Treemaker {
       Treerecursion( tokentree, tokenlist, point, index ) ;
     } // else
     
-    // if ( Isend( tokentree ) )
-    //   throw Callend() ; 
-    
-    // printer.Printtree( tokentree, point, 0 ) ;
   
   } // Buildtree()
       

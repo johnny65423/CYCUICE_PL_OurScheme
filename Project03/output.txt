@@ -1,4 +1,4 @@
-Welcome to OurScheme!(10727219)
+Welcome to OurScheme!
 
 > a defined
 
@@ -12,168 +12,55 @@ Welcome to OurScheme!(10727219)
 
 > x3 defined
 
-> ERROR (DEFINE format) : ( define
-  ( Fcond
-    x4
-    x1
-  )
-  ( cond
-    ( ( >
-        x4
-        x1
-      )
-      ( +
-        x4
-        x1
-      )
-    )
-    ( ( <
-        x4
-        x1
-      )
-      ( *
-        x4
-        x1
-      )
-    )
-    ( else
-      ( -
-        x4
-        x1
-      )
-    )
-  )
-)
+> Fcond defined
 
-> ERROR (unbound symbol) : Fcond
+> 12
 
-> ERROR (unbound symbol) : Fcond
+> 20
 
-> ERROR (unbound symbol) : Fcond
+> 0
 
-> ERROR (DEFINE format) : ( define
-  ( Fif
-    x1
-    x4
-    x3
-  )
-  ( if
-    ( >=
-      x2
-      x3
-    )
-    ( +
-      x1
-      x3
-    )
-    ( -
-      x3
-      x4
-    )
-  )
-)
+> Fif defined
 
-> ERROR (unbound symbol) : Fif
+> 10
 
-> ERROR (unbound symbol) : Fif
+> 1
 
-> ERROR (unbound symbol) : Fif
+> 8
 
-> ERROR (unbound symbol) : Fif
+> 76
 
-> ERROR (DEFINE format) : ( define
-  ( Fbegin
-    x3
-  )
-  ( begin
-    ( +
-      x1
-      x3
-    )
-    ( -
-      x2
-      x3
-    )
-  )
-)
+> Fbegin defined
 
-> ERROR (unbound symbol) : Fbegin
+> 1
 
-> ERROR (unbound symbol) : Fbegin
+> -76
 
-> ERROR (unbound symbol) : Fbegin
+> 0
 
-> ERROR (DEFINE format) : ( define
-  ( Fand
-    x4
-    x2
-    x5
-  )
-  ( and
-    ( >
-      x4
-      x2
-    )
-    ( >
-      x2
-      x5
-    )
-    ( >
-      x5
-      0
-    )
-  )
-)
+> Fand defined
 
-> ERROR (unbound symbol) : Fand
+> #t
 
-> ERROR (unbound symbol) : Fand
+> nil
 
-> ERROR (unbound symbol) : Fand
+> #t
 
-> ERROR (unbound symbol) : Fand
+> nil
 
-> ERROR (DEFINE format) : ( define
-  ( For
-    x1
-    x4
-    x3
-  )
-  ( or
-    ( >
-      x1
-      x4
-    )
-    ( >
-      x4
-      x3
-    )
-    ( >
-      x1
-      100
-    )
-    ( >
-      x4
-      100
-    )
-    ( >
-      x3
-      100
-    )
-  )
-)
+> For defined
 
-> ERROR (unbound symbol) : For
+> nil
 
-> ERROR (unbound symbol) : For
+> #t
 
-> ERROR (unbound symbol) : For
+> #t
 
-> ERROR (unbound symbol) : For
+> nil
 
-> ERROR (unbound symbol) : For
+> nil
 
-> ERROR (unbound symbol) : For
+> #t
 
 > ERROR (unbound symbol) : lambda
 
@@ -187,26 +74,22 @@ Welcome to OurScheme!(10727219)
 
 > environment cleaned
 
-> ERROR (DEFINE format) : ( define
-  ( cadr
-    x
-  )
-  ( car
-    ( cdr
-      x
-    )
-  )
+> cadr defined
+
+> #<procedure cadr>
+
+> ( 30
+  40
 )
 
-> ERROR (unbound symbol) : cadr
+> cadr-clone defined
 
-> ERROR (unbound symbol) : cadr
+> #<procedure cadr>
 
-> ERROR (unbound symbol) : cadr
-
-> ERROR (unbound symbol) : cadr-clone
-
-> ERROR (unbound symbol) : cadr-clone
+> ( 30
+  ( 40
+  )
+)
 
 > cadr-clone defined
 
@@ -214,20 +97,12 @@ Welcome to OurScheme!(10727219)
   20
 )
 
-> ERROR (unbound symbol) : cadr
+> cadr-clone defined
 
-> ERROR (DEFINE format) : ( define
-  ( cdar
-    y
-  )
-  ( cdr
-    ( car
-      y
-    )
-  )
+> cdar defined
+
+> ( 2
 )
-
-> ERROR (unbound symbol) : cdar
 
 > first defined
 
@@ -241,17 +116,24 @@ Welcome to OurScheme!(10727219)
 
 > car
 
-> ERROR (unbound symbol) : cadr
+> second defined
 
-> ERROR (unbound symbol) : second
+> 20
 
-> ERROR (unbound symbol) : second
+> ( ( 40
+    50
+  )
+  60
+)
 
-> ERROR (unbound symbol) : second
+> ( 40
+  50
+)
 
-> ERROR (unbound symbol) : second
+> 50
 
-> ERROR (unbound symbol) : second
+> ( 50
+)
 
 > 
 Thanks for using OurScheme!
