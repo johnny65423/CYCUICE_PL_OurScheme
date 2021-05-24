@@ -470,7 +470,11 @@ class Printer {
 
     Type type = temp->type ;
 
-    if ( type == DOT ) {
+    if ( type == DOT && temp->left->str == "lambda" ) {
+      Printtoken( temp->left ) ;
+      printf( "\n" ) ;
+    } // if
+    else if ( type == DOT ) {
 
       printf( "( " ) ;
       
@@ -527,7 +531,7 @@ class Printer {
           
       printf( ")\n" ) ;
       
-    } // if
+    } // else if
     else {
       if ( type == NIL ) 
         ;
@@ -1589,7 +1593,7 @@ class Evaler {
       if ( temp->type == SYMBOL ) {
         if ( Findsymbol( temp->str ) == 1 ) {
           Token * retoken = Symbols( temp ) ;
-
+          return retoken ; 
           
           if (  retoken->left != NULL && retoken->left->str == "lambda" )
             return Evalexp( retoken, 1 ) ;
@@ -1673,8 +1677,8 @@ class Evaler {
       } // else if
       else if ( temp->left->str == "lambda" ) {
         Token * re = NewToken( "lambda" ) ;
-        re->iscomd = true ;
-        return re ;
+        temp->left->iscomd = true ;
+        return temp ;
       } // else if
       else if ( temp->left->type == SYMBOL ) {
         string str = temp->left->str ;
@@ -1688,7 +1692,6 @@ class Evaler {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
-            
             return Evalexp( ntemp, 1 ) ;
           } // else if
           else if ( Isinternalfunc( sym->str ) ) {
@@ -1727,9 +1730,12 @@ class Evaler {
         else {
           Token * check = Evalexp( temp->left, 1 ) ;
           temp->left = check ;
-          if ( !Isinternalfunc( check->str ) )
+
+          if ( check->type == SYMBOL && !Isinternalfunc( check->str ) )
             throw NonFuncError( temp->left ) ;
-          
+          else if ( check->left->str != "lambda" )
+            throw NonFuncError( temp->left ) ;
+            
           return Evalexp( temp, 1 ) ;
         } // else
 

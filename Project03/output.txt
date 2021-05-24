@@ -70,9 +70,9 @@ Welcome to OurScheme!
 
 > #<procedure lambda>
 
-> ERROR (attempt to apply non-function) : #<procedure lambda>
+> 6
 
-> ERROR (attempt to apply non-function) : #<procedure lambda>
+> 9
 
 > environment cleaned
 
