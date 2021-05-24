@@ -458,7 +458,7 @@ class Printer {
   public:
   void Printtree( Token * tokentree ) {
     Token * temp = tokentree ;
-    if ( temp->right == NULL && temp->left == NULL ) {
+    if ( Isatomtype( temp->type ) ) {
       Printtoken( temp );
       printf( "\n" );
     } // if
@@ -1672,9 +1672,9 @@ class Evaler {
         return Begin( temp->right ) ;
       } // else if
       else if ( temp->left->str == "lambda" ) {
-        Token * retoken = NewToken( "lambda" ) ;
-        retoken->iscomd = true ;
-        return retoken ;
+        Token * re = NewToken( "lambda" ) ;
+        re->iscomd = true ;
+        return re ;
       } // else if
       else if ( temp->left->type == SYMBOL ) {
         string str = temp->left->str ;

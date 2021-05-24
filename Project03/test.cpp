@@ -26,6 +26,7 @@ struct Token {
   int column ;
   int intnum ;
   float floatnum ;
+  bool iscomd ;
   Type type ;
   
   Token * left ;
@@ -33,7 +34,9 @@ struct Token {
 };
 
 struct Symbol {
+
   string name ;
+  Token * args ;
   Token * info ;
   
 };
@@ -187,6 +190,46 @@ bool Justdot() {
     return false ;  
 } // Justdot()
 
+bool Isinternalfunc( string str ) {
+  if ( str == "cons" || str == "list" || str == "car" ) 
+    return true ;
+  else if ( str == "cdr" || str == "atom?" || str == "pair?" ) 
+    return true ;
+  else if ( str == "list?" || str == "null?" || str == "integer?" ) 
+    return true ;
+  else if ( str == "real?" || str == "number?" || str == "string?" ) 
+    return true ;
+  else if ( str == "boolean?" || str == "symbol?" || str == "+" ) 
+    return true ;
+  else if ( str == "-" || str == "*" || str == "/" ) 
+    return true ;
+  else if ( str == "not" || str == ">" || str == ">=" ) 
+    return true ;
+  else if ( str == "<" || str == "<=" || str == "=" ) 
+    return true ;
+  else if ( str == "string-append" || str == "string>?" || str == "string<?" ) 
+    return true ;
+  else if ( str == "string=?" || str == "eqv?" || str == "equal?" ) 
+    return true ;
+  else if ( str == "exit" ) 
+    return true ;
+  else 
+    return false ;
+} // Isinternalfunc()
+
+bool Isspfunc( string str ) {
+  if ( str == "quote" || str == "\'" || str == "define" ) 
+    return true ;
+  else if ( str == "and" || str == "or" || str == "begin" ) 
+    return true ;
+  else if ( str == "if" || str == "cond" || str == "clean-environment" ) 
+    return true ;
+  else if ( str == "exit" ) 
+    return true ;
+  else 
+    return false ;
+} // Isspfunc()
+
 bool Isprimitivepredicates( string str ) {
   if ( str == "atom?" ) return true ;
   else if ( str == "pair?" ) return true ;
@@ -235,6 +278,7 @@ float Getnum( Token * temp ) {
 class Exception {
 public:
   string merrorstr;
+  Token * mhead ;
   
   Exception() {  }
 
@@ -292,6 +336,7 @@ public:
     ss << "ERROR (incorrect number of arguments) : " << str ;
 
     merrorstr = ss.str() ;
+
   } // ArgNumError()
 };
 
@@ -308,12 +353,13 @@ public:
 
 class NonFuncError : public Exception {
 public:
-  NonFuncError( string str ) {
+  NonFuncError( Token * temp ) {
     stringstream ss ;
 
-    ss << "ERROR (attempt to apply non-function) : " << str ;
+    ss << "ERROR (attempt to apply non-function) : " ;
 
     merrorstr = ss.str() ;
+    mhead = temp ;
   } // NonFuncError()
 };
 
@@ -328,6 +374,177 @@ public:
   } // NonListError()
 };
 
+class LevelError : public Exception {
+public:
+  LevelError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (level of " << str << ")" ;
+
+    merrorstr = ss.str() ;
+  } // LevelError()
+};
+
+class FormatError : public Exception {
+public:
+  FormatError( string str ) {
+    stringstream ss ;
+
+    ss << "ERROR (" << str << " format) : " ;
+
+    merrorstr = ss.str() ;
+  } // FormatError()
+};
+
+class ArgTypeError : public Exception {
+public:
+  ArgTypeError( string str, Token * temp ) {
+    stringstream ss ;
+
+    ss << "ERROR (" << str << " with incorrect argument type) : " ;
+
+    merrorstr = ss.str() ;
+    mhead = temp ;
+  } // ArgTypeError()
+};
+
+class DivideZeroError : public Exception {
+public:
+  DivideZeroError() {
+    stringstream ss ;
+
+    ss << "ERROR (division by zero) : /" ;
+
+    merrorstr = ss.str() ;
+  } // DivideZeroError()
+};
+
+class NoReturnError : public Exception {
+public:
+  NoReturnError( Token * temp ) {
+    stringstream ss ;
+
+    ss << "ERROR (no return value) : " ;
+    mhead = temp ;
+    merrorstr = ss.str() ;
+  } // NoReturnError()
+};
+
+class ReE : public Exception {
+public:
+  ReE() {
+    ;
+  } // ReE()
+};
+
+class Printer {
+  private:
+  void Printtoken( Token * token ) {
+    Type type = token->type ;
+
+    if ( type == INT )
+      printf( "%d", token->intnum ) ;
+    else if ( type == FLOAT )
+      printf( "%.3f", token->floatnum ) ;
+    else if ( type == QUOTE )
+      printf( "%s", "quote" ) ;
+    else if ( token->iscomd )
+      printf( "#<procedure %s>", token->str.c_str() ) ;      
+    else 
+      printf( "%s", token->str.c_str() ) ;
+         
+  } // Printtoken()
+  
+  public:
+  void Printtree( Token * tokentree ) {
+    Token * temp = tokentree ;
+    if ( Isatomtype( temp->type ) ) {
+      Printtoken( temp );
+      printf( "\n" );
+    } // if
+    else  
+      PrintRe( temp, 0 ) ;
+  } // Printtree()
+  
+  void PrintRe( Token * temp, int spacenum ) {
+
+    Type type = temp->type ;
+
+    if ( type == DOT ) {
+
+      printf( "( " ) ;
+      
+      type = temp->left->type ;
+
+      if ( type == DOT )
+        PrintRe( temp->left, spacenum + 2 ) ;
+      else {
+
+        Printtoken( temp->left ) ;  
+        printf( "\n" ) ;
+      } // else
+                  
+      temp = temp->right ;
+      while ( temp != NULL ) {
+        type = temp->type ;
+        if ( type == DOT ) {
+          type = temp->left->type ;
+            
+          if ( type == DOT ) {
+            for ( int i = 0 ; i < spacenum + 2 ; i++ )
+              printf( " " ) ;
+            PrintRe( temp->left, spacenum + 2 ) ;
+          } // if
+          else {
+              
+            for ( int i = 0 ; i < spacenum + 2 ; i++ )
+              printf( " " ) ;
+                
+            Printtoken( temp->left ) ;
+            printf( "\n" ) ;
+          } // else
+        } // if
+        else {
+          type = temp->type ;
+          if ( type != NIL ) {
+            for ( int i = 0 ; i < spacenum + 2 ; i++ )
+              printf( " " ) ;
+            
+            printf( "." ) ;        
+            // .Printtoken( Maketoken( "." ) ) ; 
+            printf( "\n" ) ;  
+          } // if
+             
+          PrintRe( temp, spacenum + 2 ) ;
+        } // else
+            
+        temp = temp->right ;
+
+      } // while
+        
+      for ( int i = 0 ; i < spacenum ; i++ )
+        printf( " " ) ;
+          
+      printf( ")\n" ) ;
+      
+    } // if
+    else {
+      if ( type == NIL ) 
+        ;
+      else {
+        for ( int i = 0 ; i < spacenum ; i++ )
+          printf( " " ) ;
+        Printtoken( temp ) ;
+        printf( "\n" ) ;  
+      } // else
+
+    } // else
+
+  } // PrintRe()  
+  
+  
+};
+
 class Evaler {
   private:
     
@@ -339,6 +556,7 @@ class Evaler {
     retoken->type = Gettype( retoken->str ) ;
     retoken->intnum = Decodeint( retoken->str ) ;
     retoken->floatnum = Decodefloat( retoken->str ) ;
+    retoken->iscomd = false ;
     retoken->left = NULL ;
     retoken->right = NULL ;
       
@@ -353,17 +571,23 @@ class Evaler {
     
   } // Getsize()
   
-  bool Findsymbol( string str ) {
+  int Findsymbol( string str ) {
     int i = msymbollist.size() - 1 ;
     
     while ( i >= 0 ) {
-      if ( msymbollist.at( i ).name == str )
-        return true ;
+      if ( msymbollist.at( i ).name == str ) {
+        if ( msymbollist.at( i ).args == NULL )
+          return 1 ;
+        else 
+          return 2 ;
+
+      } // if
+        
       i-- ;  
       
     } // while
     
-    return false ;
+    return 0 ;
   } // Findsymbol()
   
   Token * Interfunc( Token * temp ) {
@@ -372,15 +596,38 @@ class Evaler {
     return NewToken( ss.str() ) ;
   } // Interfunc()
   
+  Token * Exit( Token * temp ) {
+
+    if ( Getsize( temp ) != 0 )
+      throw ArgNumError( "exit" ) ;
+    else if ( Getsize( temp ) == 0 )
+      throw Callend() ;
+  
+    return NewToken( "exit" ) ;
+  } // Exit()
+
+  Token * Copytoken( Token * temp ) {
+    if ( temp != NULL ) {
+      Token * ntemp = NewToken( temp->str ) ;
+      ntemp->left = Copytoken( temp->left ) ;
+      ntemp->right = Copytoken( temp->right ) ;
+      return ntemp ;
+    } // if
+    else 
+      return NULL ;
+  } // Copytoken()
+  
   Token * Symbols( Token * temp ) {
     
     int i = msymbollist.size() - 1 ;
     bool find = false ;
     while ( i >= 0 ) {
+
       if ( msymbollist.at( i ).name == temp->str )  {
         find = true ;
-        // cout << msymbollist.at( i ).info->str ;
-        return msymbollist.at( i ).info ;
+        
+        Token * retoken = msymbollist.at( i ).info ;
+        return retoken ;
       } // if
       
     
@@ -397,27 +644,61 @@ class Evaler {
     return NULL ;
   } // Symbols()
 
+  void Change( Token * temp ) {
+    if ( temp != NULL ) {
+      if ( temp->left != NULL && Findsymbol( temp->left->str ) == 1 ) {
+        temp->left = Copytoken( Symbols( temp->left ) ) ;
+      } // if
+
+      if ( temp->right != NULL && Findsymbol( temp->right->str ) == 1 ) {
+        temp->right = Copytoken( Symbols( temp->right ) ) ;
+      } // if    
+
+      Change( temp->left ) ;
+      Change( temp->right ) ;
+    } // if
+
+  }  // Change()
+
   Token * Define( Token * temp ) {
     
-    if ( Getsize( temp ) != 2 ) {
-      throw ArgNumError( "define" ) ;
-    } // if
+    if ( Getsize( temp ) != 2 )
+      throw FormatError( "DEFINE" ) ;
+
+    if ( temp->left->type == DOT )
+      return Definefunc( temp ) ;    
     
     Symbol newsymbol ;
     string name = temp->left->str ;
     newsymbol.name = name ;
-
-    newsymbol.info = Evalexp( temp->right->left ) ;
-
+    newsymbol.args = NULL ;
+    
+    
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE" ) ;
+    } // if
+    
+    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
+      Token * check = Copytoken( temp->right->left ) ;
+      Change( check ) ;
+      newsymbol.info = check ;
+    } // if
+    else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
+      newsymbol.info = temp->right->left ;
+    } // else if
+    else { 
+      newsymbol.info = temp->right->left ;
+    } // else 
       
-    if ( !Findsymbol( name ) )
+
+    if ( Findsymbol( name ) == 0 )
       msymbollist.push_back( newsymbol ) ;  
     else {
       for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
 
         if ( msymbollist.at( i ).name == name ) {
 
-          msymbollist.at( i ).info = temp->right->left ;
+          msymbollist.at( i ).info = newsymbol.info ;
         } // if
       } // for
 
@@ -425,6 +706,133 @@ class Evaler {
 
     return NewToken( name + " defined" ) ;
   } // Define()
+
+  Token * Definefunc( Token * temp ) {
+    
+    if ( Getsize( temp ) != 2 )
+      throw FormatError( "DEFINE" ) ;  
+    
+    Symbol newsymbol ;
+    string name = temp->left->left->str ;
+    newsymbol.name = name ;
+    newsymbol.args = temp->left->right ;
+    
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE" ) ;
+    } // if
+    
+    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
+      Token * check = Copytoken( temp->right->left ) ;
+      Change( check ) ;
+      newsymbol.info = check ;
+    } // if
+    else { 
+      newsymbol.info = temp->right->left ;
+      
+    } // else 
+      
+
+    if ( Findsymbol( name ) == 0 )
+      msymbollist.push_back( newsymbol ) ;  
+    else {
+      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
+
+        if ( msymbollist.at( i ).name == name ) {
+          msymbollist.at( i ).info = newsymbol.info ;
+          msymbollist.at( i ).args = newsymbol.args ;
+          
+        } // if
+      } // for
+
+    } // else
+
+    return NewToken( name + " defined" ) ;
+  } // Definefunc()
+  
+  Token * Customfunc( Token * temp ) {
+    int i = msymbollist.size() - 1 ;
+    string str = temp->left->str ;
+    bool find = false ;
+    Token * argname ;
+    Token * method ;
+    Token * args ;
+    while ( i >= 0 && !find ) {
+      if ( msymbollist.at( i ).name == str )  {
+        argname = msymbollist.at( i ).args ;
+        method = msymbollist.at( i ).info ;
+        find = true ;
+      } // if
+      
+      i-- ;  
+    } // while
+    
+    args = temp->right ;
+    int argsnum = Getsize( argname ) ;
+    
+    if ( argsnum != Getsize( args ) )
+      throw ArgNumError( str ) ;
+      
+    vector < Symbol > templist ;  
+    while ( argname->type != NIL ) {
+      Symbol sym ;
+      sym.name = argname->left->str ;
+      sym.args = NULL ;
+      sym.info = Evalexp( args->left, 1 ) ;
+      templist.push_back( sym ) ;
+      
+      argname = argname->right ;
+      args = args->right ;
+    } // while  
+    
+    for ( int i = 0 ; i < templist.size() ; i++ ) {
+      msymbollist.push_back( templist.at( i ) ) ;
+    } // for
+
+    Token * retoken = Evalexp( method, 1 ) ;
+    
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    
+    return retoken ;
+  } // Customfunc()
+  
+  Token * Lambda( Token * temp ) {
+
+    Token * ltemp = temp->left->right ;
+    Token * argname = ltemp->left ;
+    Token * method = ltemp->right->left ;
+    Token * args = temp->right ;
+
+    int argsnum = Getsize( argname ) ;
+    
+    if ( argsnum != Getsize( args ) )
+      throw ArgNumError( "lambda" ) ;
+      
+    vector < Symbol > templist ;  
+    while ( argname->type != NIL ) {
+      Symbol sym ;
+      sym.name = argname->left->str ;
+      sym.args = NULL ;
+      sym.info = Evalexp( args->left, 1 ) ;
+      templist.push_back( sym ) ;
+      
+      argname = argname->right ;
+      args = args->right ;
+    } // while  
+    
+    for ( int i = 0 ; i < templist.size() ; i++ ) {
+      msymbollist.push_back( templist.at( i ) ) ;
+    } // for
+
+    Token * retoken = Evalexp( method, 1 ) ;
+    
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    
+    return retoken ;
+  } // Lambda()
 
   Token * Quote( Token * temp ) {
     return temp->left ; 
@@ -435,21 +843,24 @@ class Evaler {
       throw ArgNumError( "cons" ) ;
     
     Token * retoken = NewToken( "." ) ;
-    retoken->left = Evalexp( temp->left ) ;
-    retoken->right = Evalexp( temp->right->left );
+    retoken->left = Evalexp( temp->left, 1 ) ;
+    retoken->right = Evalexp( temp->right->left, 1 );
     return retoken ;  
   } // Cons()
 
   Token * List( Token * temp ) {
-    // if(Getsize(temp) != 2)
-    //   throw ArgNumError("cons") ;
+    if ( Getsize( temp ) == 0 )
+      return NewToken( "nil" ) ;
+    else if ( !Islist( temp ) ) {
+      throw NonListError() ;
+    } // else if
     // not done
     Token * retoken = NewToken( "." ) ;
     Token * ret = retoken ;
     Token * t = temp ;
 
     while ( t->type != NIL ) {
-      ret->left = Evalexp( t->left ) ; 
+      ret->left = Evalexp( t->left, 1 ) ; 
     
       if ( t->right->type != NIL )
         ret->right = NewToken( "." ) ;
@@ -467,16 +878,24 @@ class Evaler {
   Token * Car( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "car" ) ;
+    Token * check = Evalexp( temp->left, 1 ) ;
     
-    return Evalexp( temp->left )->left ;
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "car", check ) ;
+      
+    return check->left ;
     
   } // Car()
 
   Token * Cdr( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "cdr" ) ;
+    Token * check = Evalexp( temp->left, 1 ) ;
     
-    return Evalexp( temp->left )->right ;
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "cdr", check ) ;
+      
+    return check->right ;
     
   } // Cdr()
   
@@ -484,7 +903,8 @@ class Evaler {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "not" ) ;
     
-    if ( Evalexp( temp->left )->type == NIL )     
+
+    if ( Evalexp( temp->left, 1 )->type == NIL )     
       return NewToken( "#t" ) ;
     else 
       return NewToken( "nil" ) ;
@@ -494,7 +914,14 @@ class Evaler {
   Token * Greater( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) <= Getnum( Evalexp( temp->right->left ) ) )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( ">", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( ">", check2 ) ;
+
+      if ( Getnum( check1 ) <= Getnum( check2 ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -507,7 +934,14 @@ class Evaler {
   Token * Less( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) >= Getnum( Evalexp( temp->right->left ) ) )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "<", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "<", check2 ) ;
+
+      if ( Getnum( check1 ) >= Getnum( check2 ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -520,7 +954,14 @@ class Evaler {
   Token * Nogreater( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) > Getnum( Evalexp( temp->right->left ) ) )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "<=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "<=", check2 ) ;
+
+      if ( Getnum( check1 ) > Getnum( check2 ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -533,7 +974,14 @@ class Evaler {
   Token * Noless( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) < Getnum( Evalexp( temp->right->left ) ) )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( ">=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( ">=", check2 ) ;
+
+      if ( Getnum( check1 ) < Getnum( check2 ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -546,7 +994,14 @@ class Evaler {
   Token * Equalnum( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Getnum( Evalexp( temp->left ) ) != Getnum( Evalexp( temp->right->left ) ) )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "=", check2 ) ;
+      if ( Getnum( check1 ) != Getnum( check2 ) )
         check = "nil" ;
       
       temp = temp->right ;
@@ -559,7 +1014,11 @@ class Evaler {
   Token * Strappend( Token * temp ) {
     string check = "" ;
     while ( temp->type != NIL && temp != NULL ) {
-      check = Mergestr( check, Evalexp( temp->left )->str ) ;
+      Token * nstr = Evalexp( temp->left, 1 ) ;
+      if ( nstr->type != STRING )
+        throw ArgTypeError( "string-append", nstr ) ;
+
+      check = Mergestr( check, nstr->str ) ;
       temp = temp->right ;
     } // while
 
@@ -570,7 +1029,14 @@ class Evaler {
   Token * Strgreat( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) <= 0 )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string>?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string>?", check2 ) ;
+      if ( check1->str.compare( check2->str ) <= 0 )
         check = "nil" ;
       
       temp = temp->right ;
@@ -583,7 +1049,14 @@ class Evaler {
   Token * Strless( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) >= 0 )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string<?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string<?", check2 ) ;
+      if ( check1->str.compare( check2->str ) >= 0 )
         check = "nil" ;
       
       temp = temp->right ;
@@ -596,7 +1069,14 @@ class Evaler {
   Token * Strequal( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      if ( Evalexp( temp->left )->str.compare( Evalexp( temp->right->left )->str ) != 0 )
+      Token * check1 = Evalexp( temp->left, 1 ) ;
+      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+  
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string=?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string=?", check2 ) ;
+      if ( check1->str.compare( check2->str ) != 0 )
         check = "nil" ;
       
       temp = temp->right ;
@@ -608,9 +1088,9 @@ class Evaler {
 
   Token * Eqv( Token * temp ) {
     if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "equ?" ) ;
-    Token * check1 = Evalexp( temp->left ) ;
-    Token * check2 = Evalexp( temp->right->left ) ;
+      throw ArgNumError( "eqv?" ) ;
+    Token * check1 = Evalexp( temp->left, 1 ) ;
+    Token * check2 = Evalexp( temp->right->left, 1 ) ;
     if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
          check1->type != STRING && check2->type != STRING ) {
       if ( check1->str.compare( check2->str ) == 0 )
@@ -643,8 +1123,8 @@ class Evaler {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "equ?" ) ;
     
-    Token * check1 = Evalexp( temp->left ) ;
-    Token * check2 = Evalexp( temp->right->left ) ;
+    Token * check1 = Evalexp( temp->left, 1 ) ;
+    Token * check2 = Evalexp( temp->right->left, 1 ) ;
     if ( Issame( check1, check2 ) ) 
       return NewToken( "#t" ) ;
     else 
@@ -657,17 +1137,17 @@ class Evaler {
     if ( size != 2 && size != 3 )
       throw ArgNumError( "if" ) ;
     
-    Token * check = Evalexp( temp->left ) ;
+    Token * check = Evalexp( temp->left, 1 ) ;
     Token * result ;
 
     if ( check->type != NIL ) {
-      result = Evalexp( temp->right->left ) ;
+      result = Evalexp( temp->right->left, 1 ) ;
     } // if
     else {
       if ( size == 2 )
-        throw ArgNumError( "if" ) ;
+        throw ReE() ;
       else {
-        result = Evalexp( temp->right->right->left ) ;
+        result = Evalexp( temp->right->right->left, 1 ) ;
       } // else
 
     } // else
@@ -679,13 +1159,21 @@ class Evaler {
   Token * Decide( Token * temp, bool last, bool & done ) {
 
     if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "cond" ) ;
-
-    Token * check ;
-    Token * result ;
-    if ( ( last && temp->left->str == "else" ) || Evalexp( temp->left )->type != NIL ) {
+      throw FormatError( "COND" ) ;
+    else if ( Isatomtype( temp->type ) ) {
+      throw FormatError( "COND" ) ;
+    } // else if
+    else if ( ( last && temp->left->str == "else" ) ) {
       done = true ;
-      return Begin( temp->right ) ;
+      return Begincond( temp->right ) ;
+    } // if
+
+    Token * check = Evalexp( temp->left, 1 );
+    Token * result ;
+
+    if ( check->type != NIL ) {
+      done = true ;
+      return Begincond( temp->right ) ;
     } // if
     else {
       done = false ;
@@ -697,11 +1185,24 @@ class Evaler {
   Token * Cond( Token * temp ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "cond" ) ;
+      throw FormatError( "COND" ) ;
     
     Token * t = temp ;
     bool check, done ;
     Token * result ;
+
+    while ( t->type != NIL ) {
+      if ( Isatomtype( t->left->type ) ) {
+        throw FormatError( "COND" ) ;
+      } // if
+      else if ( Getsize( t->left ) < 2 ) {
+        throw FormatError( "COND" ) ;
+      } // else if
+
+      t = t->right ;
+    } // while
+
+    t = temp ;
 
     while ( t->type != NIL ) {
       if ( t->right->type == NIL ) {
@@ -720,14 +1221,14 @@ class Evaler {
       t = t->right ;
     } // while
 
-    throw ArgNumError( "noreturn" ) ;
+    throw ReE() ;
 
   } // Cond()
   
   Token * Begin( Token * temp ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "Begin" ) ;
+      throw ArgNumError( "begin" ) ;
     
     Token * t = temp ;
     bool check, done ;
@@ -735,13 +1236,32 @@ class Evaler {
 
     while ( t != NULL && t->type != NIL ) {
 
-      result = Evalexp( t->left ) ;
+      result = Evalexp( t->left, 1 ) ;
       t = t->right ;
     } // while
 
     return result ;
 
   } // Begin()
+
+  Token * Begincond( Token * temp ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+
+      result = Evalexp( t->left, 1 ) ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Begincond()
 
   Token * Or( Token * temp ) {
     int size = Getsize( temp ) ;
@@ -753,7 +1273,7 @@ class Evaler {
     Token * result ;
     while ( t != NULL && t->type != NIL ) {
 
-      result = Evalexp( t->left ) ;
+      result = Evalexp( t->left, 1 ) ;
       if ( result->type != NIL )
         return result ;
 
@@ -767,7 +1287,7 @@ class Evaler {
   Token * And( Token * temp ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "Begin" ) ;
+      throw ArgNumError( "And" ) ;
     
     Token * t = temp ;
     bool check, done ;
@@ -775,7 +1295,7 @@ class Evaler {
 
     while ( t != NULL && t->type != NIL ) {
 
-      result = Evalexp( t->left ) ;
+      result = Evalexp( t->left, 1 ) ;
       if ( result->type == NIL )
         return result ;
       t = t->right ;
@@ -787,23 +1307,23 @@ class Evaler {
 
   Token * Primitivepredicates( Token * temp, string str ) {
     if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "***" ) ;
+      throw ArgNumError( str ) ;
     
     if ( str == "atom?" ) {
-      if ( Evalexp( temp->left )->type != DOT )
+      if ( Evalexp( temp->left, 1 )->type != DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // if
     else if ( str == "pair?" ) {
 
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
 
       if ( check->type == DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "list?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       while ( check->right != NULL ) 
         check = check->right ;    
       if ( check->type == NIL )
@@ -811,43 +1331,43 @@ class Evaler {
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "null?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == NIL )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "integer?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "real?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT || check->type == FLOAT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "number?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT || check->type == FLOAT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "string?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == STRING )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "boolean?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == NIL || check->type == T )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "symbol?" ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == SYMBOL )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
@@ -858,7 +1378,7 @@ class Evaler {
 
   Token * Arith( Token * temp, string str ) {
     if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "***" ) ;
+      throw ArgNumError( str ) ;
     stringstream ss;
     bool isfloat = false ;
     if ( str == "+" ) {
@@ -935,16 +1455,18 @@ class Evaler {
   } // Arith()
   
   Token * Func( Token * temp ) {
-    string str = Symbols( temp->left )->str ;
-    throw NonFuncError( str ) ;
+    // string str = Symbols( temp->left )->str ;
+    throw NonFuncError( Symbols( temp->left ) ) ;
 
   } // Func()
  
   float Add( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "+", check ) ;
       return Getnum( check ) + Add( temp->right, isfloat ) ;
     } // if
     else {
@@ -955,15 +1477,17 @@ class Evaler {
 
   float Sub( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       float num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
       while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left ) ;
+        Token * check2 = Evalexp( check->left, 1 ) ;
         if ( check2->type == FLOAT )
           isfloat = true ;
+        else if ( check2->type != INT && check2->type != FLOAT )
+          throw ArgTypeError( "-", check2 ) ;
         num -= Getnum( check2 ) ;
 
         check = check->right ;
@@ -981,9 +1505,12 @@ class Evaler {
 
   float Mul( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "*", check ) ;
+
       return Getnum( check ) * Mul( temp->right, isfloat ) ;
     } // if
     else {
@@ -994,16 +1521,23 @@ class Evaler {
 
   float Div( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left ) ;
+      Token * check = Evalexp( temp->left, 1 ) ;
       float num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
       while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left ) ;
+        Token * check2 = Evalexp( check->left, 1 ) ;
         if ( check2->type == FLOAT )
           isfloat = true ;
-        num /= Getnum( check2 ) ;
+        else if ( check2->type != INT && check2->type != FLOAT )
+          throw ArgTypeError( "/", check2 ) ;
+
+        float number = Getnum( check2 ) ;
+        if ( number == 0 )
+          throw DivideZeroError() ;        
+
+        num /= number ;
 
         check = check->right ;
         
@@ -1044,58 +1578,57 @@ class Evaler {
       return false ;
     } // else
   } // Islist()
-  
-  bool Isinternalfunc( string str ) {
-    if ( str == "cons" || str == "list" || str == "car" ) 
-      return true ;
-    else if ( str == "cdr" || str == "atom?" || str == "pair?" ) 
-      return true ;
-    else if ( str == "list?" || str == "null?" || str == "integer?" ) 
-      return true ;
-    else if ( str == "real?" || str == "number?" || str == "string?" ) 
-      return true ;
-    else if ( str == "boolean?" || str == "symbol?" || str == "+" ) 
-      return true ;
-    else if ( str == "-" || str == "*" || str == "/" ) 
-      return true ;
-    else if ( str == "not" || str == ">" || str == ">=" ) 
-      return true ;
-    else if ( str == "<" || str == "<=" || str == "=" ) 
-      return true ;
-    else if ( str == "string-append" || str == "string>?" || str == "string<?" ) 
-      return true ;
-    else if ( str == "string=?" || str == "eqv?" || str == "equal?" ) 
-      return true ;
-    else if ( str == "exit" ) 
-      return true ;
-    else 
-      return false ;
-  } // Isinternalfunc()
 
-  bool Isspfunc( string str ) {
-    if ( str == "quote" || str == "\'" || str == "define" ) 
-      return true ;
-    else if ( str == "and" || str == "or" || str == "begin" ) 
-      return true ;
-    else if ( str == "if" || str == "cond" || str == "clean-environment" ) 
-      return true ;
-    else if ( str == "exit" ) 
-      return true ;
-    else 
-      return false ;
-  } // Isspfunc()
+  Printer mprinter ;
 
   public:
-  /*
-  Token * Evalexp( Token * temp ) {
-    
-    if ( temp->left != NULL ) {
+  
+  Token * Evalexp( Token * temp, int head ) {
+
+    if ( Isatomtype( temp->type ) ) {
+      if ( temp->type == SYMBOL ) {
+        if ( Findsymbol( temp->str ) == 1 ) {
+          Token * retoken = Symbols( temp ) ;
+
+          
+          if (  retoken->left != NULL && retoken->left->str == "lambda" )
+            return Evalexp( retoken, 1 ) ;
+          else
+            return retoken ;
+          
+        } // if
+        else if ( Isinternalfunc( temp->str ) || Findsymbol( temp->str ) == 2 ) {
+          temp->iscomd = true ;
+          return temp ;
+        }  // else if
+        else 
+          throw UnboundError( temp->str ) ;
+      } // if
+      else
+        return temp ;
+    } // if
+    else if ( temp->left != NULL ) {
+      if ( !Islist( temp ) ) {
+        throw NonListError() ;
+      } // if
+
       if ( temp->left->str == "clean-environment" ) {
+        if ( head != 0 )
+          throw LevelError( "CLEAN-ENVIRONMENT" ) ;
+        // else if ( Getsize( temp->right ) != 0 )
         msymbollist.clear() ;
         return NewToken( "environment cleaned" ) ;  
       } // if
-      else if ( temp->left->str == "define" )
+      else if ( temp->left->str == "define" ) {
+        if ( head != 0 )
+          throw LevelError( "DEFINE" ) ;
         return Define( temp->right ) ;    
+      } // else if
+      else if ( temp->left->str == "exit" ) {
+        if ( head != 0 )
+          throw LevelError( "EXIT" ) ;
+        return Exit( temp->right ) ;    
+      } // else if
       else if ( temp->left->type == QUOTE || temp->left->str == "quote" )
         return Quote( temp->right ) ;   
       else if ( temp->left->str == "cons" )
@@ -1119,364 +1652,97 @@ class Evaler {
         return Equal( temp->right ) ;
       } // else if
       else if ( temp->left->str == "if" ) {
-        return If( temp->right ) ;
+        try {
+          return If( temp->right ) ;
+        } // try
+        catch ( ReE e ) {
+          throw NoReturnError( temp ) ;
+        } // catch
+        
       } // else if
       else if ( temp->left->str == "cond" ) {
-        return Cond( temp->right ) ;
+        try {
+          return Cond( temp->right ) ;
+        } // try
+        catch ( ReE e ) {
+          throw NoReturnError( temp ) ;
+        } // catch
       } // else if
       else if ( temp->left->str == "begin" ) {
         return Begin( temp->right ) ;
       } // else if
-      else
-        throw NonFuncError( Symbols( temp->left )->str ) ;
-    } // if 
-    else if ( temp->type == SYMBOL ) {
-      return Symbols( temp );
-    } // else if
-            
-    else 
-      return temp ;
-      
-      
-  } // Evalexp()
-  */
-
-  Token * Evaluate( Token * temp, Token * check ) {
-    
-    if ( check != NULL ) {
-      if ( check->str == "clean-environment" ) {
-        msymbollist.clear() ;
-        return NewToken( "environment cleaned" ) ;  
-      } // if
-      else if ( check->str == "define" )
-        return Define( temp->right ) ;    
-      else if ( check->type == QUOTE || check->str == "quote" )
-        return Quote( temp->right ) ;   
-      else if ( check->str == "cons" )
-        return Cons( temp->right ) ;
-      else if ( check->str == "list" )
-        return List( temp->right ) ;
-      else if ( check->str == "car" )
-        return Car( temp->right ) ;  
-      else if ( check->str == "cdr" )
-        return Cdr( temp->right ) ; 
-      else if ( check->str == "not" )
-        return Not( temp->right ) ; 
-      else if ( Isprimitivepredicates( check->str ) ) {
-
-        return Primitivepredicates( temp->right, check->str ) ;
-      } // else if   
-      else if ( IsArith( check->str ) ) 
-        return Arith( temp->right, check->str ) ; 
-      else if ( check->str == "eqv?" ) {
-        return Eqv( temp->right ) ;
+      else if ( temp->left->str == "lambda" ) {
+        Token * re = NewToken( "lambda" ) ;
+        re->iscomd = true ;
+        return re ;
       } // else if
-      else if ( check->str == "equal?" ) {
-        return Equal( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "if" ) {
-        return If( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "cond" ) {
-        return Cond( temp->right ) ;
-      } // else if
-      else if ( temp->left->str == "begin" ) {
-        return Begin( temp->right ) ;
-      } // else if
-      else
-        throw NonFuncError( Symbols( temp->left )->str ) ;
-    } // if 
-    else if ( temp->type == SYMBOL ) {
-      return Symbols( temp );
-    } // else if
-            
-    else 
-      return temp ;
-      
-      
-  } // Evaluate()
-  
-  Token * Evalexp( Token * temp ) {
-    if ( Isatomtype( temp->type ) && temp->type != SYMBOL )
-      return temp ;
-    else if ( temp->type == SYMBOL ) {
-      if ( Findsymbol( temp->str ) )
-        return Evalexp( Symbols( temp ) ) ;
-      else if ( Isinternalfunc( temp->str ) )
-        return Interfunc( temp ) ;
-      else 
-        throw UnboundError( temp->str ) ;
-      
-    } // else if
-    else { // what is being evaluated is >>>(...)<<< ; we call it the main S-expression below
-      
-      if ( !Islist( temp ) ) // (...) is not a (pure) list
-        throw NonListError() ;  // (...)要pretty print
-      else if ( Isatomtype( temp->left->type ) && temp->left->type != SYMBOL )
-        throw NonFuncError( temp->left->str ) ;
-      else if ( temp->left->type == SYMBOL || temp->left->type == QUOTE ) {
-        string sym = temp->left->str ;
-        // check whether SYM is the name of a function (i.e., check whether 「SYM has a
-        //                                binding, and that binding is an internal function」)
-        
-        // cout << sym ;
-        
-        if ( Isinternalfunc( sym ) || Isspfunc( sym ) ) { // SYM is the name of a known function
-          
-          // if ( the current level is not the top level, and SYM is 'clean-environment' or 
-          // 'define' or　'exit' ) {
-          //   ERROR (level of CLEAN-ENVIRONMENT) / ERROR (level of DEFINE) / ERROR (level of EXIT)
-          if ( 1 == 0 ) ;
-          else if ( sym == "define" || sym == "set!" || sym == "let" || 
-                    sym == "cond" || sym == "lambda" ) { 
-                    // SYM is 'define' or 'set!' or 'let' or 'cond' or 'lambda'
-                    
-          // check the format of this expression // 注意：此時尚未check num-of-arg
-          // (define symbol    // 注意：只能宣告或設定 非primitive的symbol (這是final decision!)
-          //         S-expression
-          // )
-          // (define ( one-or-more-symbols )
-          //           one-or-more-S-expressions
-          // )
-          // (set! symbol
-          //       S-expression
-          // )
-          // (lambda (zero-or-more-symbols)
-          //           one-or-more-S-expressions
-          // )
-          // (let (zero-or-more-PAIRs)
-          //        one-or-more-S-expressions
-          // )
-          // (cond one-or-more-AT-LEAST-DOUBLETONs
-          // )
-          // where PAIR df= ( symbol S-expression )
-          //        AT-LEAST-DOUBLETON df= a list of two or more S-expressions
-                    
-            /*
-            if ( 1 == 0 ) { // format error (包括attempting to redefine system primitive)
-              ERROR (COND format) : <the main S-exp> 
-              or
-              ERROR (DEFINE format) : <the main S-exp> // 有可能是因為redefining primitive之故
-              or
-              ERROR (SET! format) : <the main S-exp>    // 有可能是因為redefining primitive之故
-              or
-              ERROR (LET format) : <the main S-exp>     // 有可能是因為redefining primitive之故
-              or
-              ERROR (LAMBDA format) : <the main S-exp>  // 有可能是因為redefining primitive之故
-            } // if
-            */
-            
-
-            return Evaluate( temp, temp->left ) ;
-          } // else if
-          else if ( sym == "if" || sym == "and" || sym == "or" ) { // SYM is 'if' or 'and' or 'or'
-            /*
-            check whether the number of arguments is correct
-
-            if number of arguments is NOT correct
-              ERROR (incorrect number of arguments) : if
-            */
-            return Evaluate( temp, temp->left ) ;
-          } // else if
-          else { // SYM is a known function name 'abc', which is neither 
-                 // 'define' nor 'let' nor 'cond' nor 'lambda'
-
-            /*
-            check whether the number of arguments is correct
-
-            if number of arguments is NOT correct
-              ERROR (incorrect number of arguments) : abc
-            */     
-
-            return Evaluate( temp, NewToken( sym ) ) ;          
-          } // else
-        } // if ( SYM is the name of a known function )
-        else if ( !Findsymbol( sym ) ) {
-          throw UnboundError( sym ) ;
-        } // else if
-        else {
-          Token * ntemp = NewToken( "." ) ;
-          ntemp->left = Symbols( NewToken( sym ) ) ;
-          ntemp->right = temp->right ;
-          return Evalexp( ntemp ) ;
-          // throw NonFuncError( sym ) ;
-        } // else
-      } // else if 
-      else { // the first argument of ( ... ) is ( 。。。 ), i.e., it is ( ( 。。。 ) ...... )
-
-        Token * checktemp = Evalexp( temp->left ) ;
-
-        // if any error occurs during the evaluation of ( 。。。 ), we just output an
-        // an appropriate error message, and we will not proceed any further
-        if ( 1 == 1 ) {
-
-          // check whether the evaluated result (of ( 。。。 )) is an internal function
-          if ( Isinternalfunc( checktemp->str ) ) {
-          // the evaluated result (of ( 。。。 )) is an internal function )
-            /*
-            check whether the number of arguments is correct
-
-            if num-of-arguments is NOT correct
-              ERROR (incorrect number of arguments) : name-of-the-function
-              or
-              ERROR (incorrect number of arguments) : lambda expression 
-              // in the case of nameless functions
-
-            */
-            Evalexp( temp->left ) ;
+      else if ( temp->left->type == SYMBOL ) {
+        string str = temp->left->str ;
+        int mode = Findsymbol( str ) ;
+        Token * sym = Symbols( temp->left ) ;
+        if ( mode != 0 ) {
+          if ( mode == 2 ) {
+            return Customfunc( temp ) ;
           } // if
-          else // the evaluated result (of ( 。。。 )) is not an internal function
-            throw NonFuncError( checktemp->left->str ) ; //  ☆ is the evaluated result
-        } // if
-      } // else end of 「else the first argument of ( ... ) is ( 。。。 )」
-        
-      /*  
-      eval the second argument S2 of (the main S-expression) ( ... )
-
-      if the type of the evaluated result is not correct 
-        ERROR (xxx with incorrect argument type) : the-evaluated-result
-        // xxx must be the name of some primitive function!
-
-      if no error
-        eval the third argument S3 of (the main S-expression) ( ... )
-
-      if the type of the evaluated result is not correct 
-        ERROR (xxx with incorrect argument type) : the-evaluated-result
-
-      ...
-
-      if ( no error ) {
-
-        apply the binding of the first argument (an internal function) to S2-eval-result, 
-        S3-eval-result, ... 
-
-        if ( no error ) {
-          if there is an evaluated result to be returned
-            return the evaluated result
-          else
-            ERROR (no return result) : name-of-this-function
-            or
-            ERROR (no return result) : lambda expression // if there is such a case ...
-        } // if
-      } // if
-      */
-    } // else what is being evaluated is (...) ; we call it the main S-expression
-    
-    return NewToken( "fail" ) ;
-    
-  } // Evalexp()
-  
-};
-
-class Printer {
-  private:
-  void Printtoken( Token * token ) {
-    Type type = token->type ;
-
-    if ( type == INT )
-      printf( "%d", token->intnum ) ;
-    else if ( type == FLOAT )
-      printf( "%.3f", token->floatnum ) ;
-    else if ( type == QUOTE )
-      printf( "%s", "quote" ) ;
-    else 
-      printf( "%s", token->str.c_str() ) ;
-         
-  } // Printtoken()
-  
-  public:
-  void Printtree( Token * tokentree ) {
-    cout << "sss" ;
-    Token * temp = tokentree ;
-    if ( temp == NULL )
-      cout << temp->str << "<<" ;
-    if ( temp->right == NULL && temp->left == NULL ) {
-      cout <<  "fire"  ;
-      Printtoken( temp );
-      printf( "\n" );
-    } // if
-    else {
-      
-      PrintRe( temp, 0 ) ;
-    } // else  
-  } // Printtree()
-  
-  void PrintRe( Token * temp, int spacenum ) {
-
-    Type type = temp->type ;
-    if ( type == DOT ) {
-
-      printf( "( " ) ;
-      
-      type = temp->left->type ;
-
-      if ( type == DOT )
-        PrintRe( temp->left, spacenum + 2 ) ;
-      else {
-
-        Printtoken( temp->left ) ;  
-        printf( "\n" ) ;
-      } // else
-        
-      temp = temp->right ;
-      while ( temp != NULL ) {
-        type = temp->type ;
-        if ( type == DOT ) {
-          type = temp->left->type ;
+          else if ( Findsymbol( sym->str ) == 2 ) {
+            Token * ntemp = NewToken( "." ) ;
+            ntemp->left = Symbols( temp->left ) ;
+            ntemp->right = temp->right ;
             
-          if ( type == DOT ) {
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
-            PrintRe( temp->left, spacenum + 2 ) ;
-          } // if
+            return Evalexp( ntemp, 1 ) ;
+          } // else if
+          else if ( Isinternalfunc( sym->str ) ) {
+            Token * ntemp = NewToken( "." ) ;
+            ntemp->left = Symbols( temp->left ) ;
+            ntemp->right = temp->right ;
+            
+            return Evalexp( ntemp, 1 ) ;
+          } // else if
+          else if ( sym->left != NULL && sym->left->str == "lambda" ) {
+            Token * ntemp = NewToken( "." ) ;
+            ntemp->left = Symbols( temp->left ) ;
+            ntemp->right = temp->right ;
+            
+            return Evalexp( ntemp, 1 ) ;
+          } // else if
           else {
-              
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
-                
-            Printtoken( temp->left ) ;
-            printf( "\n" ) ;
+            throw NonFuncError( Symbols( temp->left ) ) ;
           } // else
         } // if
         else {
-          type = temp->type ;
-          
-          if ( type != NIL ) {
-            for ( int i = 0 ; i < spacenum + 2 ; i++ )
-              printf( " " ) ;
-            
-            printf( "." ) ;        
-            // .Printtoken( Maketoken( "." ) ) ; 
-            printf( "\n" ) ;  
-          } // if
-             
-          PrintRe( temp, spacenum + 2 ) ;
+          // cout << Evalexp( temp->left )->str ;
+          string str = temp->left->str ;
+          throw UnboundError( str ) ;
+          // return temp ;
         } // else
-            
-        temp = temp->right ;
-
-      } // while
         
-      for ( int i = 0 ; i < spacenum ; i++ )
-        printf( " " ) ;
+        
+        return temp ;
+      } // else if
+      else if ( temp->left->type == DOT ) {
+        if ( temp->left->left->str == "lambda" ) {
+          return Lambda( temp ) ;
           
-      printf( ")\n" ) ;
-      
-    } // if
-    else {
-      if ( type == NIL ) 
-        ;
+        } // if
+        else {
+          Token * check = Evalexp( temp->left, 1 ) ;
+          temp->left = check ;
+          if ( !Isinternalfunc( check->str ) )
+            throw NonFuncError( temp->left ) ;
+          
+          return Evalexp( temp, 1 ) ;
+        } // else
+
+      } // else if
       else {
-        for ( int i = 0 ; i < spacenum ; i++ )
-          printf( " " ) ;
-        Printtoken( temp ) ;
-        printf( "\n" ) ;  
+        throw NonFuncError( temp->left ) ;
       } // else
-
-    } // else
-
-  } // PrintRe()  
-  
+    } // else if         
+    else 
+      return temp ;
+      
+      
+  } // Evalexp()
   
 };
 
@@ -1611,6 +1877,8 @@ class Scanner {
       retoken.intnum = Decodeint( retoken.str ) ;
     else if ( retoken.type == FLOAT )
       retoken.floatnum = Decodefloat( retoken.str ) ;
+
+    retoken.iscomd = false ;
 
     return retoken ;
   } // Gettoken()
@@ -1770,10 +2038,6 @@ class Treemaker {
       Treerecursion( tokentree, tokenlist, point, index ) ;
     } // else
     
-    if ( Isend( tokentree ) )
-      throw Callend() ; 
-    
-    // printer.Printtree( tokentree, point, 0 ) ;
   
   } // Buildtree()
       
@@ -1834,6 +2098,7 @@ class Treemaker {
     retoken.column = -1 ;
     retoken.line = -1 ;
     retoken.str = str ;
+    retoken.iscomd = false ;
     retoken.type = Gettype( retoken.str ) ;
     retoken.str = Setstr( retoken.str ) ;
     if ( retoken.type == INT )
@@ -1848,17 +2113,7 @@ class Treemaker {
 
 class Interpreter{
   public:
-  Token * NewToken( string str ) {
-    Token * retoken = new Token ;
-    retoken->str = Setstr( str ) ;
-    retoken->type = Gettype( retoken->str ) ;
-    retoken->intnum = Decodeint( retoken->str ) ;
-    retoken->floatnum = Decodefloat( retoken->str ) ;
-    retoken->left = NULL ;
-    retoken->right = NULL ;
-      
-    return retoken ;
-  } // NewToken()
+   
   
   Interpreter() {
     // mch = '\0' ;
@@ -1908,8 +2163,8 @@ class Interpreter{
         mtokentree = SetTree( 1 ) ;
         Token * outtree ;
         try {
-
-          outtree = mevaler.Evalexp( mtokentree ) ;
+          
+          outtree = mevaler.Evalexp( mtokentree, 0 ) ;
            
           
         }
@@ -1922,29 +2177,43 @@ class Interpreter{
           evalerr = true ;
         } // catch
         catch ( NonFuncError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( e.mhead ) ; 
+        } // catch
+        catch ( LevelError e ) {
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
+        } // catch
+        catch ( FormatError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( mtokentree ) ; 
         } // catch
         catch ( NonListError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
           mprinter.Printtree( mtokentree ) ; 
+        } // catch
+        catch ( ArgTypeError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+          mprinter.Printtree( e.mhead ) ; 
+        } // catch
+        catch ( DivideZeroError e ) {
+          printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
         } // catch
-        // cout << "done" << endl ;
+        catch ( NoReturnError e ) {
+          printf( "%s", e.merrorstr.c_str() ) ;
+          mprinter.Printtree( e.mhead ) ; 
+          evalerr = true ;
+        } // catch
+        
         if ( !evalerr ) {
-          /*
-          Token * t = outtree ;
-          while ( t != NULL ) {
-            cout << t->str << endl;
-            t = t->right ;
-          } // while
-          */
-          cout << "go go power ranger" << endl ;
-          
-          cout << outtree->str ;
-          mprinter.Printtree( outtree ) ;
+          mprinter.Printtree( outtree ) ; 
         } // if
-           
+          
         
       } // if
 
@@ -1959,7 +2228,7 @@ class Interpreter{
       
       ch = mscanner.Getch() ;
       if ( ch == ';' ) {
-        while ( ch != '\n' ) {
+        while ( ch != '\n' && !gEnd ) {
           mscanner.Getchar() ;
           ch = mscanner.Getch() ;
         } // while
@@ -1994,6 +2263,7 @@ class Interpreter{
     retoken->intnum = token.intnum ;
     retoken->floatnum = token.floatnum ;
     retoken->type = token.type ;
+    retoken->iscomd = false ;
     retoken->left = NULL ;
     retoken->right = NULL ;
     
