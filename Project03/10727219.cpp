@@ -627,7 +627,6 @@ class Evaler {
         find = true ;
         
         Token * retoken = msymbollist.at( i ).info ;
-        // mprinter.Printtree(retoken) ;
         return retoken ;
       } // if
       
@@ -684,24 +683,9 @@ class Evaler {
       Change( check ) ;
       newsymbol.info = check ;
     } // if
-    /*
-    else if ( temp->right->left->type == SYMBOL && Findsymbol( temp->right->left->str ) == 2 ) { 
-      string str = temp->right->left->str ;
-      bool find = false ;
-      newsymbol.info = Evalexp( temp->right->left, 1 ) ;
-      
-      int i = msymbollist.size() - 1 ;
-      while ( i >= 0 && !find ) {
-        cout << msymbollist.at( i ).name << str << endl ;
-        if ( msymbollist.at( i ).name == str ) {
-          newsymbol.args = msymbollist.at( i ).args ;
-        } // if
-        i-- ;  
-      } // while
-      
-      
+    else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
+      newsymbol.info = temp->right->left ;
     } // else if
-    */
     else { 
       newsymbol.info = Evalexp( temp->right->left, 1 ) ;
     } // else 
@@ -812,6 +796,43 @@ class Evaler {
     
     return retoken ;
   } // Customfunc()
+  
+  Token * Lambda( Token * temp ) {
+
+    Token * ltemp = temp->left->right ;
+    Token * argname = ltemp->left ;
+    Token * method = ltemp->right->left ;
+    Token * args = temp->right ;
+
+    int argsnum = Getsize( argname ) ;
+    
+    if ( argsnum != Getsize( args ) )
+      throw ArgNumError( "lambda" ) ;
+      
+    vector < Symbol > templist ;  
+    while ( argname->type != NIL ) {
+      Symbol sym ;
+      sym.name = argname->left->str ;
+      sym.args = NULL ;
+      sym.info = Evalexp( args->left, 1 ) ;
+      templist.push_back( sym ) ;
+      
+      argname = argname->right ;
+      args = args->right ;
+    } // while  
+    
+    for ( int i = 0 ; i < templist.size() ; i++ ) {
+      msymbollist.push_back( templist.at( i ) ) ;
+    } // for
+
+    Token * retoken = Evalexp( method, 1 ) ;
+    
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    
+    return retoken ;
+  } // Lambda()
 
   Token * Quote( Token * temp ) {
     return temp->left ; 
@@ -1566,10 +1587,14 @@ class Evaler {
 
     if ( Isatomtype( temp->type ) ) {
       if ( temp->type == SYMBOL ) {
-      	// cout << "**" << temp->str << Findsymbol( temp->str ) << endl ;
         if ( Findsymbol( temp->str ) == 1 ) {
-          // return Evalexp( Symbols( temp ) ) ;
-          return Symbols( temp ) ;
+          Token * retoken = Symbols( temp ) ;
+
+          
+          if (  retoken->left != NULL && retoken->left->str == "lambda" )
+            return Evalexp( retoken, 1 ) ;
+          else
+            return retoken ;
           
         } // if
         else if ( Isinternalfunc( temp->str ) || Findsymbol( temp->str ) == 2 ) {
@@ -1646,22 +1671,34 @@ class Evaler {
       else if ( temp->left->str == "begin" ) {
         return Begin( temp->right ) ;
       } // else if
+      else if ( temp->left->str == "lambda" ) {
+        Token * retoken = NewToken( "lambda" ) ;
+        retoken->iscomd = true ;
+        return retoken ;
+      } // else if
       else if ( temp->left->type == SYMBOL ) {
         string str = temp->left->str ;
         int mode = Findsymbol( str ) ;
-        
+        Token * sym = Symbols( temp->left ) ;
         if ( mode != 0 ) {
           if ( mode == 2 ) {
             return Customfunc( temp ) ;
           } // if
-          else if ( Findsymbol( Symbols( temp->left )->str ) == 2 ) {
+          else if ( Findsymbol( sym->str ) == 2 ) {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
             
             return Evalexp( ntemp, 1 ) ;
           } // else if
-          else if ( Isinternalfunc( Symbols( temp->left )->str ) ) {
+          else if ( Isinternalfunc( sym->str ) ) {
+            Token * ntemp = NewToken( "." ) ;
+            ntemp->left = Symbols( temp->left ) ;
+            ntemp->right = temp->right ;
+            
+            return Evalexp( ntemp, 1 ) ;
+          } // else if
+          else if ( sym->left != NULL && sym->left->str == "lambda" ) {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
@@ -1683,12 +1720,19 @@ class Evaler {
         return temp ;
       } // else if
       else if ( temp->left->type == DOT ) {
-        Token * check = Evalexp( temp->left, 1 ) ;
-        temp->left = check ;
-        if ( !Isinternalfunc( check->str ) )
-          throw NonFuncError( temp->left ) ;
-        
-        return Evalexp( temp, 1 ) ;
+        if ( temp->left->left->str == "lambda" ) {
+          return Lambda( temp ) ;
+          
+        } // if
+        else {
+          Token * check = Evalexp( temp->left, 1 ) ;
+          temp->left = check ;
+          if ( !Isinternalfunc( check->str ) )
+            throw NonFuncError( temp->left ) ;
+          
+          return Evalexp( temp, 1 ) ;
+        } // else
+
       } // else if
       else {
         throw NonFuncError( temp->left ) ;

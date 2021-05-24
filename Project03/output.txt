@@ -62,11 +62,11 @@ Welcome to OurScheme!
 
 > #t
 
-> ERROR (unbound symbol) : lambda
+> x4 defined
 
-> ERROR (unbound symbol) : x4
+> #<procedure lambda>
 
-> ERROR (unbound symbol) : x4
+> 10
 
 > 3
 
