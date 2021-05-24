@@ -1,4 +1,4 @@
-1
+當測試「Test data 1 of 3」時，Input為>>1
 (define a "=============== Problem 2 viewable case =================")
 a
 
@@ -177,4 +177,112 @@ a
             )
        )
   )
-(exit)
+(exit)<<
+
+正確的輸出應該是>>Welcome to OurScheme!
+
+> a defined
+
+> "=============== Problem 2 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> 24
+
+> 40
+
+> -20
+
+> Fif defined
+
+> -34
+
+> -43
+
+> 52
+
+> 32
+
+> Fbegin defined
+
+> 0
+
+> 83
+
+> 7
+
+> Fand defined
+
+> nil
+
+> nil
+
+> #t
+
+> nil
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 6
+
+> 9
+
+> environment cleaned
+
+> ( 3
+  2
+  3
+)
+
+> 5
+
+> 5
+
+> environment cleaned
+
+> a defined
+
+> 13
+
+> 5
+
+> 16
+
+> 5
+
+> -2
+
+> 3
+
+> 41
+
+> 
+Thanks for using OurScheme!<<
