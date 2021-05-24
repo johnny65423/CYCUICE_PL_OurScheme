@@ -345,7 +345,7 @@ class Scheduler {
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() ) {
+				else if( remaindertime == 0 && pqueue.empty() && nowwork != -1 ) {
 					insertresult( nowwork, time, 0 ) ;
 					nowwork = -1 ;
 				}
@@ -425,7 +425,7 @@ class Scheduler {
 					nowwork = temp.id ;
 					runtime = 0 ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() ){
+				else if( remaindertime == 0 && pqueue.empty() && nowwork != -1 ){
 					insertresult( nowwork, time, 1 ) ;
 					nowwork = -1 ;
 				}
@@ -510,7 +510,7 @@ class Scheduler {
 					arrtime = temp.arrivaltime ;
 					nowwork = temp.id ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() ){
+				else if( remaindertime == 0 && pqueue.empty() && nowwork != -1 ){
 					insertresult( nowwork, time, 2 ) ;
 					nowwork = -1 ;
 				}
@@ -638,7 +638,7 @@ class Scheduler {
 					p = temp.priority ;
 					runtime = 0 ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() ) {
+				else if( remaindertime == 0 && pqueue.empty() && nowwork != -1 ) {
 					insertresult( nowwork, time, 3 ) ;
 					nowwork = -1 ;
 				}
@@ -714,7 +714,7 @@ class Scheduler {
 					remaindertime = temp.cpuburst ;	
 					nowwork = temp.id ;
 				}
-				else if( remaindertime == 0 && pqueue.empty() ) {
+				else if( remaindertime == 0 && pqueue.empty() && nowwork != -1 ) {
 					insertresult( nowwork, time, 4 ) ;
 					nowwork = -1 ;
 				}
