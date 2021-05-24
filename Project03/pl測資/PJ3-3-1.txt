@@ -1,4 +1,4 @@
-1
+當測試「Test data 1 of 3」時，Input為>>1
 (define a "=============== Problem 3 viewable case =================")
 a
 
@@ -209,4 +209,148 @@ f
 (Try cadr)
 (Try car)
 (Try cdr)
-(exit)
+(exit)<<
+
+正確的輸出應該是>>Welcome to OurScheme!
+
+> a defined
+
+> "=============== Problem 3 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> Fif defined
+
+> Fbegin defined
+
+> Fand defined
+
+> For defined
+
+> -10320
+
+> -10
+
+> 8
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> nil
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> -60
+
+> -86
+
+> -2580
+
+> -752
+
+> environment cleaned
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 11
+
+> a defined
+
+> f defined
+
+> #<procedure lambda>
+
+> c defined
+
+> 14
+
+> 54
+
+> x defined
+
+> y defined
+
+> g defined
+
+> 77556
+
+> 3110
+
+> F defined
+
+> G defined
+
+> 15
+
+> F defined
+
+> 40
+
+> F defined
+
+> 20
+
+> H defined
+
+> ( 3
+  .
+  5
+)
+
+> 10
+
+> F defined
+
+> ( 20
+  30
+)
+
+> 110
+
+> cadr defined
+
+> global defined
+
+> Try defined
+
+> 20
+
+> 10
+
+> ( 20
+  30
+)
+
+> 
+Thanks for using OurScheme!<<

@@ -2,7 +2,7 @@ Welcome to OurScheme!
 
 > a defined
 
-> "=============== Problem 2 viewable case ================="
+> "=============== Problem 3 viewable case ================="
 
 > environment cleaned
 
@@ -14,39 +14,19 @@ Welcome to OurScheme!
 
 > Fcond defined
 
-> 24
-
-> 40
-
-> -20
-
 > Fif defined
-
-> -34
-
-> -43
-
-> 52
-
-> 32
 
 > Fbegin defined
 
-> 0
-
-> 83
-
-> 7
-
 > Fand defined
 
-> nil
+> For defined
 
-> nil
+> -10320
 
-> #t
+> -10
 
-> nil
+> 8
 
 > For defined
 
@@ -58,9 +38,9 @@ Welcome to OurScheme!
 
 > nil
 
-> nil
-
 > #t
+
+> nil
 
 > Flambda defined
 
@@ -70,38 +50,94 @@ Welcome to OurScheme!
 
 > #<procedure lambda>
 
-> 6
+> -60
 
-> 9
+> -86
 
-> environment cleaned
+> -2580
 
-> ( 3
-  2
-  3
-)
-
-> 5
-
-> 5
+> -752
 
 > environment cleaned
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 11
 
 > a defined
 
-> 13
+> f defined
 
-> 5
+> #<procedure lambda>
 
-> 16
+> c defined
 
-> 5
+> 14
 
-> -2
+> 54
 
-> 3
+> x defined
 
-> 41
+> y defined
+
+> g defined
+
+> 77556
+
+> 3110
+
+> F defined
+
+> G defined
+
+> 15
+
+> F defined
+
+> 40
+
+> F defined
+
+> 20
+
+> H defined
+
+> ( 3
+  .
+  5
+)
+
+> 10
+
+> F defined
+
+> ( 20
+  30
+)
+
+> 110
+
+> cadr defined
+
+> global defined
+
+> Try defined
+
+> 20
+
+> 10
+
+> ( 20
+  30
+)
 
 > 
 Thanks for using OurScheme!

@@ -1,8 +1,10 @@
+
+(There was a run-time error :
 Welcome to OurScheme!
 
 > a defined
 
-> "=============== Problem 2 viewable case ================="
+> "=============== Problem 3 viewable case ================="
 
 > environment cleaned
 
@@ -14,39 +16,19 @@ Welcome to OurScheme!
 
 > Fcond defined
 
-> 24
-
-> 40
-
-> -20
-
 > Fif defined
-
-> -34
-
-> -43
-
-> 52
-
-> 32
 
 > Fbegin defined
 
-> 0
-
-> 83
-
-> 7
-
 > Fand defined
 
-> nil
+> For defined
 
-> nil
+> -10320
 
-> #t
+> -10
 
-> nil
+> 8
 
 > For defined
 
@@ -58,9 +40,9 @@ Welcome to OurScheme!
 
 > nil
 
-> nil
-
 > #t
+
+> nil
 
 > Flambda defined
 
@@ -70,35 +52,66 @@ Welcome to OurScheme!
 
 > #<procedure lambda>
 
-> 6
+> -60
 
-> 9
+> -86
 
-> environment cleaned
+> -2580
 
-> ERROR (unbound symbol) : let
-
-> ERROR (unbound symbol) : let
-
-> ERROR (unbound symbol) : let
+> -752
 
 > environment cleaned
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 10
 
 > a defined
 
-> ERROR (unbound symbol) : let
+> f defined
 
-> 5
+> #<procedure lambda>
 
-> ERROR (unbound symbol) : let
+> c defined
 
-> 5
+> 14
 
-> ERROR (unbound symbol) : let
+> 54
 
-> ERROR (unbound symbol) : let
+> x defined
 
-> ERROR (unbound symbol) : let
+> y defined
 
-> 
-Thanks for using OurScheme!
+> g defined
+
+> 77556
+
+> 3110
+
+> F defined
+
+> G defined
+
+> 15
+
+> F defined
+
+> 40
+
+> F defined
+
+> 20
+
+> H defined
+
+>
+
+A SAFECode fault has occurred. Line number unknown..)

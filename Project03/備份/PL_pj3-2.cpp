@@ -806,7 +806,7 @@ class Evaler {
 
     Token * ltemp = temp->left->right ;
     Token * argname = ltemp->left ;
-    Token * method = ltemp->right ;
+    Token * method = ltemp->right->left ;
     Token * args = temp->right ;
 
     int argsnum = Getsize( argname ) ;
@@ -830,20 +830,13 @@ class Evaler {
       msymbollist.push_back( templist.at( i ) ) ;
     } // for
 
-
-    Token * result ;
-
-    while ( method != NULL && method->type != NIL ) {
-
-      result = Evalexp( method->left, 1 ) ;
-      method = method->right ;
-    } // while
+    Token * retoken = Evalexp( method, 1 ) ;
     
     for ( int i = 0 ; i < argsnum ; i++ ) {
       msymbollist.pop_back() ;
     } // for
     
-    return result ;
+    return retoken ;
   } // Lambda()
   
   Token * Let( Token * temp ) {
