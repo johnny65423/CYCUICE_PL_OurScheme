@@ -1779,12 +1779,11 @@ class Evaler {
         else {
           Token * check = Evalexp( temp->left, 1 ) ;
           temp->left = check ;
-
           if ( check->type == SYMBOL && !Isinternalfunc( check->str ) )
             throw NonFuncError( temp->left ) ;
-          else if ( check->left->str != "lambda" )
+          else if ( check->left != NULL && check->left->str != "lambda" )
             throw NonFuncError( temp->left ) ;
-            
+
           return Evalexp( temp, 1 ) ;
         } // else
 
@@ -2223,6 +2222,10 @@ class Interpreter{
            
           
         }
+        catch ( LevelError e ) {
+          printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+        } // catch
         catch ( ArgNumError e ) {
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
@@ -2231,14 +2234,14 @@ class Interpreter{
           printf( "%s\n", e.merrorstr.c_str() ) ;
           evalerr = true ;
         } // catch
+        catch ( DivideZeroError e ) {
+          printf( "%s\n", e.merrorstr.c_str() ) ;
+          evalerr = true ;
+        } // catch
         catch ( NonFuncError e ) {
           printf( "%s", e.merrorstr.c_str() ) ;
           evalerr = true ;
           mprinter.Printtree( e.mhead ) ; 
-        } // catch
-        catch ( LevelError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
         } // catch
         catch ( FormatError e ) {
           printf( "%s", e.merrorstr.c_str() ) ;
@@ -2254,10 +2257,6 @@ class Interpreter{
           printf( "%s", e.merrorstr.c_str() ) ;
           evalerr = true ;
           mprinter.Printtree( e.mhead ) ; 
-        } // catch
-        catch ( DivideZeroError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
         } // catch
         catch ( NoReturnError e ) {
           printf( "%s", e.merrorstr.c_str() ) ;
