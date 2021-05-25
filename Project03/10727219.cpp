@@ -687,12 +687,13 @@ class Evaler {
   }  // Change()
 
   Token * Define( Token * temp ) {
-    
+    if ( temp->left->type == DOT )
+      return Definefunc( temp ) ;   
+ 
     if ( Getsize( temp ) != 2 )
       throw FormatError( "DEFINE" ) ;
 
-    if ( temp->left->type == DOT )
-      return Definefunc( temp ) ;    
+  
     
     Symbol newsymbol ;
     string name = temp->left->str ;
@@ -736,7 +737,7 @@ class Evaler {
 
   Token * Definefunc( Token * temp ) {
     
-    if ( Getsize( temp ) != 2 )
+    if ( Getsize( temp ) < 2 )
       throw FormatError( "DEFINE" ) ;  
     
     Symbol newsymbol ;
@@ -748,6 +749,9 @@ class Evaler {
       throw FormatError( "DEFINE" ) ;
     } // if
     
+    // newsymbol.info = temp->right ;
+    
+    
     if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
       Token * check = Copytoken( temp->right->left ) ;
       Change( check ) ;
@@ -757,7 +761,7 @@ class Evaler {
       newsymbol.info = temp->right->left ;
       
     } // else 
-      
+    
 
     if ( Findsymbol( name ) == 0 )
       msymbollist.push_back( newsymbol ) ;  
@@ -1369,21 +1373,28 @@ class Evaler {
       throw ArgNumError( "begin" ) ;
     
     Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-
+    bool done = true ;
+    Token * result = NULL ;
+    Token * ans ;
     while ( t != NULL && t->type != NIL ) {
+      done = true ;
       try {
-      result = Evalexp( t->left, 1 ) ;
+        ans = Evalexp( t->left, 1 ) ;
       } // try
       catch ( NoReturnError e ) {
+        done = false ;
         if ( t->right->type == NIL )
           throw e ;
       } // catch
       
+      if ( done )
+        result = ans ;
+
       t = t->right ;
     } // while
-
+    
+    //if ( result == NULL )
+    //  throw NoReturnError( temp ) ;
     return result ;
 
   } // Begin()
