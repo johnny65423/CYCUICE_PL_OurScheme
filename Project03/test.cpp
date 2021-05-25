@@ -491,13 +491,8 @@ class Printer {
   void PrintRe( Token * temp, int spacenum ) {
 
     Type type = temp->type ;
-    /*
+    
     if ( type == DOT && temp->left->str == "lambda" ) {
-      Printtoken( temp->left ) ;
-      printf( "\n" ) ;
-    } // if
-    */
-    if ( 0 == 1 ) {
       Printtoken( temp->left ) ;
       printf( "\n" ) ;
     } // if
@@ -845,7 +840,7 @@ class Evaler {
 
     } // try 
     catch ( Exception e ) {
-      e.mhead = temp ;
+      // e.mhead = temp ;
       for ( int i = 0 ; i < argsnum ; i++ )
         msymbollist.pop_back() ;
       
@@ -1887,13 +1882,11 @@ class Evaler {
       else if ( temp->left->str == "begin" ) {
         return Begin( temp->right ) ;
       } // else if
-      /*
       else if ( temp->left->str == "lambda" ) {
         Token * re = NewToken( "lambda" ) ;
         temp->left->iscomd = true ;
         return temp ;
       } // else if
-      */
       else if ( temp->left->str == "let" ) {
         return Let( temp->right ) ;
       } // else if
@@ -1904,21 +1897,16 @@ class Evaler {
         if ( mode != 0 ) {
           if ( mode == 2 ) {
             Token * ret ;
-            // try {
-            ret =  Customfunc( temp ) ;
-            // } // try
-            /*
-            catch ( NoReturnError e ) {
-              // bool b = false ;
-              if ( head == 0 ) {
-               
-                throw e ;
-              } // if
+            try {
+              ret =  Customfunc( temp ) ;
+            } // try
+            catch ( Exception e ) {
+              if ( e.mname == "NoReturnError" )
+                e.mhead = temp ;
+              throw e ;
+
               
-              // if ( !b )
-              //   throw UnboundparaError( e.mhead ) ;
             } // catch
-            */
             return ret ;
           } // if
           else if ( Findsymbol( sym->str ) == 2 ) {
@@ -1934,7 +1922,6 @@ class Evaler {
             
             return Evalexp( ntemp, head ) ;
           } // else if
-          /*
           else if ( sym->left != NULL && sym->left->str == "lambda" ) {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
@@ -1942,7 +1929,6 @@ class Evaler {
             
             return Evalexp( ntemp, head ) ;
           } // else if
-          */
           else {
             throw NonFuncError( Symbols( temp->left ) ) ;
           } // else
@@ -2418,8 +2404,7 @@ class Interpreter{
             evalerr = true ;
             mprinter.Printtree( e.mhead ) ; 
           } // else if
-          else if( e.mname == "FormatError" || e.mname == "NonListError" ||
-              e.mname == "NoReturnError" || e.mname == "UnboundparaError" ) {
+          else if( e.mname == "FormatError" || e.mname == "NonListError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
             mprinter.Printtree( mtokentree ) ;
@@ -2428,55 +2413,6 @@ class Interpreter{
             throw e ;
           } // else if
         } // catch
-        
-        /*
-        catch ( LevelError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-        } // catch
-        catch ( ArgNumError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-        } // catch
-        catch ( UnboundError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-        } // catch
-        catch ( DivideZeroError e ) {
-          printf( "%s\n", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-        } // catch
-        catch ( NonFuncError e ) {
-          printf( "%s", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-          mprinter.Printtree( e.mhead ) ; 
-        } // catch
-        catch ( FormatError e ) {
-          printf( "%s", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-          mprinter.Printtree( mtokentree ) ; 
-        } // catch
-        catch ( NonListError e ) {
-          printf( "%s", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-          mprinter.Printtree( mtokentree ) ; 
-        } // catch
-        catch ( ArgTypeError e ) {
-          printf( "%s", e.merrorstr.c_str() ) ;
-          evalerr = true ;
-          mprinter.Printtree( e.mhead ) ; 
-        } // catch
-        catch ( NoReturnError e ) {
-          printf( "%s", e.merrorstr.c_str() ) ;
-          mprinter.Printtree( e.mhead ) ; 
-          evalerr = true ;
-        } // catch
-        catch ( UnboundparaError e ) {
-          printf( "%s", e.merrorstr.c_str() ) ;
-          mprinter.Printtree( e.mhead ) ; 
-          evalerr = true ;
-        } // catch
-        */
         
         if ( !evalerr ) {
           mprinter.Printtree( outtree ) ; 

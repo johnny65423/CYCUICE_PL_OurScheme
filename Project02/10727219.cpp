@@ -2129,7 +2129,7 @@ int main() {
   char t ;
   scanf( "%d",  &gTestNum  ) ;
   scanf( "%c",  &t ) ;
-  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     interpreter.Gettokenlist() ;
   } // try
