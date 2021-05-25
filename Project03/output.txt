@@ -1,8 +1,80 @@
+
+(There was a run-time error :
 Welcome to OurScheme!
 
 > a defined
 
-> "=============== Problem 6 viewable case ================="
+> "=============== Problem 7 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> 24
+
+> 40
+
+> -20
+
+> Fif defined
+
+> -34
+
+> -43
+
+> 52
+
+> 32
+
+> Fbegin defined
+
+> 0
+
+> 83
+
+> 7
+
+> Fand defined
+
+> nil
+
+> nil
+
+> #t
+
+> nil
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 6
+
+> 9
 
 > environment cleaned
 
@@ -15,317 +87,240 @@ Welcome to OurScheme!
 > Fcond defined
 
 > 12
+
+> ERROR (no return value) : ( Fcond
+  x2
+  ( -
+    x2
+    1
+  )
+)
 
 > 20
 
-> 0
-
-> Fif defined
-
-> 10
-
-> 1
-
-> 8
-
-> 76
-
-> Fbegin defined
-
-> 1
-
-> -76
-
-> 0
-
-> Fand defined
-
-> #t
-
-> nil
-
-> #t
-
-> nil
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> nil
-
-> #t
-
-> x4 defined
-
-> #<procedure lambda>
-
-> 10
-
-> 3
-
-> 4
-
-> environment cleaned
-
-> x1 defined
-
-> x2 defined
-
-> x3 defined
-
-> Fcond defined
-
-> ERROR (no return value) : ( cond
-  ( ( >
-      x4
-      x1
-    )
-    ( +
-      x4
-      x1
-    )
-  )
-  ( ( =
-      x4
-      x1
-    )
-    ( *
-      x4
-      x1
-    )
-  )
+> ERROR (no return value) : ( Fcond
+  x1
+  x1
 )
 
-> ERROR (no return value) : ( cond
-  ( ( >
-      x4
-      x1
-    )
-    ( +
-      x4
-      x1
-    )
-  )
-  ( ( =
-      x4
-      x1
-    )
-    ( *
-      x4
-      x1
-    )
-  )
-)
-
-> 25
-
-> ERROR (no return value) : ( cond
-  ( ( >
-      x4
-      x1
-    )
-    ( +
-      x4
-      x1
-    )
-  )
-  ( ( =
-      x4
-      x1
-    )
-    ( *
-      x4
-      x1
-    )
-  )
-)
-
-> Fif defined
-
-> 80
-
-> ERROR (no return value) : ( if
-  ( >=
-    x3
-    x1
-  )
+> ERROR (no return value) : ( Fcond
   ( +
-    x1
     x3
+    1
+  )
+  ( -
+    ( +
+      x3
+      2
+    )
+    1
   )
 )
 
-> 15
+> Fif defined
 
-> 84
+> temp1 defined
 
-> 29
+> temp2 defined
 
-> Fbegin defined
+> temp3 defined
 
-> -6
-
-> -76
-
-> 0
-
-> ERROR (incorrect number of arguments) : Fbegin
-
-> Fand defined
-
-> nil
-
-> nil
-
-> #t
-
-> nil
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> #t
-
-> #t
-
-> nil
-
-> ERROR (> with incorrect argument type) : ( 4
-  .
-  4
-)
-
-> nil
-
-> x4 defined
-
-> #<procedure lambda>
-
-> 8
-
-> 12
-
-> x5 defined
-
-> 16
-
-> nil
-
-> ERROR (incorrect number of arguments) : lambda
-
-> 4
-
-> 4
-
-> environment cleaned
-
-> ERROR (unbound symbol) : cadr
-
-> cadr defined
-
-> #<procedure cadr>
-
-> ERROR (car with incorrect argument type) : #<procedure cadr>
-
-> ( 30
+> ERROR (no return value) : ( Fif
+  130
   40
+  -50
 )
 
-> cadr-clone defined
-
-> #<procedure cadr>
-
-> ( 30
-  ( 40
-  )
+> ERROR (no return value) : ( Fif
+  x1
+  x2
+  x3
 )
 
-> cadr-clone defined
-
-> ( 10
-  20
+> ERROR (unbound parameter) : ( Fcond
+  x1
+  x1
 )
 
-> cadr-clone defined
+> 73
+
+> ERROR (no return value) : ( Fif
+  x3
+  x2
+  x3
+)
+
+> -125
+
+> ERROR (unbound parameter) : ( Fif
+  x1
+  x2
+  x3
+)
 
 > ERROR (DEFINE format) : ( define
-  car
-  cadr
-)
-
-> ERROR (incorrect number of arguments) : cadr
-
-> ERROR (incorrect number of arguments) : cadr
-
-> ERROR (attempt to apply non-function) : 10
-
-> ERROR (cdr with incorrect argument type) : 10
-
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (unbound symbol) : cdar
-
-> ERROR (car with incorrect argument type) : nil
-
-> cdar defined
-
-> ( 2
-)
-
-> ERROR (cdr with incorrect argument type) : 1
-
-> ERROR (unbound symbol) : first
-
-> first defined
-
-> #<procedure car>
-
-> #<procedure car>
-
-> 10
-
-> ERROR (unbound symbol) : First
-
-> First defined
-
-> car
-
-> ERROR (attempt to apply non-function) : 1
-
-> ERROR (attempt to apply non-function) : 1
-
-> second defined
-
-> 20
-
-> ( ( 40
-    50
+  ( Fbegin
+    x3
   )
-  60
+  ( begin
+    ( begin
+      ( +
+        x1
+        x3
+      )
+    )
+    ( begin
+      ( -
+        x2
+        x3
+      )
+    )
+    ( cond
+      ( ( >
+          x3
+          x1
+        )
+        ( +
+          x3
+          x1
+        )
+      )
+      ( ( <
+          x3
+          x1
+        )
+        ( *
+          x3
+          x1
+        )
+      )
+    )
+  )
+  ( begin
+    ( begin
+      ( +
+        x1
+        x3
+      )
+    )
+    ( begin
+      ( -
+        x2
+        x3
+      )
+    )
+    ( cond
+      ( ( >
+          x3
+          x1
+        )
+        ( +
+          x3
+          x1
+        )
+      )
+      ( ( =
+          x3
+          x1
+        )
+        ( *
+          x3
+          x1
+        )
+      )
+    )
+  )
 )
 
-> ( 40
-  50
+> ERROR (unbound symbol) : Fbegin
+
+> ERROR (unbound symbol) : Fbegin
+
+> ERROR (unbound symbol) : Fbegin
+
+> ERROR (unbound symbol) : Fbegin
+
+> Fand defined
+
+> #t
+
+> ERROR (no return value) : ( Fand
+  x3
+  -10
+  x1
 )
 
-> 50
+> #t
 
-> ( 50
+> ERROR (no return value) : ( Fand
+  7
+  ( -
+    x2
+    x2
+    3
+  )
+  -7
 )
 
-> ERROR (cdr with incorrect argument type) : 10
+> For defined
 
-> 
-Thanks for using OurScheme!
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> ERROR (no return value) : ( Flambda
+  10
+)
+
+> ERROR (no return value) : ( Flambda
+  -10
+)
+
+> ERROR (unbound parameter) : ( Flambda
+  10
+)
+
+> ERROR (unbound parameter) : ( Flambda
+  -10
+)
+
+> ERROR (unbound parameter) : ( Flambda
+  10
+)
+
+> ERROR (unbound parameter) : ( Flambda
+  10
+)
+
+> ERROR (unbound parameter) : ( Flambda
+  10
+)
+
+> ERROR (unbound parameter) : ( Flambda
+  10
+)
+
+> environment cleaned
+
+> ( 3
+  2
+  3
+)
+
+> ERROR (unbound symbol) : x
+
+>
+
+A SAFECode fault has occurred. Line number unknown..)
