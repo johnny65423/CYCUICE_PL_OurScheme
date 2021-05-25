@@ -1337,10 +1337,17 @@ class Evaler {
 
     while ( t->type != NIL ) {
       if ( t->right->type == NIL ) {
+
         result = Decide( t->left, true, done ) ;
+
       } // if
       else {
-        result = Decide( t->left, false, done ) ; 
+        try {
+          result = Decide( t->left, false, done ) ;
+        } // try
+        catch ( NoReturnError e ) {
+          ;
+        } // catch
       } // else
         
 
@@ -1366,8 +1373,14 @@ class Evaler {
     Token * result ;
 
     while ( t != NULL && t->type != NIL ) {
-
+      try {
       result = Evalexp( t->left, 1 ) ;
+      } // try
+      catch ( NoReturnError e ) {
+        if ( t->right->type == NIL )
+          throw e ;
+      } // catch
+      
       t = t->right ;
     } // while
 
@@ -1385,8 +1398,13 @@ class Evaler {
     Token * result ;
 
     while ( t != NULL && t->type != NIL ) {
-
-      result = Evalexp( t->left, 1 ) ;
+      try {
+        result = Evalexp( t->left, 1 ) ;
+      } // try
+      catch ( NoReturnError e ) {
+        if ( t->right->type == NIL )
+          throw e ;
+      } // catch
       t = t->right ;
     } // while
 
