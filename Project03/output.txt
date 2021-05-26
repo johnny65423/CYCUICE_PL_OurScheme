@@ -2,7 +2,77 @@ Welcome to OurScheme!
 
 > a defined
 
-> "=============== Problem 6 viewable case ================="
+> "=============== Problem 7 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> 24
+
+> 40
+
+> -20
+
+> Fif defined
+
+> -34
+
+> -43
+
+> 52
+
+> 32
+
+> Fbegin defined
+
+> 0
+
+> 83
+
+> 7
+
+> Fand defined
+
+> nil
+
+> nil
+
+> #t
+
+> nil
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 6
+
+> 9
 
 > environment cleaned
 
@@ -16,131 +86,105 @@ Welcome to OurScheme!
 
 > 12
 
+> 7
+
 > 20
-
-> 0
-
-> Fif defined
-
-> 10
-
-> 1
-
-> 8
-
-> 76
-
-> Fbegin defined
-
-> 1
-
-> -76
-
-> 0
-
-> Fand defined
-
-> #t
-
-> nil
-
-> #t
-
-> nil
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> nil
-
-> #t
-
-> x4 defined
-
-> #<procedure lambda>
-
-> 10
-
-> 3
-
-> 4
-
-> environment cleaned
-
-> x1 defined
-
-> x2 defined
-
-> x3 defined
-
-> Fcond defined
 
 > ERROR (no return value) : ( Fcond
   x1
-  x2
+  x1
 )
 
 > ERROR (no return value) : ( Fcond
+  ( +
+    x3
+    1
+  )
+  ( -
+    ( +
+      x3
+      2
+    )
+    1
+  )
+)
+
+> Fif defined
+
+> temp1 defined
+
+> temp2 defined
+
+> temp3 defined
+
+> 80
+
+> ERROR (no return value) : ( Fif
+  x1
   x2
   x3
+)
+
+> ERROR (unbound parameter) : ( Fcond
+  x1
+  x1
+)
+
+> 73
+
+> ERROR (no return value) : ( Fif
+  x3
+  x2
+  x3
+)
+
+> -125
+
+> ERROR (unbound parameter) : ( Fif
+  x1
+  x2
+  x3
+)
+
+> Fbegin defined
+
+> 9
+
+> 83
+
+> ERROR (no return value) : ( Fbegin
+  -80
 )
 
 > 9
 
-> ERROR (no return value) : ( Fcond
-  x1
-  ( +
-    x1
-    x1
-  )
-)
-
-> Fif defined
-
-> 80
-
-> 8
-
-> ERROR (no return value) : ( Fif
-  x3
-  x2
-  x1
-)
-
-> 84
-
-> ERROR (no return value) : ( Fif
-  x3
-  x2
-  x1
-)
-
-> Fbegin defined
-
-> 1
-
-> -76
-
-> 0
-
-> ERROR (incorrect number of arguments) : Fbegin
-
 > Fand defined
 
 > #t
 
-> nil
+> ERROR (unbound condition) : ( if
+  ( >
+    x2
+    0
+  )
+  ( <
+    x1
+    40
+  )
+)
 
 > #t
 
-> nil
+> ERROR (unbound condition) : ( if
+  ( >
+    x2
+    0
+  )
+  ( <
+    x1
+    40
+  )
+)
 
 > For defined
 
@@ -152,134 +196,37 @@ Welcome to OurScheme!
 
 > nil
 
-> #t
-
 > nil
 
-> ERROR (> with incorrect argument type) : ( 4
-  .
-  4
-)
-
 > #t
 
-> x4 defined
+> Flambda defined
+
+> #<procedure Flambda>
 
 > #<procedure lambda>
 
-> 10
-
-> 13
-
-> x5 defined
-
-> 16
-
-> #t
-
-> ERROR (incorrect number of arguments) : lambda
-
-> 3
-
-> 4
-
-> environment cleaned
-
-> ERROR (unbound symbol) : cadr
-
-> cadr defined
-
-> #<procedure cadr>
-
-> ERROR (car with incorrect argument type) : #<procedure cadr>
-
-> ( 30
-  40
+> ERROR (no return value) : ( Flambda
+  -10
 )
 
-> cadr-clone defined
+> 6
 
-> #<procedure cadr>
-
-> ( 30
-  ( 40
-  )
+> ERROR (no return value) : ( Flambda
+  -10
 )
 
-> cadr-clone defined
+> 12
 
-> ( 10
-  20
+> ERROR (no return value) : ( Flambda
+  -10
 )
 
-> cadr-clone defined
-
-> ERROR (DEFINE format) : ( define
-  car
-  cadr
+> ERROR (unbound parameter) : ( Flambda
+  -10
 )
 
-> ERROR (incorrect number of arguments) : cadr
+> ERROR (+ with incorrect argument type) : #<procedure lambda>
 
-> ERROR (incorrect number of arguments) : cadr
-
-> ERROR (attempt to apply non-function) : 10
-
-> ERROR (cdr with incorrect argument type) : 10
-
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (unbound symbol) : cdar
-
-> ERROR (unbound symbol) : x
-
-> cdar defined
-
-> ( 2
-)
-
-> ERROR (cdr with incorrect argument type) : 1
-
-> ERROR (unbound symbol) : first
-
-> first defined
-
-> #<procedure car>
-
-> #<procedure car>
-
-> 10
-
-> ERROR (unbound symbol) : First
-
-> First defined
-
-> car
-
-> ERROR (attempt to apply non-function) : car
-
-> ERROR (attempt to apply non-function) : 1
-
-> second defined
-
-> 20
-
-> ( ( 40
-    50
-  )
-  60
-)
-
-> ( 40
-  50
-)
-
-> 50
-
-> ( 50
-)
-
-> ERROR (cdr with incorrect argument type) : 10
-
-> 
+> ERROR (no more input) : END-OF-FILE encountered
 Thanks for using OurScheme!

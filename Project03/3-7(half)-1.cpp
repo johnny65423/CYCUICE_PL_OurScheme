@@ -452,17 +452,6 @@ public:
   } // UnboundParaError()
 };
 
-class UnboundCondiError : public Exception {
-public:
-  UnboundCondiError( Token * temp ) {
-    stringstream ss ;
-    mname = "UnboundCondiError" ;
-    ss << "ERROR (unbound condition) : " ;
-    mhead = temp ;
-    merrorstr = ss.str() ;
-  } // UnboundCondiError()
-};
-
 class ReE : public Exception {
 public:
   ReE() {
@@ -791,7 +780,7 @@ class Evaler {
     return NewToken( name + " defined" ) ;
   } // Definefunc()
   
-  Token * Customfunc( Token * temp, int head ) {
+  Token * Customfunc( Token * temp ) {
     int i = msymbollist.size() - 1 ;
     string str = temp->left->str ;
     bool find = false ;
@@ -841,7 +830,7 @@ class Evaler {
     while ( method->type != NIL ) {
       done = true ;
       try {
-        ans = Evalexp( method->left, head ) ;
+        ans = Evalexp( method->left, 1 ) ;
         retoken = ans ;
       } // try
       catch ( Exception e ) {
@@ -857,7 +846,7 @@ class Evaler {
             msymbollist.pop_back() ;
           throw e ;
         } // else
-      } // catch
+    } // catch
 
       method = method->right ;
     } // while
@@ -871,7 +860,7 @@ class Evaler {
     return retoken ;
   } // Customfunc()
   
-  Token * Lambda( Token * temp, int head ) {
+  Token * Lambda( Token * temp ) {
 
     Token * ltemp = temp->left->right ;
     Token * argname = ltemp->left ;
@@ -904,7 +893,7 @@ class Evaler {
 
     while ( method != NULL && method->type != NIL ) {
 
-      result = Evalexp( method->left, head ) ;
+      result = Evalexp( method->left, 1 ) ;
       method = method->right ;
     } // while
     
@@ -1439,18 +1428,8 @@ class Evaler {
     bool check, done ;
     Token * result ;
     while ( t != NULL && t->type != NIL ) {
-      try {
-        result = Evalexp( t->left, 1 ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          throw UnboundCondiError( e.mhead ) ;
-        } // if
-        else {
-          throw e ;
-        } // else
-      } // catch
-    
+
+      result = Evalexp( t->left, 1 ) ;
       if ( result->type != NIL )
         return result ;
 
@@ -1471,19 +1450,8 @@ class Evaler {
     Token * result ;
 
     while ( t != NULL && t->type != NIL ) {
-      try {
-        result = Evalexp( t->left, 1 ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          throw UnboundCondiError( e.mhead ) ;
-        } // if
-        else {
-          throw e ;
-        } // else
-      } // catch
-    
-      
+
+      result = Evalexp( t->left, 1 ) ;
       if ( result->type == NIL )
         return result ;
       t = t->right ;
@@ -1772,7 +1740,12 @@ class Evaler {
         if ( Findsymbol( temp->str ) == 1 ) {
           Token * retoken = Symbols( temp ) ;
           return retoken ; 
-
+          /*
+          if (  retoken->left != NULL && retoken->left->str == "lambda" )
+            return Evalexp( retoken, 1 ) ;
+          else
+            return retoken ;
+          */
         } // if
         else if ( Isinternalfunc( temp->str ) || Findsymbol( temp->str ) == 2 ) {
           temp->iscomd = true ;
@@ -1857,7 +1830,6 @@ class Evaler {
         return Let( temp->right ) ;
       } // else if
       else if ( temp->left->type == SYMBOL ) {
-
         string str = temp->left->str ;
         int mode = Findsymbol( str ) ;
         Token * sym = Symbols( temp->left ) ;
@@ -1865,16 +1837,14 @@ class Evaler {
           if ( mode == 2 ) {
             Token * ret ;
             try {
-
-              ret =  Customfunc( temp, head ) ;
+              ret =  Customfunc( temp ) ;
             } // try
             catch ( Exception e ) {
               if ( e.mname == "NoReturnError" ) {
                 e.mhead = temp ;
-                // cout << head ;
-                if ( head != 0 ) {
+                
+                if ( head != 0 )
                   throw UnboundParaError( e.mhead ) ;
-                } // if
               } // if
               
               
@@ -1888,7 +1858,7 @@ class Evaler {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
-            return Evalexp( ntemp, head ) ;
+            return Evalexp( ntemp, 1 ) ;
           } // else if
           else if ( Isinternalfunc( sym->str ) && sym->iscomd ) {
             Token * ntemp = NewToken( "." ) ;
@@ -1918,26 +1888,11 @@ class Evaler {
       } // else if
       else if ( temp->left->type == DOT ) {
         if ( temp->left->left->str == "lambda" ) {
-          Token * ret ;
-          try {
-            ret =  Lambda( temp, head ) ;
-          } // try
-          catch ( Exception e ) {
-            if ( e.mname == "NoReturnError" ) {
-              e.mhead = temp ;
-              
-              if ( head != 0 )
-                throw UnboundParaError( e.mhead ) ;
-            } // if
-            
-            throw e ;
-          } // catch
-          
-          return ret ;
+          return Lambda( temp ) ;
           
         } // if
         else {
-          Token * check = Evalexp( temp->left, 0 ) ;
+          Token * check = Evalexp( temp->left, 1 ) ;
           temp->left = check ;
           if ( check->type == SYMBOL && !Isinternalfunc( check->str ) )
             throw NonFuncError( temp->left ) ;
@@ -2390,11 +2345,6 @@ class Interpreter{
           } // if
           else if ( e.mname == "NonFuncError" || e.mname == "ArgTypeError" ||
                     e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
-            printf( "%s", e.merrorstr.c_str() ) ;
-            evalerr = true ;
-            mprinter.Printtree( e.mhead ) ; 
-          } // else if
-          else if ( e.mname == "UnboundCondiError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
             mprinter.Printtree( e.mhead ) ; 
