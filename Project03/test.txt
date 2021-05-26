@@ -1,21 +1,16 @@
-
-(define x1 3)(define x2 4)(define x3 5)
-( define (Fbegin x3)  ;       x3 : p1
-  ( begin 
-    ( begin (+ x1 x3) )
-    ( begin (- x2 x3) )
-    ( cond ( (> x3 x1) (+ x3 x1) ) 
-           ( (< x3 x1) (* x3 x1) )
-           ; ( else      (- x3 x1) ) ; no return value when p1 = x1
-    );cond                           ; but OK
-  );begin
-  ( begin 
-    ( begin (+ x1 x3) )
-    ( begin (- x2 x3) )
-    ( cond ( (> x3 x1) (+ x3 x1) ) 
-           ( (= x3 x1) (* x3 x1) )
-           ; ( else      (- x3 x1) ) ; no return value when p1 < x1
-    );cond                           ; result not OK
-  );begin
-);define
-(Fbegin x1)
+1
+(let ( (x 6) (y '(1 2 3))
+         (a 7)
+       )
+       (+ a x (car (cdr (cdr y)))
+       )
+       (let ( (a 17) (x 11) 
+            )
+            (- a x (car (cdr (cdr y)))
+               (let ( (x 21) )
+                    (+ a x 5)
+                    (if nil 7)
+               )
+            )
+       )
+  )

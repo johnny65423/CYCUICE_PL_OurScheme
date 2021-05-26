@@ -397,12 +397,12 @@ public:
 
 class FormatError : public Exception {
 public:
-  FormatError( string str ) {
+  FormatError( string str, Token * temp ) {
     mname = "FormatError" ;
     stringstream ss ;
 
     ss << "ERROR (" << str << " format) : " ;
-
+    mhead = temp ;
     merrorstr = ss.str() ;
   } // FormatError()
 };
@@ -697,12 +697,14 @@ class Evaler {
 
   }  // Change()
 
-  Token * Define( Token * temp ) {
+  Token * Define( Token * temp1 ) {
+    Token * temp = temp1->right ;
+    
     if ( temp->left != NULL && temp->left->type == DOT )
-      return Definefunc( temp ) ;   
+      return Definefunc( temp1 ) ;   
  
     if ( Getsize( temp ) != 2 )
-      throw FormatError( "DEFINE" ) ;
+      throw FormatError( "DEFINE", temp1 ) ;
 
   
     
@@ -713,7 +715,7 @@ class Evaler {
     
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
-      throw FormatError( "DEFINE" ) ;
+      throw FormatError( "DEFINE", temp1 ) ;
     } // if
     
     if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
@@ -726,7 +728,7 @@ class Evaler {
       newsymbol.info = temp->right->left ;
     } // else if
     else { 
-      newsymbol.info = Evalexp( temp->right->left, 1 ) ;
+      newsymbol.info = Evalexp( temp->right->left, 0 ) ;
     } // else 
       
 
@@ -746,10 +748,11 @@ class Evaler {
     return NewToken( name + " defined" ) ;
   } // Define()
 
-  Token * Definefunc( Token * temp ) {
+  Token * Definefunc( Token * temp1 ) {
+    Token * temp = temp1->right ;
     
     if ( Getsize( temp ) < 2 )
-      throw FormatError( "DEFINE" ) ;  
+      throw FormatError( "DEFINE", temp1 ) ;  
     
     Symbol newsymbol ;
     string name = temp->left->left->str ;
@@ -757,22 +760,10 @@ class Evaler {
     newsymbol.args = temp->left->right ;
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->left->type != SYMBOL ) { 
-      throw FormatError( "DEFINE" ) ;
+      throw FormatError( "DEFINE", temp1 ) ;
     } // if
     
     newsymbol.info = temp->right ;
-    
-    /*
-    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
-      Token * check = Copytoken( temp->right->left ) ;
-      Change( check ) ;
-      newsymbol.info = check ;
-    } // if
-    else { 
-      newsymbol.info = temp->right->left ;
-      
-    } // else 
-    */
 
     if ( Findsymbol( name ) == 0 )
       msymbollist.push_back( newsymbol ) ;  
@@ -915,30 +906,36 @@ class Evaler {
     return result ;
   } // Lambda()
   
-  Token * Let( Token * temp ) {
-    
+  Token * Let( Token * temp1 ) {
+    Token * temp = temp1->right ;
     if ( Getsize( temp ) < 2 )
-      throw FormatError( "LET" ) ;
+      throw FormatError( "LET", temp1 ) ;
     
     Token * args = temp->left ;
     int argsnum = Getsize( args ) ;
     vector < Symbol > templist ;  
     
     while ( args->type != NIL ) {
+      if ( Getsize( args->left ) != 2 )
+        throw FormatError( "LET", temp1 ) ;
+      args = args->right ;
+    } // while  
+    
+    args = temp->left ;
+    while ( args->type != NIL ) {
 
       Symbol sym ;
       Token * argtemp = args->left ;
       if ( argtemp->type != DOT )
-        throw FormatError( "LET" ) ;
+        throw FormatError( "LET", temp1 ) ;
       string name = argtemp->left->str ; 
       if ( Isinternalfunc( name ) || Isspfunc( name ) || argtemp->left->type != SYMBOL ) { 
-        throw FormatError( "LET" ) ;
+        throw FormatError( "LET", temp1 ) ;
       } // if
-      else if ( Getsize( argtemp ) != 2 )
-        throw FormatError( "LET" ) ;
+      
       sym.name = name ;
       sym.args = NULL ;
-      sym.info = Evalexp( argtemp->right->left, 1 ) ;
+      sym.info = Evalexp( argtemp->right->left, 0 ) ;
       templist.push_back( sym ) ;
       
       args = args->right ;
@@ -990,16 +987,16 @@ class Evaler {
 
   } // If()
 
-  Token * Decide( Token * temp, bool last, bool & done ) {
+  Token * Decide( Token * temp, bool last, bool & done, Token * temp1 ) {
 
     if ( Getsize( temp ) < 1 )
-      throw FormatError( "COND" ) ;
+      throw FormatError( "COND", temp1 ) ;
     else if ( Isatomtype( temp->type ) ) {
-      throw FormatError( "COND" ) ;
+      throw FormatError( "COND", temp1 ) ;
     } // else if
     else if ( ( last && temp->left->str == "else" ) ) {
       done = true ;
-      return Begincond( temp->right ) ;
+      return Begincond( temp->right, temp1 ) ;
     } // if
 
     Token * check = Evalexp( temp->left, 1 );
@@ -1007,7 +1004,7 @@ class Evaler {
 
     if ( check->type != NIL ) {
       done = true ;
-      return Begincond( temp->right ) ;
+      return Begincond( temp->right, temp1 ) ;
     } // if
     else {
       done = false ;
@@ -1016,10 +1013,11 @@ class Evaler {
 
   } // Decide()
 
-  Token * Cond( Token * temp ) {
+  Token * Cond( Token * temp1 ) {
+    Token * temp = temp1->right ;
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
-      throw FormatError( "COND" ) ;
+      throw FormatError( "COND", temp1 ) ;
     
     Token * t = temp ;
     bool check, done ;
@@ -1027,10 +1025,10 @@ class Evaler {
 
     while ( t->type != NIL ) {
       if ( Isatomtype( t->left->type ) ) {
-        throw FormatError( "COND" ) ;
+        throw FormatError( "COND", temp1 ) ;
       } // if
       else if ( Getsize( t->left ) < 2 ) {
-        throw FormatError( "COND" ) ;
+        throw FormatError( "COND", temp1 ) ;
       } // else if
 
       t = t->right ;
@@ -1041,19 +1039,11 @@ class Evaler {
     while ( t->type != NIL ) {
       if ( t->right->type == NIL ) {
 
-        result = Decide( t->left, true, done ) ;
+        result = Decide( t->left, true, done, temp1 ) ;
 
       } // if
       else {
-        result = Decide( t->left, false, done ) ;
-        /*
-        try {
-          result = Decide( t->left, false, done ) ;
-        } // try
-        catch ( NoReturnError e ) {
-          ;
-        } // catch
-        */
+        result = Decide( t->left, false, done, temp1 ) ;
       } // else
         
 
@@ -1086,7 +1076,7 @@ class Evaler {
         result = ans ;
       } // try
       catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
+        if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
           if ( t->right->type == NIL ) {
             throw e ;
           } // if
@@ -1108,10 +1098,10 @@ class Evaler {
 
   } // Begin()
 
-  Token * Begincond( Token * temp ) {
+  Token * Begincond( Token * temp, Token * temp1 ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
-      throw FormatError( "COND" ) ;
+      throw FormatError( "COND", temp1 ) ;
     
     Token * t = temp ;
     bool check, done ;
@@ -1125,7 +1115,7 @@ class Evaler {
         result = ans ;
       } // try
       catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
+        if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
           if ( t->right->type == NIL )
             throw e ;
         } // if
@@ -1140,6 +1130,7 @@ class Evaler {
     if ( result == NULL ) {
       throw NoReturnError( temp ) ;
     } // if
+    
     return result ;
 
   } // Begincond()
@@ -1456,7 +1447,7 @@ class Evaler {
         result = Evalexp( t->left, 1 ) ;
       } // try
       catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
+        if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
           throw UnboundCondiError( e.mhead ) ;
         } // if
         else {
@@ -1488,7 +1479,7 @@ class Evaler {
         result = Evalexp( t->left, 1 ) ;
       } // try
       catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
+        if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
           throw UnboundCondiError( e.mhead ) ;
         } // if
         else {
@@ -1812,7 +1803,8 @@ class Evaler {
       else if ( temp->left->str == "define" ) {
         if ( head != 0 )
           throw LevelError( "DEFINE" ) ;
-        return Define( temp->right ) ;    
+        
+        return Define( temp ) ;    
       } // else if
       else if ( temp->left->str == "exit" ) {
         if ( head != 0 )
@@ -1852,7 +1844,7 @@ class Evaler {
       } // else if
       else if ( temp->left->str == "cond" ) {
         try {
-          return Cond( temp->right ) ;
+          return Cond( temp ) ;
         } // try
         catch ( ReE e ) {
           throw NoReturnError( temp ) ;
@@ -1867,7 +1859,7 @@ class Evaler {
         return temp ;
       } // else if
       else if ( temp->left->str == "let" ) {
-        return Let( temp->right ) ;
+        return Let( temp ) ;
       } // else if
       else if ( temp->left->type == SYMBOL ) {
 
@@ -2241,8 +2233,8 @@ class Scanner {
       
     } // while()
 
-    if ( gEnd )
-      throw EndOfFileError() ; 
+    // if ( gEnd )
+    //   throw EndOfFileError() ; 
       
     return temp ;
   } // Getothers() 
@@ -2384,6 +2376,12 @@ class Interpreter{
       
       gReading = false ;
       
+
+      if ( gEnd && mtokenlist.size() == 1 ) {
+        if ( mtokenlist.at( 0 ).str[0] == '\0' )
+          throw EndOfFileError() ;
+      } // if
+      
       if ( !err ) {
         bool evalerr = false ;
         mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
@@ -2407,12 +2405,12 @@ class Interpreter{
             evalerr = true ;
             mprinter.Printtree( e.mhead ) ; 
           } // else if
-          else if ( e.mname == "UnboundCondiError" ) {
+          else if ( e.mname == "FormatError" || e.mname == "UnboundCondiError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
             mprinter.Printtree( e.mhead ) ; 
           } // else if
-          else if ( e.mname == "FormatError" || e.mname == "NonListError" ) {
+          else if ( e.mname == "NonListError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
             mprinter.Printtree( mtokentree ) ;
@@ -2451,7 +2449,7 @@ class Interpreter{
       else
         gColumn = gColumn - c + 1 ;
          
-         
+
     } // while()
     
 
@@ -2498,8 +2496,11 @@ class Interpreter{
 int main() {
   Interpreter interpreter = Interpreter() ;
   char t ;
-  scanf( "%d",  &gTestNum  ) ;
+  scanf( "%d",  &gTestNum ) ;
   scanf( "%c",  &t ) ;
+  
+  Token * temp = NULL ;
+
   printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     interpreter.Gettokenlist() ;
