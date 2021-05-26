@@ -916,14 +916,27 @@ class Evaler {
   } // Lambda()
   
   Token * Let( Token * temp ) {
+    
+    if ( Getsize( temp ) < 2 )
+      throw FormatError( "LET" ) ;
+    
     Token * args = temp->left ;
     int argsnum = Getsize( args ) ;
     vector < Symbol > templist ;  
     
     while ( args->type != NIL ) {
+
       Symbol sym ;
       Token * argtemp = args->left ;
-      sym.name = argtemp->left->str ;
+      if ( argtemp->type != DOT )
+        throw FormatError( "LET" ) ;
+      string name = argtemp->left->str ; 
+      if ( Isinternalfunc( name ) || Isspfunc( name ) || argtemp->left->type != SYMBOL ) { 
+        throw FormatError( "LET" ) ;
+      } // if
+      else if ( Getsize( argtemp ) != 2 )
+        throw FormatError( "LET" ) ;
+      sym.name = name ;
       sym.args = NULL ;
       sym.info = Evalexp( argtemp->right->left, 1 ) ;
       templist.push_back( sym ) ;

@@ -228,5 +228,99 @@ Welcome to OurScheme!
 
 > ERROR (+ with incorrect argument type) : #<procedure lambda>
 
+> environment cleaned
+
+> ( 3
+  2
+  3
+)
+
+> ERROR (unbound symbol) : x
+
+> ERROR (LET format) : ( let
+  ( car
+    ( quote
+      ( 1
+        2
+        3
+      )
+    )
+  )
+  5
+)
+
+> ERROR (LET format) : ( let
+  ( ( x
+      3
+      4
+    )
+  )
+  5
+)
+
+> 2
+
+> ERROR (LET format) : ( let
+  ( ( ( car
+        ( quote
+          ( x
+            y
+            z
+          )
+        )
+      )
+      3
+    )
+  )
+  5
+)
+
+> ERROR (LET format) : ( let
+  nil
+)
+
+> 5
+
+> ERROR (LET format) : ( let
+  ( ( x
+      5
+    )
+  )
+)
+
+> ERROR (incorrect number of arguments) : cons
+
+> ERROR (incorrect number of arguments) : cons
+
+> ( 5
+  .
+  10
+)
+
+> ERROR (* with incorrect argument type) : ( 5
+  .
+  10
+)
+
+> ERROR (incorrect number of arguments) : cons
+
+> ERROR (incorrect number of arguments) : car
+
+> ERROR (attempt to apply non-function) : 1
+
+> ERROR (LET format) : ( let
+  ( ( x
+      ( 1
+        2
+        3
+      )
+    )
+  )
+)
+
+> ERROR (attempt to apply non-function) : 1
+
+> environment cleaned
+
 > ERROR (no more input) : END-OF-FILE encountered
 Thanks for using OurScheme!
