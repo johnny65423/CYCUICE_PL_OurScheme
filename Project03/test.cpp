@@ -1165,9 +1165,28 @@ class Evaler {
       throw ArgNumError( "cons" ) ;
     
     Token * retoken = NewToken( "." ) ;
-    retoken->left = Evalexp( temp->left, 1 ) ;
-    retoken->right = Evalexp( temp->right->left, 1 );
+    Token * ans[2] ;
+    Token * t = temp ;
+    for ( int i = 0 ; i < 2 ; i++ ) {
+      try {
+        ans[i] = Evalexp( t->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      t = t->right ;
+		} // for
+
+    retoken->left = ans[0] ;
+    retoken->right = ans[1] ;
+
     return retoken ;  
+    
+    
   } // Cons()
 
   Token * List( Token * temp ) {
@@ -1182,8 +1201,16 @@ class Evaler {
     Token * t = temp ;
 
     while ( t->type != NIL ) {
-      ret->left = Evalexp( t->left, 1 ) ; 
-    
+      try {
+        ret->left = Evalexp( t->left, 1 ) ; 
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
       if ( t->right->type != NIL )
         ret->right = NewToken( "." ) ;
       else 
@@ -1200,7 +1227,17 @@ class Evaler {
   Token * Car( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "car" ) ;
-    Token * check = Evalexp( temp->left, 1 ) ;
+      
+    Token * check ;  
+    try {
+    	check = Evalexp( temp->left, 1 ) ;
+		} // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
     
     if ( Isatomtype( check->type ) )
       throw ArgTypeError( "car", check ) ;
@@ -1212,7 +1249,22 @@ class Evaler {
   Token * Cdr( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "cdr" ) ;
-    Token * check = Evalexp( temp->left, 1 ) ;
+    
+    Token * check ;  
+    try {
+    	check = Evalexp( temp->left, 1 ) ;
+		} // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+    
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "car", check ) ;
+      
+    return check->left ;
     
     if ( Isatomtype( check->type ) )
       throw ArgTypeError( "cdr", check ) ;
@@ -1224,9 +1276,18 @@ class Evaler {
   Token * Not( Token * temp ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "not" ) ;
+    Token * check ;
+    try {
+    	check = Evalexp( temp->left, 1 ) ;
+		} // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
     
-
-    if ( Evalexp( temp->left, 1 )->type == NIL )     
+      throw e ;
+    } // catch
+    
+    if ( check->type == NIL )     
       return NewToken( "#t" ) ;
     else 
       return NewToken( "nil" ) ;
@@ -1236,8 +1297,21 @@ class Evaler {
   Token * Greater( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      
+      
       if ( check1->type != INT && check1->type != FLOAT )
         throw ArgTypeError( ">", check1 ) ;
       else if ( check2->type != INT && check2->type != FLOAT )
@@ -1256,8 +1330,18 @@ class Evaler {
   Token * Less( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
       if ( check1->type != INT && check1->type != FLOAT )
         throw ArgTypeError( "<", check1 ) ;
       else if ( check2->type != INT && check2->type != FLOAT )
@@ -1276,8 +1360,18 @@ class Evaler {
   Token * Nogreater( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
       if ( check1->type != INT && check1->type != FLOAT )
         throw ArgTypeError( "<=", check1 ) ;
       else if ( check2->type != INT && check2->type != FLOAT )
@@ -1296,8 +1390,18 @@ class Evaler {
   Token * Noless( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
       if ( check1->type != INT && check1->type != FLOAT )
         throw ArgTypeError( ">=", check1 ) ;
       else if ( check2->type != INT && check2->type != FLOAT )
@@ -1316,8 +1420,18 @@ class Evaler {
   Token * Equalnum( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
   
       if ( check1->type != INT && check1->type != FLOAT )
         throw ArgTypeError( "=", check1 ) ;
@@ -1336,7 +1450,17 @@ class Evaler {
   Token * Strappend( Token * temp ) {
     string check = "" ;
     while ( temp->type != NIL && temp != NULL ) {
-      Token * nstr = Evalexp( temp->left, 1 ) ;
+      Token * nstr ;
+      try {
+        nstr = Evalexp( temp->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
       if ( nstr->type != STRING )
         throw ArgTypeError( "string-append", nstr ) ;
 
@@ -1965,8 +2089,10 @@ class Evaler {
         else {
           Token * check = Evalexp( temp->left, 0 ) ;
           temp->left = check ;
-          if ( check->type == SYMBOL && !( Isinternalfunc( check->str ) || Isspfunc( check->str ) ) ) 
+          if ( check->type == SYMBOL  ) {
+            if ( !check->iscomd )
             throw NonFuncError( temp->left ) ;
+          } // if
           else if ( check->left != NULL && check->left->str != "lambda" )
             throw NonFuncError( temp->left ) ;
 
