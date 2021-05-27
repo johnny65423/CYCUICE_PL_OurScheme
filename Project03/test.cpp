@@ -503,7 +503,7 @@ class Printer {
 
     Type type = temp->type ;
     
-    if ( type == DOT && temp->left->str == "lambda" ) {
+    if ( type == DOT && temp->left->str == "lambda" && temp->left->iscomd ) {
       Printtoken( temp->left ) ;
       printf( "\n" ) ;
     } // if
@@ -728,7 +728,7 @@ class Evaler {
       newsymbol.info = temp->right->left ;
     } // else if
     else { 
-      newsymbol.info = Evalexp( temp->right->left, 0 ) ;
+      newsymbol.info = Evalexp( temp->right->left, 1 ) ;
     } // else 
       
 
