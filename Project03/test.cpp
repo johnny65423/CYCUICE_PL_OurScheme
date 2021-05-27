@@ -211,20 +211,20 @@ bool Isinternalfunc( string str ) {
     return true ;
   else if ( str == "string=?" || str == "eqv?" || str == "equal?" ) 
     return true ;
-  else if ( str == "exit" ) 
+  else if ( str == "quote" || str == "exit" ) 
     return true ;
   else 
     return false ;
 } // Isinternalfunc()
 
 bool Isspfunc( string str ) {
-  if ( str == "quote" || str == "\'" || str == "define" ) 
+  if ( str == "define" ) 
     return true ;
   else if ( str == "and" || str == "or" || str == "begin" ) 
     return true ;
   else if ( str == "if" || str == "cond" || str == "clean-environment" ) 
     return true ;
-  else if ( str == "exit" ) 
+  else if ( str == "let" || str == "exit" || str == "lambda" ) 
     return true ;
   else 
     return false ;
@@ -740,6 +740,7 @@ class Evaler {
         if ( msymbollist.at( i ).name == name ) {
 
           msymbollist.at( i ).info = newsymbol.info ;
+          msymbollist.at( i ).args = NULL ;
         } // if
       } // for
 
@@ -947,11 +948,29 @@ class Evaler {
 
     
     Token * t = temp->right ;
-    Token * result ;
-
+    Token * result = NULL;
+    Token * ans = NULL;
     while ( t != NULL && t->type != NIL ) {
-
-      result = Evalexp( t->left, 1 ) ;
+      try {
+        ans = Evalexp( t->left, 1 ) ;
+        result = ans ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" ) {
+          if ( t->right->type == NIL ) {
+            e.mhead = temp1 ;
+            for ( int i = 0 ; i < argsnum ; i++ )
+              msymbollist.pop_back() ;
+            throw e ;
+          } // if
+        } // if
+        else {
+          for ( int i = 0 ; i < argsnum ; i++ )
+            msymbollist.pop_back() ;
+          throw e ;
+        } // else
+      } // catch
+      
       t = t->right ;
     } // while
 
@@ -1078,6 +1097,7 @@ class Evaler {
       catch ( Exception e ) {
         if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
           if ( t->right->type == NIL ) {
+            // e.mhead = temp1 ;
             throw e ;
           } // if
         } // if
@@ -1772,18 +1792,19 @@ class Evaler {
   Token * Evalexp( Token * temp, int head ) {
 
     if ( Isatomtype( temp->type ) ) {
+      string str = temp->str ;
       if ( temp->type == SYMBOL ) {
-        if ( Findsymbol( temp->str ) == 1 ) {
+        if ( Findsymbol( str ) == 1 ) {
           Token * retoken = Symbols( temp ) ;
           return retoken ; 
 
         } // if
-        else if ( Isinternalfunc( temp->str ) || Findsymbol( temp->str ) == 2 ) {
+        else if ( Isspfunc( str ) || Isinternalfunc( str ) || Findsymbol( str ) == 2 ) {
           temp->iscomd = true ;
           return temp ;
         }  // else if
         else 
-          throw UnboundError( temp->str ) ;
+          throw UnboundError( str ) ;
       } // if
       else
         return temp ;
@@ -1895,7 +1916,7 @@ class Evaler {
             ntemp->right = temp->right ;
             return Evalexp( ntemp, head ) ;
           } // else if
-          else if ( Isinternalfunc( sym->str ) && sym->iscomd ) {
+          else if ( ( Isspfunc( sym->str ) || Isinternalfunc( sym->str ) ) && sym->iscomd ) {
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
@@ -1944,7 +1965,7 @@ class Evaler {
         else {
           Token * check = Evalexp( temp->left, 0 ) ;
           temp->left = check ;
-          if ( check->type == SYMBOL && !Isinternalfunc( check->str ) )
+          if ( check->type == SYMBOL && !( Isinternalfunc( check->str ) || Isspfunc( check->str ) ) ) 
             throw NonFuncError( temp->left ) ;
           else if ( check->left != NULL && check->left->str != "lambda" )
             throw NonFuncError( temp->left ) ;
