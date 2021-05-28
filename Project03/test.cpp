@@ -2013,26 +2013,8 @@ class Evaler {
         Token * sym = Symbols( temp->left ) ;
         if ( mode != 0 ) {
           if ( mode == 2 ) {
-            Token * ret ;
-            try {
 
-              ret =  Customfunc( temp, head ) ;
-            } // try
-            catch ( Exception e ) {
-              if ( e.mname == "NoReturnError" ) {
-                e.mhead = temp ;
-                // cout << head ;
-                if ( head != 0 ) {
-                  throw UnboundParaError( e.mhead ) ;
-                } // if
-              } // if
-              
-              
-              throw e ;
-
-              
-            } // catch
-            return ret ;
+            return Customfunc( temp, head ) ;
           } // if
           else if ( Findsymbol( sym->str ) == 2 ) {
             Token * ntemp = NewToken( "." ) ;
@@ -2068,22 +2050,8 @@ class Evaler {
       } // else if
       else if ( temp->left->type == DOT ) {
         if ( temp->left->left->str == "lambda" ) {
-          Token * ret ;
-          try {
-            ret =  Lambda( temp, head ) ;
-          } // try
-          catch ( Exception e ) {
-            if ( e.mname == "NoReturnError" ) {
-              e.mhead = temp ;
-              
-              if ( head != 0 )
-                throw UnboundParaError( e.mhead ) ;
-            } // if
-            
-            throw e ;
-          } // catch
-          
-          return ret ;
+
+          return Lambda( temp, head ) ;
           
         } // if
         else {
