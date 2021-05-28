@@ -812,7 +812,15 @@ class Evaler {
       Symbol sym ;
       sym.name = argname->left->str ;
       sym.args = NULL ;
-      sym.info = Evalexp( args->left, 1 ) ;
+      try {
+        sym.info = Evalexp( args->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( args->left ) ;
+        
+        throw e ;
+      } // catch
       templist.push_back( sym ) ;
       
       argname = argname->right ;
@@ -838,6 +846,7 @@ class Evaler {
       } // try
       catch ( Exception e ) {
         if ( e.mname == "NoReturnError" ) {
+          e.mhead = temp ;
           if ( method->right->type == NIL ) {
             for ( int i = 0 ; i < argsnum ; i++ )
               msymbollist.pop_back() ;
@@ -880,7 +889,13 @@ class Evaler {
       Symbol sym ;
       sym.name = argname->left->str ;
       sym.args = NULL ;
-      sym.info = Evalexp( args->left, 1 ) ;
+      try {
+        sym.info = Evalexp( args->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( args->left ) ;
+      } // catch
       templist.push_back( sym ) ;
       
       argname = argname->right ;
@@ -982,20 +997,33 @@ class Evaler {
 
   } // Let()
 
-  Token * If( Token * temp ) {
+  Token * If( Token * temp1 ) {
+    Token * temp = temp1->right ;
     int size = Getsize( temp ) ;
     if ( size != 2 && size != 3 )
       throw ArgNumError( "if" ) ;
     
-    Token * check = Evalexp( temp->left, 1 ) ;
+    Token * check ;
     Token * result ;
+    
+    try {
+      check = Evalexp( temp->left, 1 ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+        // unboundtest
+      throw e ;
+    } // catch
+
+
 
     if ( check->type != NIL ) {
       result = Evalexp( temp->right->left, 1 ) ;
     } // if
     else {
       if ( size == 2 )
-        throw ReE() ;
+        throw NoReturnError( temp1 ) ;
       else {
         result = Evalexp( temp->right->right->left, 1 ) ;
       } // else
@@ -1018,8 +1046,18 @@ class Evaler {
       return Begincond( temp->right, temp1 ) ;
     } // if
 
-    Token * check = Evalexp( temp->left, 1 );
+    Token * check ;
     Token * result ;
+
+    try {
+      check = Evalexp( temp->left, 1 );
+    } // try 
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+        // unboundtest
+      throw e ;
+    } // catch
 
     if ( check->type != NIL ) {
       done = true ;
@@ -1064,9 +1102,7 @@ class Evaler {
       else {
         result = Decide( t->left, false, done, temp1 ) ;
       } // else
-        
 
-      
       if ( done ) {
         return result ;
       } // if
@@ -1074,7 +1110,7 @@ class Evaler {
       t = t->right ;
     } // while
 
-    throw ReE() ;
+    throw NoReturnError( temp1 ) ;
 
   } // Cond()
   
@@ -1089,13 +1125,13 @@ class Evaler {
     Token * ans ;
     while ( t != NULL && t->type != NIL ) {
       done = true ;
-      
+      // error ;
       try {
         ans = Evalexp( t->left, 1 ) ;
         result = ans ;
       } // try
       catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
+        if ( e.mname == "NoReturnError" ) {
           if ( t->right->type == NIL ) {
             // e.mhead = temp1 ;
             throw e ;
@@ -1129,13 +1165,13 @@ class Evaler {
     Token * ans ;
     while ( t != NULL && t->type != NIL ) {
       // result = Evalexp( t->left, 1 ) ;
- 
+      // error
       try {
         ans = Evalexp( t->left, 1 ) ;
         result = ans ;
       } // try
       catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
+        if ( e.mname == "NoReturnError" ) {
           if ( t->right->type == NIL )
             throw e ;
         } // if
@@ -1179,7 +1215,7 @@ class Evaler {
       } // catch
       
       t = t->right ;
-		} // for
+    } // for
 
     retoken->left = ans[0] ;
     retoken->right = ans[1] ;
@@ -1230,8 +1266,8 @@ class Evaler {
       
     Token * check ;  
     try {
-    	check = Evalexp( temp->left, 1 ) ;
-		} // try
+      check = Evalexp( temp->left, 1 ) ;
+    } // try
     catch ( Exception e ) {
       if ( e.mname == "NoReturnError" )
         throw UnboundParaError( e.mhead ) ;
@@ -1252,19 +1288,15 @@ class Evaler {
     
     Token * check ;  
     try {
-    	check = Evalexp( temp->left, 1 ) ;
-		} // try
+      check = Evalexp( temp->left, 1 ) ;
+    } // try
     catch ( Exception e ) {
       if ( e.mname == "NoReturnError" )
         throw UnboundParaError( e.mhead ) ;
     
       throw e ;
     } // catch
-    
-    if ( Isatomtype( check->type ) )
-      throw ArgTypeError( "car", check ) ;
-      
-    return check->left ;
+
     
     if ( Isatomtype( check->type ) )
       throw ArgTypeError( "cdr", check ) ;
@@ -1278,8 +1310,8 @@ class Evaler {
       throw ArgNumError( "not" ) ;
     Token * check ;
     try {
-    	check = Evalexp( temp->left, 1 ) ;
-		} // try
+      check = Evalexp( temp->left, 1 ) ;
+    } // try
     catch ( Exception e ) {
       if ( e.mname == "NoReturnError" )
         throw UnboundParaError( e.mhead ) ;
@@ -1475,9 +1507,19 @@ class Evaler {
   Token * Strgreat( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
-  
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
       if ( check1->type != STRING )
         throw ArgTypeError( "string>?", check1 ) ;
       else if ( check2->type != STRING )
@@ -1495,9 +1537,19 @@ class Evaler {
   Token * Strless( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
-  
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
       if ( check1->type != STRING )
         throw ArgTypeError( "string<?", check1 ) ;
       else if ( check2->type != STRING )
@@ -1515,9 +1567,19 @@ class Evaler {
   Token * Strequal( Token * temp ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 = Evalexp( temp->left, 1 ) ;
-      Token * check2 = Evalexp( temp->right->left, 1 ) ;
-  
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1 ) ;
+        check2 = Evalexp( temp->right->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
       if ( check1->type != STRING )
         throw ArgTypeError( "string=?", check1 ) ;
       else if ( check2->type != STRING )
@@ -1535,8 +1597,19 @@ class Evaler {
   Token * Eqv( Token * temp ) {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "eqv?" ) ;
-    Token * check1 = Evalexp( temp->left, 1 ) ;
-    Token * check2 = Evalexp( temp->right->left, 1 ) ;
+    Token * check1 ;
+    Token * check2 ;
+    try {
+      check1 = Evalexp( temp->left, 1 ) ;
+      check2 = Evalexp( temp->right->left, 1 ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+      
     if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
          check1->type != STRING && check2->type != STRING ) {
       if ( check1->str.compare( check2->str ) == 0 )
@@ -1569,8 +1642,19 @@ class Evaler {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "equ?" ) ;
     
-    Token * check1 = Evalexp( temp->left, 1 ) ;
-    Token * check2 = Evalexp( temp->right->left, 1 ) ;
+    Token * check1 ;
+    Token * check2 ;
+    try {
+      check1 = Evalexp( temp->left, 1 ) ;
+      check2 = Evalexp( temp->right->left, 1 ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+      
     if ( Issame( check1, check2 ) ) 
       return NewToken( "#t" ) ;
     else 
@@ -1644,22 +1728,28 @@ class Evaler {
   Token * Primitivepredicates( Token * temp, string str ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( str ) ;
+    Token * check ;
+    try {
+      check = Evalexp( temp->left, 1 ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
     
+      throw e ;
+    } // catch
+      
     if ( str == "atom?" ) {
-      if ( Evalexp( temp->left, 1 )->type != DOT )
+      if ( check->type != DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // if
     else if ( str == "pair?" ) {
-
-      Token * check = Evalexp( temp->left, 1 ) ;
-
       if ( check->type == DOT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "list?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       while ( check->right != NULL ) 
         check = check->right ;    
       if ( check->type == NIL )
@@ -1667,43 +1757,36 @@ class Evaler {
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "null?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == NIL )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "integer?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "real?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT || check->type == FLOAT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "number?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == INT || check->type == FLOAT )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "string?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == STRING )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "boolean?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == NIL || check->type == T )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
     } // else if
     else if ( str == "symbol?" ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
       if ( check->type == SYMBOL )
         return NewToken( "#t" ) ;
       else return NewToken( "nil" ) ;
@@ -1792,7 +1875,16 @@ class Evaler {
  
   float Add( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
       if ( check->type == FLOAT )
         isfloat = true ;
       else if ( check->type != INT && check->type != FLOAT )
@@ -1807,13 +1899,32 @@ class Evaler {
 
   float Sub( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
+      
       float num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
       while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left, 1 ) ;
+        Token * check2 ;
+        try {
+          check2 = Evalexp( check->left, 1 ) ;
+        } // try
+        catch ( Exception e ) {
+          if ( e.mname == "NoReturnError" )
+            throw UnboundParaError( e.mhead ) ;
+      
+          throw e ;
+        } // catch
         if ( check2->type == FLOAT )
           isfloat = true ;
         else if ( check2->type != INT && check2->type != FLOAT )
@@ -1835,7 +1946,16 @@ class Evaler {
 
   float Mul( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
       if ( check->type == FLOAT )
         isfloat = true ;
       else if ( check->type != INT && check->type != FLOAT )
@@ -1851,13 +1971,31 @@ class Evaler {
 
   float Div( Token * temp, bool & isfloat ) {
     if ( temp->left != NULL ) {
-      Token * check = Evalexp( temp->left, 1 ) ;
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1 ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
       float num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
       while ( check != NULL && check->type != NIL ) {
-        Token * check2 = Evalexp( check->left, 1 ) ;
+        Token * check2 ;
+        try {
+          check2 = Evalexp( check->left, 1 ) ;
+        } // try
+        catch ( Exception e ) {
+          if ( e.mname == "NoReturnError" )
+            throw UnboundParaError( e.mhead ) ;
+      
+          throw e ;
+        } // catch
         if ( check2->type == FLOAT )
           isfloat = true ;
         else if ( check2->type != INT && check2->type != FLOAT )
@@ -1979,21 +2117,28 @@ class Evaler {
         return Equal( temp->right ) ;
       } // else if
       else if ( temp->left->str == "if" ) {
+        // return If( temp ) ;
+        Token * ret ;
         try {
-          return If( temp->right ) ;
+          ret = If( temp ) ;
         } // try
-        catch ( ReE e ) {
-          throw NoReturnError( temp ) ;
+        catch ( Exception e ) {
+          throw e ;
         } // catch
         
+        return ret ;
       } // else if
       else if ( temp->left->str == "cond" ) {
+        // return Cond( temp ) ;
+        Token * ret ;
         try {
-          return Cond( temp ) ;
+          ret = Cond( temp ) ;
         } // try
-        catch ( ReE e ) {
-          throw NoReturnError( temp ) ;
+        catch ( Exception e ) {
+          throw e ;
         } // catch
+        
+        return ret ;
       } // else if
       else if ( temp->left->str == "begin" ) {
         return Begin( temp->right ) ;
@@ -2011,6 +2156,7 @@ class Evaler {
         string str = temp->left->str ;
         int mode = Findsymbol( str ) ;
         Token * sym = Symbols( temp->left ) ;
+        
         if ( mode != 0 ) {
           if ( mode == 2 ) {
 
@@ -2023,6 +2169,7 @@ class Evaler {
             return Evalexp( ntemp, head ) ;
           } // else if
           else if ( ( Isspfunc( sym->str ) || Isinternalfunc( sym->str ) ) && sym->iscomd ) {
+            // cout <<"gogo" ;
             Token * ntemp = NewToken( "." ) ;
             ntemp->left = Symbols( temp->left ) ;
             ntemp->right = temp->right ;
@@ -2055,7 +2202,20 @@ class Evaler {
           
         } // if
         else {
-          Token * check = Evalexp( temp->left, 0 ) ;
+          Token * check ;
+          try {
+            check = Evalexp( temp->left, head + 1 ) ;
+          } // try 
+          catch ( Exception e ) {
+            if ( e.mname == "NoReturnError" ) {
+
+              e.mname = "NoReturnErrorgogo" ;
+
+              throw e ;
+            } // if
+            
+            throw e ;
+          } // catch
           temp->left = check ;
           if ( check->type == SYMBOL  ) {
             if ( !check->iscomd )
@@ -2516,6 +2676,11 @@ class Interpreter{
           } // if
           else if ( e.mname == "NonFuncError" || e.mname == "ArgTypeError" ||
                     e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
+            printf( "%s", e.merrorstr.c_str() ) ;
+            evalerr = true ;
+            mprinter.Printtree( e.mhead ) ; 
+          } // else if
+          else if ( e.mname == "NoReturnErrorgogo" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
             mprinter.Printtree( e.mhead ) ; 
