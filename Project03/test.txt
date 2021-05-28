@@ -9,7 +9,7 @@
             (- a x (car (cdr (cdr y)))
                (let ( (x 21) )
                     (+ a x 5)
-                    (if nil 7)
+                    (- 0 a 0)
                )
             )
        )

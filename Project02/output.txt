@@ -1,5 +1,7 @@
 Welcome to OurScheme!
 
+> 1
+
 > ERROR (unbound symbol) : ab
 
 > a defined
@@ -1334,7 +1336,7 @@ Welcome to OurScheme!
 
 > ERROR (incorrect number of arguments) : if
 
-> ERROR (no return value) : ( if
+> ERROR (unbound parameter) : ( if
   ( string>?
     ( car
       listOfStr

@@ -8,7 +8,8 @@
 # include <iomanip>
 # include <math.h>
 
- 
+
+
 using namespace std;
 
 enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMMENT, UNKNOWN };
@@ -32,6 +33,8 @@ struct Token {
   Token * left ;
   Token * right ;
 };
+
+typedef Token * TokenPtr ;
 
 struct Symbol {
 
@@ -1201,7 +1204,7 @@ class Evaler {
       throw ArgNumError( "cons" ) ;
     
     Token * retoken = NewToken( "." ) ;
-    Token * ans[2] ;
+    TokenPtr ans[2] ;
     Token * t = temp ;
     for ( int i = 0 ; i < 2 ; i++ ) {
       try {
@@ -2219,7 +2222,7 @@ class Evaler {
           temp->left = check ;
           if ( check->type == SYMBOL  ) {
             if ( !check->iscomd )
-            throw NonFuncError( temp->left ) ;
+              throw NonFuncError( temp->left ) ;
           } // if
           else if ( check->left != NULL && check->left->str != "lambda" )
             throw NonFuncError( temp->left ) ;
