@@ -26,7 +26,7 @@ struct Token {
   int line ;
   int column ;
   int intnum ;
-  float floatnum ;
+  double floatnum ;
   bool iscomd ;
   Type type ;
   
@@ -142,7 +142,7 @@ string Setstr( string str ) {
   
 } // Setstr()
 
-string Tofloat( float num ) {
+string Tofloat( double num ) {
   stringstream ss ;
   ss << num ; 
   if ( ss.str().find( "." ) != -1 )
@@ -171,18 +171,16 @@ float Decodefloat( string str ) {
   if ( str[0] == '+' )
     str.erase( 0, 1 ) ;
   else if ( str[0] == '-' ) {
-    // str.erase( 0, 1 ) ;
+    str.erase( 0, 1 ) ;
     positive = -1 ;
   } // else if
   
   if ( str[0] == '.' )
     str = "0" + str ;
   
-  string ch = "" ;
-  
-  float num = strtof( str.c_str(), NULL ) ;
-
-  return strtod( str.c_str(), NULL ) ;
+  double num = atof( str.c_str() ) * positive ;
+    
+  return num ;
 } // Decodefloat()
 
 bool Justdot() {
@@ -274,7 +272,7 @@ bool IsArith( string str ) {
 
 float Getnum( Token * temp ) {
   if ( temp->type == INT )
-    return ( float ) temp->intnum ;
+    return ( double ) temp->intnum ;
   else if ( temp->type == FLOAT )
     return temp->floatnum ; 
   else return 0.0 ;
@@ -484,7 +482,7 @@ class Printer {
     if ( type == INT )
       printf( "%d", token->intnum ) ;
     else if ( type == FLOAT )
-      printf( "%.3f", token->floatnum ) ;
+      printf( "%.3lf", token->floatnum ) ;
     else if ( type == QUOTE )
       printf( "%s", "quote" ) ;
     else if ( token->iscomd )
@@ -1893,7 +1891,7 @@ class Evaler {
     stringstream ss;
     bool isfloat = false ;
     if ( str == "+" ) {
-      float num = 0 ;
+      double num = 0 ;
       num = Add( temp, isfloat, localsymlist ) ;
       if ( !isfloat )
         ss << ( int ) num ;
@@ -1902,7 +1900,7 @@ class Evaler {
       return NewToken( ss.str() ) ;
     } // if
     else if ( str == "-" ) {
-      float num = 0 ;
+      double num = 0 ;
       num = Sub( temp, isfloat, localsymlist ) ;
       if ( !isfloat )
         ss << ( int ) num ;
@@ -1911,7 +1909,7 @@ class Evaler {
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == "*" ) {
-      float num = 0 ;
+      double num = 0 ;
       num = Mul( temp, isfloat, localsymlist ) ;
       if ( !isfloat )
         ss << ( int ) num ;
@@ -1920,7 +1918,7 @@ class Evaler {
       return NewToken( ss.str() ) ;
     } // else if
     else if ( str == "/" ) {
-      float num = 0 ;
+      double num = 0 ;
       num = Div( temp, isfloat, localsymlist ) ;
       if ( !isfloat )
         ss << ( int ) num ;
@@ -1965,7 +1963,7 @@ class Evaler {
 
   } // Arith()
  
-  float Add( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+  double Add( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -1984,12 +1982,12 @@ class Evaler {
       return Getnum( check ) + Add( temp->right, isfloat, localsymlist ) ;
     } // if
     else {
-      float z = 0 ;
+      double z = 0 ;
       return z ;
     } // else    
   } // Add()
 
-  float Sub( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+  double Sub( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2002,7 +2000,7 @@ class Evaler {
         throw e ;
       } // catch
       
-      float num = Getnum( check ) ;
+      double num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
@@ -2031,12 +2029,12 @@ class Evaler {
 
     } // if
     else {
-      float z = 0 ;
+      double z = 0 ;
       return z ;
     } // else    
   } // Sub()
 
-  float Mul( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+  double Mul( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2057,12 +2055,12 @@ class Evaler {
       return Getnum( check ) * Mul( temp->right, isfloat, localsymlist ) ;
     } // if
     else {
-      float z = 1 ;
+      double z = 1 ;
       return z ;
     } // else   
   } // Mul()
 
-  float Div( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+  double Div( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2074,7 +2072,7 @@ class Evaler {
     
         throw e ;
       } // catch
-      float num = Getnum( check ) ;
+      double num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isfloat = true ;
       check = temp->right ;
@@ -2094,7 +2092,7 @@ class Evaler {
         else if ( check2->type != INT && check2->type != FLOAT )
           throw ArgTypeError( "/", check2 ) ;
 
-        float number = Getnum( check2 ) ;
+        double number = Getnum( check2 ) ;
         if ( number == 0 )
           throw DivideZeroError() ;        
 
@@ -2108,7 +2106,7 @@ class Evaler {
 
     } // if
     else {
-      float z = 0 ;
+      double z = 0 ;
       return z ;
     } // else      
   } // Div()
@@ -2148,7 +2146,7 @@ class Evaler {
 
     if ( Isatomtype( temp->type ) ) {
       string str = temp->str ;
-      
+
       if ( temp->type == SYMBOL ) {
         if ( Findsymbol( str, localsymlist ) == 1 ) {
           Token * retoken = Symbols( temp, localsymlist ) ;

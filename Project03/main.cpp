@@ -927,6 +927,7 @@ void FixToken( Token * t ) {
 
     if ( realFloat ) {
       stringstream ss ;
+      cout << t->mContent.c_str() << endl ;
       ss << fixed << setprecision( 3 ) << atof( t->mContent.c_str() ) ;
       /*
       string tempFloat = ss.str() ;
