@@ -178,7 +178,8 @@ float Decodefloat( string str ) {
   if ( str[0] == '.' )
     str = "0" + str ;
   
-  float num = atof( str.c_str() ) * positive ; 
+  float num = atof( str.c_str() ) * positive ;
+    
   return num ;
 } // Decodefloat()
 
