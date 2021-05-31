@@ -2,7 +2,7 @@ Welcome to OurScheme!
 
 > a defined
 
-> "=============== Problem 8 viewable case ================="
+> "=============== Problem 10 viewable case ================="
 
 > environment cleaned
 
@@ -12,324 +12,205 @@ Welcome to OurScheme!
 
 > x3 defined
 
-> Fcond defined
+> TrickySumUp defined
 
-> Fif defined
+> 55.500
 
-> Fbegin defined
+> "Illegal input! the first argument must be smaller or equal to the second."
 
-> Fand defined
-
-> For defined
-
-> -10320
-
-> -10
-
-> 8
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> #t
-
-> nil
-
-> Flambda defined
-
-> #<procedure Flambda>
-
-> #<procedure lambda>
-
-> #<procedure lambda>
-
-> -60
-
-> -86
-
-> -2580
-
-> -752
-
-> environment cleaned
-
-> x1 defined
-
-> x2 defined
-
-> x3 defined
-
-> Fcond defined
-
-> Fif defined
-
-> Fbegin defined
-
-> Fand defined
-
-> For defined
+> 3.500
 
 > 12
 
-> 7
+> Abs defined
 
-> 20
+> Real defined
 
-> ERROR (no return value) : ( Fcond
-  x1
-  x1
+> Int defined
+
+> Power defined
+
+> FindRange defined
+
+> Find-Range defined
+
+> IntFloor defined
+
+> Int-Floor defined
+
+> ( 8192
+  16384
 )
 
-> ERROR (no return value) : ( Fcond
-  ( +
-    x3
-    1
-  )
-  ( -
-    ( +
-      x3
-      2
-    )
-    1
-  )
+> 13579
+
+> 13579
+
+> 13579.000
+
+> ( 1024
+  1024
 )
 
-> ERROR (unbound parameter) : ( Fcond
-  x1
-  x1
-)
+> 1024
 
-> temp1 defined
-
-> temp2 defined
-
-> temp3 defined
-
-> 6351
-
-> 949
-
-> ERROR (unbound parameter) : ( Fif
-  ( +
-    x1
-    x2
-  )
-  x2
-  x3
-)
-
-> For defined
-
-> ERROR (unbound parameter) : ( Fif
-  x1
-  x3
-  x4
-)
-
-> ERROR (unbound parameter) : ( Fif
-  x1
-  x3
-  x4
-)
-
-> ERROR (unbound parameter) : ( Fif
-  x1
-  x3
-  x4
-)
-
-> #t
-
-> #t
-
-> #t
-
-> Flambda defined
-
-> #<procedure Flambda>
-
-> #<procedure lambda>
-
-> #<procedure lambda>
-
-> -60
-
-> ERROR (unbound parameter) : ( Fif
-  ( Fcond
-    x3
-    x1
-  )
-  x2
-  x3
-)
-
-> 45
-
-> ERROR (unbound parameter) : ( Fcond
-  x3
-  x1
-)
-
-> ERROR (unbound parameter) : ( Fif
-  ( Fcond
-    x3
-    x1
-  )
-  x2
-  x3
-)
-
-> -480
-
-> -900
-
-> ERROR (unbound parameter) : ( Fif
-  ( Fcond
-    x3
-    x1
-  )
-  x2
-  x3
-)
+> -13579
 
 > environment cleaned
 
-> #<procedure lambda>
+> x1 defined
 
-> #<procedure lambda>
+> x2 defined
 
-> #<procedure lambda>
+> x3 defined
 
-> #<procedure lambda>
+> TrickySumUp defined
 
-> #<procedure lambda>
+> 55.500
 
-> #<procedure lambda>
+> ERROR (unbound symbol) : Transform
 
-> #<procedure lambda>
+> 60.500
 
-> #<procedure lambda>
+> ERROR (+ with incorrect argument type) : "Illegal input! the first argument must be smaller or equal to the second."
 
-> #<procedure lambda>
+> "Illegal input! the first argument must be smaller or equal to the second."
 
-> #<procedure lambda>
+> 3.500
 
-> #<procedure lambda>
+> 12
 
-> ERROR (LAMBDA format) : ( ( lambda
-    nil
-    ( +
-      c
-      5
-    )
-  )
+> Abs defined
+
+> Real defined
+
+> Int defined
+
+> Power defined
+
+> FindRange defined
+
+> Find-Range defined
+
+> IntFloor defined
+
+> Int-Floor defined
+
+> Transform defined
+
+> ( 8192
+  16384
 )
 
-> ERROR (LAMBDA format) : ( ( lambda
-    nil
-    ( +
-      5
-      5
-    )
-    ( +
-      5
-      6
-    )
-  )
+> 13579
+
+> 13579
+
+> 13579.000
+
+> ( 1024
+  1024
 )
 
-> ERROR (incorrect number of arguments) : lambda
+> 1024
 
-> a defined
+> -13579
 
-> f defined
-
-> #<procedure lambda>
-
-> ERROR (incorrect number of arguments) : lambda
-
-> ERROR (unbound symbol) : c
-
-> ERROR (unbound symbol) : b
-
-> c defined
-
-> ERROR (+ with incorrect argument type) : #<procedure lambda>
-
-> ERROR (incorrect number of arguments) : lambda
-
-> c defined
-
-> 14
-
-> 54
-
-> x defined
-
-> y defined
-
-> g defined
-
-> 77556
-
-> 3110
-
-> ERROR (unbound symbol) : why
-
-> ERROR (unbound symbol) : no
-
-> ERROR (incorrect number of arguments) : lambda
-
-> F defined
-
-> G defined
-
-> 15
-
-> F defined
-
-> 40
-
-> F defined
-
-> 20
-
-> H defined
-
-> ( 3
-  .
+> ERROR (no return value) : ( Transform
+  3
   5
+  2
 )
 
-> 10
-
-> F defined
-
-> ( 20
-  30
+> ERROR (no return value) : ( Transform
+  below
+  above
+  below
 )
 
-> 110
+> ERROR (no return value) : ( Transform
+  3
+  31258.789
+  2
+)
 
-> cadr defined
+> ERROR (no return value) : ( Transform
+  below
+  above
+  below
+)
 
-> global defined
+> GuaiPower defined
 
-> Try defined
+> ERROR (no return value) : ( GuaiPower
+  2
+  12
+)
 
-> 20
+> 144
 
-> 10
+> Find-Range defined
 
-> ( 20
-  30
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> 234
+
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> GuaiInt defined
+
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> ERROR (no return value) : ( GuaiInt
+  23.560
+)
+
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> ERROR (unbound parameter) : ( GuaiInt
+  23.560
+)
+
+> 123
+
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
 )
 
 > 

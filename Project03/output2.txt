@@ -1,289 +1,10 @@
 Welcome to OurScheme!
 
-> a defined
-
-> "=============== Problem 6 viewable case ================="
-
-> environment cleaned
-
-> x1 defined
-
-> x2 defined
-
-> x3 defined
-
-> Fcond defined
-
-> 12
-
-> 20
-
-> 0
-
-> Fif defined
-
-> 10
-
 > 1
-
-> 8
-
-> 76
-
-> Fbegin defined
-
-> 1
-
-> -76
-
-> 0
-
-> Fand defined
-
-> #t
-
-> nil
-
-> #t
-
-> nil
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> nil
-
-> #t
-
-> x4 defined
-
-> #<procedure lambda>
-
-> 10
-
-> 3
-
-> 4
-
-> environment cleaned
-
-> x1 defined
-
-> x2 defined
-
-> x3 defined
-
-> Fcond defined
-
-> ERROR (no return value) : ( Fcond
-  x1
-  x2
-)
-
-> ERROR (no return value) : ( Fcond
-  x2
-  x3
-)
-
-> 9
-
-> ERROR (no return value) : ( Fcond
-  x1
-  ( +
-    x1
-    x1
-  )
-)
-
-> Fif defined
-
-> 80
-
-> 8
-
-> ERROR (no return value) : ( Fif
-  x3
-  x2
-  x1
-)
-
-> 84
-
-> ERROR (unbound parameter) : ( Fif
-  x3
-  x2
-  x1
-)
-
-> Fbegin defined
-
-> 1
-
-> -76
-
-> 0
-
-> ERROR (incorrect number of arguments) : Fbegin
-
-> Fand defined
-
-> #t
-
-> nil
-
-> #t
-
-> nil
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> #t
-
-> nil
-
-> ERROR (> with incorrect argument type) : ( 4
-  .
-  4
-)
-
-> #t
-
-> x4 defined
-
-> #<procedure lambda>
-
-> 10
-
-> 13
-
-> x5 defined
-
-> 16
-
-> #t
-
-> ERROR (incorrect number of arguments) : lambda
-
-> 3
-
-> 4
-
-> environment cleaned
-
-> ERROR (unbound symbol) : cadr
-
-> cadr defined
-
-> #<procedure cadr>
-
-> ERROR (car with incorrect argument type) : #<procedure cadr>
-
-> ( 30
-  40
-)
-
-> cadr-clone defined
-
-> #<procedure cadr>
-
-> ( 30
-  ( 40
-  )
-)
-
-> cadr-clone defined
-
-> ( 10
-  20
-)
-
-> cadr-clone defined
-
-> ERROR (DEFINE format) : ( define
-  car
-  cadr
-)
-
-> ERROR (incorrect number of arguments) : cadr
-
-> ERROR (incorrect number of arguments) : cadr
-
-> ERROR (attempt to apply non-function) : 10
-
-> ERROR (cdr with incorrect argument type) : 10
-
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (unbound symbol) : cdar
-
-> ERROR (unbound symbol) : x
-
-> cdar defined
-
-> ( 2
-)
-
-> ERROR (cdr with incorrect argument type) : 1
-
-> ERROR (unbound symbol) : first
-
-> first defined
-
-> #<procedure car>
-
-> #<procedure car>
-
-> 10
-
-> ERROR (unbound symbol) : First
-
-> First defined
-
-> car
-
-> ERROR (attempt to apply non-function) : car
-
-> ERROR (attempt to apply non-function) : 1
-
-> second defined
-
-> 20
-
-> ( ( 40
-    50
-  )
-  60
-)
-
-> ( 40
-  50
-)
-
-> 50
-
-> ( 50
-)
-
-> ERROR (cdr with incorrect argument type) : 10
 
 > a defined
 
-> "=============== Problem 7 viewable case ================="
+> "=============== Problem 10 viewable case ================="
 
 > environment cleaned
 
@@ -293,67 +14,49 @@ Welcome to OurScheme!
 
 > x3 defined
 
-> Fcond defined
+> TrickySumUp defined
 
-> 24
+> 55.500
 
-> 40
+> "Illegal input! the first argument must be smaller or equal to the second."
 
-> -20
+> 3.500
 
-> Fif defined
+> 12
 
-> -34
+> Abs defined
 
-> -43
+> Real defined
 
-> 52
+> Int defined
 
-> 32
+> Power defined
 
-> Fbegin defined
+> FindRange defined
 
-> 0
+> Find-Range defined
 
-> 83
+> IntFloor defined
 
-> 7
+> Int-Floor defined
 
-> Fand defined
+> ( 8192
+  16384
+)
 
-> nil
+> 13579
 
-> nil
+> 13579
 
-> #t
+> 13579.000
 
-> nil
+> ( 1024
+  1024
+)
 
-> For defined
+> 1024
 
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> nil
-
-> #t
-
-> Flambda defined
-
-> #<procedure Flambda>
-
-> #<procedure lambda>
-
-> #<procedure lambda>
-
-> 6
-
-> 9
+> -13579
 
 > environment cleaned
 
@@ -363,320 +66,154 @@ Welcome to OurScheme!
 
 > x3 defined
 
-> Fcond defined
+> TrickySumUp defined
+
+> 55.500
+
+> ERROR (unbound symbol) : Transform
+
+> 60.500
+
+> ERROR (+ with incorrect argument type) : "Illegal input! the first argument must be smaller or equal to the second."
+
+> "Illegal input! the first argument must be smaller or equal to the second."
+
+> 3.500
 
 > 12
 
-> 7
+> Abs defined
 
-> 20
+> Real defined
 
-> ERROR (no return value) : ( Fcond
-  x1
-  x1
+> Int defined
+
+> Power defined
+
+> FindRange defined
+
+> Find-Range defined
+
+> IntFloor defined
+
+> Int-Floor defined
+
+> Transform defined
+
+> ( 8192
+  16384
 )
 
-> ERROR (no return value) : ( Fcond
-  ( +
-    x3
-    1
-  )
-  ( -
-    ( +
-      x3
-      2
-    )
-    1
-  )
+> 13579
+
+> 13579
+
+> 13579.000
+
+> ( 1024
+  1024
 )
 
-> Fif defined
+> 1024
 
-> temp1 defined
+> -13579
 
-> temp2 defined
-
-> temp3 defined
-
-> 80
-
-> ERROR (no return value) : ( Fif
-  x1
-  x2
-  x3
-)
-
-> ERROR (unbound parameter) : ( Fcond
-  x1
-  x1
-)
-
-> 73
-
-> ERROR (no return value) : ( Fif
-  x3
-  x2
-  x3
-)
-
-> -125
-
-> ERROR (unbound parameter) : ( Fif
-  x1
-  x2
-  x3
-)
-
-> Fbegin defined
-
-> 9
-
-> 83
-
-> ERROR (no return value) : ( Fbegin
-  -80
-)
-
-> 9
-
-> Fand defined
-
-> #t
-
-> ERROR (unbound condition) : ( if
-  ( >
-    x2
-    0
-  )
-  ( <
-    x1
-    40
-  )
-)
-
-> #t
-
-> ERROR (unbound condition) : ( if
-  ( >
-    x2
-    0
-  )
-  ( <
-    x1
-    40
-  )
-)
-
-> For defined
-
-> nil
-
-> #t
-
-> #t
-
-> nil
-
-> nil
-
-> #t
-
-> Flambda defined
-
-> #<procedure Flambda>
-
-> #<procedure lambda>
-
-> ERROR (no return value) : ( Flambda
-  -10
-)
-
-> 6
-
-> ERROR (no return value) : ( Flambda
-  -10
-)
-
-> 12
-
-> ERROR (no return value) : ( Flambda
-  -10
-)
-
-> ERROR (unbound parameter) : ( Flambda
-  -10
-)
-
-> ERROR (+ with incorrect argument type) : #<procedure lambda>
-
-> environment cleaned
-
-> ( 3
-  2
+> ERROR (no return value) : ( Transform
   3
-)
-
-> ERROR (unbound symbol) : x
-
-> ERROR (LET format) : ( let
-  ( car
-    ( quote
-      ( 1
-        2
-        3
-      )
-    )
-  )
   5
+  2
 )
 
-> ERROR (LET format) : ( let
-  ( ( x
-      3
-      4
-    )
-  )
-  5
+> ERROR (no return value) : ( Transform
+  below
+  above
+  below
 )
 
-> 2
-
-> ERROR (LET format) : ( let
-  ( ( ( car
-        ( quote
-          ( x
-            y
-            z
-          )
-        )
-      )
-      3
-    )
-  )
-  5
+> ERROR (no return value) : ( Transform
+  3
+  31258.790
+  2
 )
 
-> ERROR (LET format) : ( let
-  nil
+> ERROR (no return value) : ( Transform
+  below
+  above
+  below
 )
 
-> 5
+> GuaiPower defined
 
-> ERROR (LET format) : ( let
-  ( ( x
-      5
-    )
-  )
+> ERROR (no return value) : ( GuaiPower
+  2
+  12
 )
 
-> ERROR (incorrect number of arguments) : cons
+> 144
 
-> ERROR (incorrect number of arguments) : cons
+> Find-Range defined
 
-> ( 5
-  .
-  10
-)
-
-> ERROR (* with incorrect argument type) : ( 5
-  .
-  10
-)
-
-> ERROR (incorrect number of arguments) : cons
-
-> ERROR (incorrect number of arguments) : car
-
-> ERROR (attempt to apply non-function) : 1
-
-> ERROR (LET format) : ( let
-  ( ( x
-      ( 1
-        2
-        3
-      )
-    )
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
   )
 )
 
-> ERROR (LET format) : ( let
-  ( ( x
-      ( 1
-        2
-        3
-      )
-    )
-    ( 5
-    )
-  )
-  10
-)
+> 234
 
-> environment cleaned
-
-> a defined
-
-> 13
-
-> 5
-
-> ERROR (unbound symbol) : x
-
-> 16
-
-> 5
-
-> -2
-
-> 3
-
-> 41
-
-> ERROR (LET format) : ( let
-  ( ( a
-      17
-    )
-    ( x
-      11
-      12
-    )
-  )
-  ( -
-    a
-    x
-    ( car
-      ( cdr
-        ( cdr
-          y
-        )
-      )
-    )
-    ( let
-      ( ( x
-          21
-        )
-      )
-      ( +
-        a
-        x
-        5
-      )
-      ( -
-        0
-        a
-        x
-      )
-    )
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
   )
 )
 
-> ERROR (unbound symbol) : hello
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
 
-> ERROR (unbound symbol) : Go
+> GuaiInt defined
 
-> ERROR (unbound symbol) : get
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
 
-> ERROR (unbound symbol) : them!
+> ERROR (no return value) : ( GuaiInt
+  23.560
+)
 
-> ERROR (no more input) : END-OF-FILE encountered
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> ERROR (unbound parameter) : ( GuaiInt
+  23.560
+)
+
+> 123
+
+> ERROR (no return value) : ( GuaiPower
+  2
+  ( +
+    startWith
+    1
+  )
+)
+
+> 
 Thanks for using OurScheme!
