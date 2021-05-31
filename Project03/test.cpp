@@ -179,11 +179,37 @@ float Decodefloat( string str ) {
     str = "0" + str ;
   
   string ch = "" ;
-  
-  float num = strtof( str.c_str(), NULL ) ;
 
-  return strtod( str.c_str(), NULL ) ;
+
+  return atof( str.c_str() ) ;
 } // Decodefloat()
+
+string Setfloatstr( string str ) {
+  if ( str[0] == '+' )
+    str.erase( 0, 1 ) ;
+    
+  if ( str[0] == '.' )
+    str = "0" + str ;
+  else if ( str[0] == '-' && str[1] == '.' ) {
+    str.erase( 0, 1 ) ;
+    str = "-0" + str ;
+  } // else if
+      
+   
+      
+  int index = str.find( "." ) ;
+  int size = str.size() - 4 ;
+
+  if ( index > size ) {
+
+    while ( index != str.size() - 4 ) {
+      str = str + "0" ;  
+    } // while
+      
+  } // if
+  
+  return str ;
+} // Setfloatstr()
 
 bool Justdot() {
   char ch = Cpeek() ;
@@ -483,8 +509,8 @@ class Printer {
 
     if ( type == INT )
       printf( "%d", token->intnum ) ;
-    else if ( type == FLOAT )
-      printf( "%.3f", token->floatnum ) ;
+    // else if ( type == FLOAT )
+    //   printf( "%.3f", token->floatnum ) ;
     else if ( type == QUOTE )
       printf( "%s", "quote" ) ;
     else if ( token->iscomd )
@@ -599,6 +625,8 @@ class Evaler {
     retoken->type = Gettype( retoken->str ) ;
     retoken->intnum = Decodeint( retoken->str ) ;
     retoken->floatnum = Decodefloat( retoken->str ) ;
+    if ( retoken->type == FLOAT ) 
+      retoken->str = Setfloatstr( retoken->str ) ;
     retoken->iscomd = false ;
     retoken->left = NULL ;
     retoken->right = NULL ;
@@ -2474,8 +2502,11 @@ class Scanner {
     
     if ( retoken.type == INT )
       retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT )
+    else if ( retoken.type == FLOAT ) {
       retoken.floatnum = Decodefloat( retoken.str ) ;
+      retoken.str = Setfloatstr( retoken.str ) ;
+    } // else if
+      
 
     retoken.iscomd = false ;
 
@@ -2638,7 +2669,7 @@ class Treemaker {
     int index = 0 ;
 
     if ( tokenlist.size() == 1 ) {
-      tokentree[1] =  tokenlist.at( 0 ) ;
+      tokentree[1] = tokenlist.at( 0 ) ;
     } // if
     else {
       Treerecursion( tokentree, tokenlist, point, index ) ;
@@ -2709,8 +2740,12 @@ class Treemaker {
     retoken.str = Setstr( retoken.str ) ;
     if ( retoken.type == INT )
       retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT )
+    else if ( retoken.type == FLOAT ) {
+      
       retoken.floatnum = Decodefloat( retoken.str ) ;
+      retoken.str = Setfloatstr( retoken.str ) ;
+    } // else if
+      
       
     return retoken ;
   } // Maktoken()
