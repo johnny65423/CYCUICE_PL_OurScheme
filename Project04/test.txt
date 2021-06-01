@@ -1,0 +1,95 @@
+1
+(define x1 3)(define x2 4)(define x3 5)
+(define (Fcond x4 x1) ;    x4 is p1    x1 is p2
+        (cond ( (> x4 x1) 
+                ( if (< x4 x2)
+                     (+ x4 x1 22)
+                     ; (+ x4 x1 33) ; no return-value when p1 > p2 and p1 >= x2
+                )                   ; but OK
+                (+ x4 x1)
+              ) 
+              ( (< x4 x1) 
+                ( if (< x4 x1)
+                     (* x4 x1 2)
+                     (* x4 x1 3)
+                )
+                (* x4 x1)
+              )
+              ( else 
+                (- x4 x1)
+                (if (= x4 x3)
+                    (- x4 x1 20)
+                    ; (- x4 x1 30) ; no return-value when p1 = p2 and p1 <> x3
+                )                  ; result not OK
+              );else
+        );cond
+);define
+(define (Fif x1 x4 x3) ;      x1 is p1    x4 is p2    x3 is p3
+        (if (>= x2 x3) 
+            ( begin 
+              ( if ( and ( > x1 50 ) ( > x4 50 ) )
+                   (+ x1 x3 33)
+                   ; (+ x1 x3 44) ; no return value when x2 >= p3 AND ( p1 <= 50 OR p2 <= 50 )
+              );if                ; but OK
+              ; (display-string "Hello\n")
+              (+ x1 x3) 
+            );begin
+            ( begin 
+              (- x3 x4)
+              ; (display-string "Hi\n")
+              ( if ( and ( > x1 50 ) ( > x4 50 ) )
+                   (- x3 x4 33)
+                   ; (- x3 x4 44) ; no return value when x2 < p3 AND ( p1 <= 50 OR p2 <= 50 )
+              );if                ; result not OK
+            );begin
+        );if
+);define
+
+
+( define ( Flambda x1 )    ;    x1 : p1
+  ( begin
+    ( if ( > x1 40 )
+         ( lambda ( x2 ) ( * ( Fcond x2 x3 
+                             );Fcond
+                             3 
+                         );*
+         );lambda
+         ; ( lambda ( x3 ) ( * ( Fif ( Fcond x3 x1  ; no return value when p1 <= 40
+         ;                           );Fcond        ; but OK
+         ;                           x2 
+         ;                           x3 
+         ;                     );Fif
+         ;                     2 
+         ;                 );*
+         ; );lambda
+    );if
+    ( if ( > x1 0 )
+         ( lambda ( x2 ) ( * ( Fcond x2 x3 
+                             );Fcond
+                             3 
+                         );*
+         );lambda
+         ( lambda ( x3 ) ( * ( Fif ( Fcond x3 x1 
+                                   );Fcond 
+                                   x2 
+                                   x3 
+                             );Fif
+                             3 
+                         );*
+         );lambda
+    );if
+  );begin
+);define
+Flambda
+( Flambda 10 )
+( Flambda -10 )
+( ( Flambda 10 ) x3 ) ; ok
+( ( Flambda -10 ) x3 ) ; error
+( ( Flambda 10 ) x1 ) ; ok
+( ( Flambda -10 ) x1 ) ; error
+
+(define a 5)
+( define (F1 b ) a )
+( define ( F2 a ) ( F1 a ) )
+( F1 0 )
+( F2 0 )

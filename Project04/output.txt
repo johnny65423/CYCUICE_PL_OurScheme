@@ -1,0 +1,203 @@
+Welcome to OurScheme!
+
+> a defined
+
+> "=============== Problem 1 viewable case ================="
+
+> environment cleaned
+
+> cadr defined
+
+> caddr defined
+
+> caar defined
+
+> caadr defined
+
+> caaddr defined
+
+> % defined
+
+> $%%% defined
+
+> KeyPair defined
+
+> RealKey defined
+
+> ListAppend defined
+
+> $ListAppend defined
+
+> ListLength defined
+
+> $ListLength defined
+
+> NthElementOf defined
+
+> $NthElementOf defined
+
+> WithNthElementOfListReplaced defined
+
+> $WithNthElementOfListReplaced defined
+
+> DivisibleBy defined
+
+> PrintListOfStringsAsSentence defined
+
+> PrintListOfSymbolsAsSentence defined
+
+> PrintListOfSymbolsStringsAsSentence defined
+
+> PrintListOfSymbolsNumbersStringsAsSentence defined
+
+> SwitchSubject defined
+
+> AdjustVerb defined
+
+> Adverb defined
+
+> KindOfVerb defined
+
+> UnknownVerb defined
+
+> VerbToBe defined
+
+> AskEliza defined
+
+> Eliza defined
+
+> $Eliza defined
+
+> ERROR (car with incorrect argument type) : nil
+
+> ERROR (attempt to apply non-function) : 3
+
+> ERROR (car with incorrect argument type) : nil
+
+> ERROR (attempt to apply non-function) : 3
+
+> ERROR (car with incorrect argument type) : nil
+
+> ERROR (attempt to apply non-function) : 3
+
+> 4
+
+> 5
+
+> ERROR (car with incorrect argument type) : nil
+
+> ERROR (unbound symbol) : what
+
+> ERROR (unbound symbol) : rest
+
+> ERROR (unbound symbol) : set!
+
+> ERROR (unbound symbol) : what
+
+> ERROR (unbound symbol) : rest
+
+> ERROR (car with incorrect argument type) : nil
+
+> ERROR (unbound symbol) : what
+
+> ERROR (unbound symbol) : I
+
+> ERROR (unbound symbol) : eval
+
+> ( 12
+  ( 18
+    29
+  )
+  ( 3
+    5
+  )
+)
+
+> ERROR (unbound symbol) : eval
+
+> ERROR (attempt to apply non-function) : 12
+
+> x defined
+
+> y defined
+
+> ERROR (+ with incorrect argument type) : nil
+
+> 3
+
+> 7
+
+> 13
+
+> ERROR (unbound symbol) : eval
+
+> ( 4
+  5
+)
+
+> ERROR (unbound symbol) : eval
+
+> ( ( 4
+    ( 5
+    )
+  )
+  6
+  7
+)
+
+> ERROR (unbound symbol) : set!
+
+> ERROR (attempt to apply non-function) : 3
+
+> ERROR (cdr with incorrect argument type) : nil
+
+> ( 4
+  5
+)
+
+> ERROR (cdr with incorrect argument type) : nil
+
+> ( 4
+  5
+)
+
+> ERROR (unbound symbol) : display-string
+
+> ERROR (unbound symbol) : I
+
+> ERROR (unbound symbol) : You
+
+> ERROR (unbound symbol) : Jolin
+
+> ERROR (unbound symbol) : LinSanity
+
+> ERROR (unbound symbol) : LinSanity
+
+> ERROR (unbound symbol) : I
+
+> ERROR (unbound symbol) : I
+
+> ERROR (unbound symbol) : You
+
+> ERROR (unbound symbol) : You
+
+> ERROR (unbound symbol) : You
+
+> ERROR (unbound symbol) : Do
+
+> ERROR (unbound symbol) : This
+
+> ERROR (unbound symbol) : I
+
+> ERROR (unbound symbol) : Can
+
+> ERROR (unbound symbol) : Please
+
+> ERROR (unbound symbol) : NOOOOOOO!
+
+> ERROR (unbound symbol) : I
+
+> ERROR (unbound symbol) : quit
+
+> 
+Thanks for using OurScheme!
