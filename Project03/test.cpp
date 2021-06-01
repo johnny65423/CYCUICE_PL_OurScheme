@@ -185,6 +185,7 @@ float Decodefloat( string str ) {
 } // Decodefloat()
 
 string Setfloatstr( string str ) {
+  
   if ( str[0] == '+' )
     str.erase( 0, 1 ) ;
     
@@ -198,15 +199,36 @@ string Setfloatstr( string str ) {
    
       
   int index = str.find( "." ) ;
-  int size = str.size() - 4 ;
+  int size = str.size() - 5 ;
 
   if ( index > size ) {
 
-    while ( index != str.size() - 4 ) {
+    while ( index != str.size() - 5 ) {
       str = str + "0" ;  
     } // while
       
   } // if
+  else if ( index < size ) {
+
+    while ( index != str.size() - 5 ) {
+      str.erase( str.end() - 1 ) ;  
+    } // while
+      
+  } // if
+  
+  char ch = str[str.size() - 1] ;
+  
+  if ( ch > '4' ) {
+    str.erase( str.end() - 1 ) ;
+    float num = atof( str.c_str() ) ;
+    num = num + 0.001 ;
+    stringstream ss ;
+    ss << num ;
+    str = Setfloatstr( ss.str() ) ;  
+  } // if
+  else {
+    str.erase( str.end() - 1 ) ;
+  } // else
   
   return str ;
 } // Setfloatstr()
@@ -2741,7 +2763,6 @@ class Treemaker {
     if ( retoken.type == INT )
       retoken.intnum = Decodeint( retoken.str ) ;
     else if ( retoken.type == FLOAT ) {
-      
       retoken.floatnum = Decodefloat( retoken.str ) ;
       retoken.str = Setfloatstr( retoken.str ) ;
     } // else if

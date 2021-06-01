@@ -171,16 +171,67 @@ float Decodefloat( string str ) {
   if ( str[0] == '+' )
     str.erase( 0, 1 ) ;
   else if ( str[0] == '-' ) {
-    str.erase( 0, 1 ) ;
+    // str.erase( 0, 1 ) ;
     positive = -1 ;
   } // else if
   
   if ( str[0] == '.' )
     str = "0" + str ;
   
-  float num = atof( str.c_str() ) * positive ; 
-  return num ;
+  string ch = "" ;
+
+
+  return atof( str.c_str() ) ;
 } // Decodefloat()
+
+string Setfloatstr( string str ) {
+  
+  if ( str[0] == '+' )
+    str.erase( 0, 1 ) ;
+    
+  if ( str[0] == '.' )
+    str = "0" + str ;
+  else if ( str[0] == '-' && str[1] == '.' ) {
+    str.erase( 0, 1 ) ;
+    str = "-0" + str ;
+  } // else if
+      
+   
+      
+  int index = str.find( "." ) ;
+  int size = str.size() - 5 ;
+
+  if ( index > size ) {
+
+    while ( index != str.size() - 5 ) {
+      str = str + "0" ;  
+    } // while
+      
+  } // if
+  else if ( index < size ) {
+
+    while ( index != str.size() - 5 ) {
+      str.erase( str.end() - 1 ) ;  
+    } // while
+      
+  } // if
+  
+  char ch = str[str.size() - 1] ;
+  
+  if ( ch > '4' ) {
+    str.erase( str.end() - 1 ) ;
+    float num = atof( str.c_str() ) ;
+    num = num + 0.001 ;
+    stringstream ss ;
+    ss << num ;
+    str = Setfloatstr( ss.str() ) ;  
+  } // if
+  else {
+    str.erase( str.end() - 1 ) ;
+  } // else
+  
+  return str ;
+} // Setfloatstr()
 
 bool Justdot() {
   char ch = Cpeek() ;
@@ -480,8 +531,8 @@ class Printer {
 
     if ( type == INT )
       printf( "%d", token->intnum ) ;
-    else if ( type == FLOAT )
-      printf( "%.3f", token->floatnum ) ;
+    // else if ( type == FLOAT )
+    //   printf( "%.3f", token->floatnum ) ;
     else if ( type == QUOTE )
       printf( "%s", "quote" ) ;
     else if ( token->iscomd )
@@ -596,6 +647,8 @@ class Evaler {
     retoken->type = Gettype( retoken->str ) ;
     retoken->intnum = Decodeint( retoken->str ) ;
     retoken->floatnum = Decodefloat( retoken->str ) ;
+    if ( retoken->type == FLOAT ) 
+      retoken->str = Setfloatstr( retoken->str ) ;
     retoken->iscomd = false ;
     retoken->left = NULL ;
     retoken->right = NULL ;
@@ -761,7 +814,15 @@ class Evaler {
       newsymbol.info = temp->right->left ;
     } // else if
     else { 
-      newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
+      try {
+        newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          e.mname = "NoReturnErrorgogo" ;
+
+        throw e ;
+      } // catch
     } // else 
       
 
@@ -860,14 +921,6 @@ class Evaler {
       argname = argname->right ;
       args = args->right ;
     } // while 
-
-
- 
-    /*
-    for ( int i = 0 ; i < templist.size() ; i++ ) {
-      msymbollist.push_back( templist.at( i ) ) ;
-    } // for
-    */
     
     Token * ans = NULL ;
     retoken = NULL ;
@@ -896,24 +949,46 @@ class Evaler {
 
       method = method->right ;
     } // while
-    /*
-    for ( int i = 0 ; i < argsnum ; i++ ) {
-      msymbollist.pop_back() ;
-    } // for
-    */
+
     if ( retoken == NULL )
       throw NoReturnError( temp ) ;
     return retoken ;
   } // Customfunc()
   
-  Token * Lambda( Token * temp, int head, vector < Symbol > localsymlist ) {
-
-    if ( Getsize( temp->left->right ) < 2 )
+  Token * Setlambda( Token * temp, int head, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp->right ) < 2 )
       throw FormatError( "LAMBDA", temp ) ;
 
-    Token * ltemp = temp->left->right ;
-    Token * argname = ltemp->left ;
-    Token * method = ltemp->right ;
+
+    Token * argname = temp->right->left ;
+    Token * method = temp->right->right ;
+
+    if ( argname->type != DOT && argname->type != NIL )
+      throw FormatError( "LAMBDA", temp ) ;
+    
+    Token * t = argname ;
+    
+    while ( t != NULL && t->type != NIL ) {
+      if ( t->left->type != SYMBOL )
+        throw FormatError( "LAMBDA", temp ) ;
+      
+      t = t->right ;
+    } // while
+
+    Token * retoken = NewToken( "lambda" ) ;
+    retoken->left = argname ;
+    retoken->right = method ;
+    
+    retoken->iscomd = true ;
+    return retoken ;
+    
+    
+  } // Setlambda()
+  
+  Token * Lambda( Token * temp, int head, vector < Symbol > localsymlist ) {
+
+    Token * argname = temp->left->left ;
+    Token * method = temp->left->right ;
     Token * args = temp->right ;
 
     int argsnum = Getsize( argname ) ;
@@ -1009,14 +1084,23 @@ class Evaler {
       
       sym.name = name ;
       sym.args = NULL ;
-      sym.info = Evalexp( argtemp->right->left, 0, localsymlist ) ;
+      
+      try {
+        sym.info = Evalexp( argtemp->right->left, 0, localsymlist ) ;
+      } // try 
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          e.mname = "NoReturnErrorgogo" ;
+        throw e ;        
+      } // catch
       templist.push_back( sym ) ;
       
       args = args->right ;
     } // while  
     
-    for ( int i = 0 ; i < templist.size() ; i++ ) {
-      msymbollist.push_back( templist.at( i ) ) ;
+
+    for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
+      templist.insert( templist.begin(), localsymlist.at( i ) ) ;
     } // for
 
     
@@ -2114,6 +2198,7 @@ class Evaler {
 
     if ( Isatomtype( temp->type ) ) {
       string str = temp->str ;
+      
       if ( temp->type == SYMBOL ) {
         if ( Findsymbol( str, localsymlist ) == 1 ) {
           Token * retoken = Symbols( temp, localsymlist ) ;
@@ -2186,9 +2271,13 @@ class Evaler {
           return Begin( temp->right, localsymlist ) ;
         } // else if
         else if ( temp->left->str == "lambda" ) {
-          Token * re = NewToken( "lambda" ) ;
-          temp->left->iscomd = true ;
-          return temp ;
+          if ( temp->left->right == NULL )
+            return Setlambda( temp, head, localsymlist ) ;
+          else
+            return Lambda( temp, head, localsymlist ) ;
+          // Token * re = NewToken( "lambda" ) ;
+          // temp->left->iscomd = true ;
+          // return temp ;
         } // else if
         else if ( temp->left->str == "let" ) {
           return Let( temp, localsymlist ) ;
@@ -2238,8 +2327,8 @@ class Evaler {
           return temp ;
         } // else if
         else if ( temp->left->type == DOT ) {
-          if ( temp->left->left->str == "lambda" ) {
-
+          // if ( temp->left->left->str == "lambda" ) {
+          if ( 0 == 1 ) {
             return Lambda( temp, head, localsymlist ) ;
             /*
             try {
@@ -2359,7 +2448,7 @@ class Scanner {
       Readnwschar() ;
       Skipcomment() ; 
       
-      while ( mch != ')' && ! ( mch == '.' && Justdot() ) ) {
+      while ( !gEnd && mch != ')' && ! ( mch == '.' && Justdot() ) ) {
         ReadSexp( tokenlist ) ;
         Readnwschar() ;
         Skipcomment() ;
@@ -2377,13 +2466,16 @@ class Scanner {
       Readnwschar() ;
       Skipcomment() ;
 
-      if ( mch == ')' ) {
+      if ( gEnd ) {
+        // cout << " f" ;
+        throw EndOfFileError() ;// error
+      } // if
+      else if ( mch == ')' ) {
        
         temp = Gettoken() ;
         tokenlist.push_back( temp ) ;
-      } // if
+      } // else if
       else {
-
         temp = Gettoken() ;
         throw Stringerror( temp, 1 ) ;// error
       } // else
@@ -2432,8 +2524,11 @@ class Scanner {
     
     if ( retoken.type == INT )
       retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT )
+    else if ( retoken.type == FLOAT ) {
       retoken.floatnum = Decodefloat( retoken.str ) ;
+      retoken.str = Setfloatstr( retoken.str ) ;
+    } // else if
+      
 
     retoken.iscomd = false ;
 
@@ -2495,6 +2590,7 @@ class Scanner {
         throw Stringerror( tk, 2 ) ;
       } // if
       
+      
       bool check = true ;
       if ( mch == '\\' ) {
 
@@ -2532,11 +2628,17 @@ class Scanner {
         
       if ( check )
         Getchar() ; 
-        
+       
+      if ( gEnd )
+        throw Stringerror( tk, 2 ) ;
+       
       if ( gColumn > tk.column )
         tk.column = gColumn ;
           
     } // while()
+    
+    
+  
     
     temp += mch ;
     Getchar() ;
@@ -2589,7 +2691,7 @@ class Treemaker {
     int index = 0 ;
 
     if ( tokenlist.size() == 1 ) {
-      tokentree[1] =  tokenlist.at( 0 ) ;
+      tokentree[1] = tokenlist.at( 0 ) ;
     } // if
     else {
       Treerecursion( tokentree, tokenlist, point, index ) ;
@@ -2660,8 +2762,11 @@ class Treemaker {
     retoken.str = Setstr( retoken.str ) ;
     if ( retoken.type == INT )
       retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT )
+    else if ( retoken.type == FLOAT ) {
       retoken.floatnum = Decodefloat( retoken.str ) ;
+      retoken.str = Setfloatstr( retoken.str ) ;
+    } // else if
+      
       
     return retoken ;
   } // Maktoken()
@@ -2848,6 +2953,7 @@ int main() {
 
   printf( "Welcome to OurScheme!\n\n" ) ;
   try {
+    // if ( gTestNum != 2 ) 
     interpreter.Gettokenlist() ;
   } // try
   catch ( Exception e ) {
