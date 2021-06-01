@@ -68,39 +68,38 @@ Welcome to OurScheme!
 
 > $Eliza defined
 
-> ERROR (car with incorrect argument type) : nil
+> 3
 
-> ERROR (attempt to apply non-function) : 3
+> 3
 
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (attempt to apply non-function) : 3
-
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (attempt to apply non-function) : 3
-
-> 4
+> 7
 
 > 5
 
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (unbound symbol) : what
+> ( is
+  what
+  going
+  on
+  here
+  ?
+)
 
 > ERROR (unbound symbol) : rest
 
 > ERROR (unbound symbol) : set!
 
-> ERROR (unbound symbol) : what
-
 > ERROR (unbound symbol) : rest
 
-> ERROR (car with incorrect argument type) : nil
-
-> ERROR (unbound symbol) : what
-
-> ERROR (unbound symbol) : I
+> ( I
+  must
+  say
+  is
+  what
+  going
+  on
+  here
+  ?
+)
 
 > ERROR (unbound symbol) : eval
 
@@ -121,13 +120,7 @@ Welcome to OurScheme!
 
 > y defined
 
-> ERROR (+ with incorrect argument type) : nil
-
-> 3
-
-> 7
-
-> 13
+> 30
 
 > ERROR (unbound symbol) : eval
 
@@ -147,19 +140,9 @@ Welcome to OurScheme!
 
 > ERROR (unbound symbol) : set!
 
-> ERROR (attempt to apply non-function) : 3
+> ERROR (unbound symbol) : eval
 
-> ERROR (cdr with incorrect argument type) : nil
-
-> ( 4
-  5
-)
-
-> ERROR (cdr with incorrect argument type) : nil
-
-> ( 4
-  5
-)
+> ERROR (unbound symbol) : eval
 
 > ERROR (unbound symbol) : display-string
 

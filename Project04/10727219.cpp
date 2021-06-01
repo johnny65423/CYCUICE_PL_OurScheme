@@ -153,6 +153,32 @@ string Tofloat( float num ) {
   } // else
 } // Tofloat()
 
+Token * CreatToken( Token token ) {
+  Token * retoken = new Token ;
+  retoken->str = token.str ;
+  retoken->line = token.line ;
+  retoken->column = token.column ;
+  retoken->intnum = token.intnum ;
+  retoken->floatnum = token.floatnum ;
+  retoken->type = token.type ;
+  retoken->iscomd = false ;
+  retoken->left = NULL ;
+  retoken->right = NULL ;
+  
+  return retoken ;
+} // NewToken()
+
+Token * SetTree( int index, map< int, Token > morigintree ) {
+  if ( morigintree.find( index ) == morigintree.end() )
+    return NULL ;
+  else {
+    Token * temp = CreatToken( morigintree.find( index )->second ) ;
+    temp->left = SetTree( 2 * index, morigintree ) ;
+    temp->right = SetTree( 2 * index + 1, morigintree ) ;  
+    return temp ;
+  } // else
+} // SetTree() 
+
 int Decodeint( string str ) {
   int positive = 1 ;
   if ( str[0] == '+' )
@@ -637,6 +663,391 @@ class Printer {
   
   
 };
+
+class Scanner {
+  public:
+  char Getch() {
+    return mch ;
+  } // Getch()
+  
+  void Getchar() {
+    
+    int eof = scanf( "%c", &mch ) ;
+    if ( eof == EOF ) {
+
+      gEnd = true ;
+      mch = '\0' ;
+    } // if
+      
+    gColumn++ ;
+    if ( mch == '\n' ) {
+      
+      gColumn = 0 ;
+      gLine++ ;
+    } // if()
+  
+  } // Getchar() 
+  
+  void Readnwschar() {
+    while ( ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) && !gEnd ) {
+      Getchar() ;
+    } // while()
+    
+  } // Readnwschar() 
+  
+  void Skipcomment() {
+    while ( mch == ';' ) {
+      Getchar() ;
+      while ( mch != '\n' && !gEnd ) {
+        Getchar() ;
+      } // while
+      
+      Readnwschar() ;
+    } // while
+  } // Skipcomment() 
+  
+  void ReadSexp( vector<Token> & tokenlist ) {
+    Token temp ;
+    Readnwschar() ;
+    temp = Gettoken() ;
+
+    gReading = true ;
+    if ( temp.type == LPAREN ) {
+
+      tokenlist.push_back( temp ) ;
+      ReadSexp( tokenlist ) ;
+      
+      Readnwschar() ;
+      Skipcomment() ; 
+      
+      while ( !gEnd && mch != ')' && ! ( mch == '.' && Justdot() ) ) {
+        ReadSexp( tokenlist ) ;
+        Readnwschar() ;
+        Skipcomment() ;
+      } // while
+
+      if ( mch == '.' && Justdot() ) {
+
+        temp = Gettoken() ;
+
+        tokenlist.push_back( temp ) ;
+        ReadSexp( tokenlist ) ;
+        Readnwschar() ;
+      } // if
+        
+      Readnwschar() ;
+      Skipcomment() ;
+
+      if ( gEnd ) {
+        // cout << " f" ;
+        throw EndOfFileError() ;// error
+      } // if
+      else if ( mch == ')' ) {
+       
+        temp = Gettoken() ;
+        tokenlist.push_back( temp ) ;
+      } // else if
+      else {
+        temp = Gettoken() ;
+        throw Stringerror( temp, 1 ) ;// error
+      } // else
+      
+    } // if
+    else if ( Isatomtype( temp.type ) ) {
+
+      tokenlist.push_back( temp ) ;
+    } // else if
+    else if ( temp.type == QUOTE ) {
+      tokenlist.push_back( temp ) ;
+      ReadSexp( tokenlist ) ;
+    } // else if 
+    else {
+      throw Stringerror( temp, 0 ) ;// error
+    } // else
+    
+  } // ReadSexp()  
+    
+  private:  
+  char mch ; 
+  
+  Token Gettoken() {
+    Token retoken ;
+
+    Readnwschar() ; 
+    retoken.column = gColumn ;
+    retoken.line = gLine ;
+    retoken.str = Gettokenstr() ;
+    while ( retoken.str == ";" ) {
+      while ( mch != '\n' && !gEnd )
+        Getchar() ;
+      
+      if ( gEnd )  
+        throw EndOfFileError() ;
+      else
+        Readnwschar() ; 
+        
+      retoken.column = gColumn ;
+      retoken.line = gLine ;
+      retoken.str = Gettokenstr() ;
+    } // while
+    
+    retoken.type = Gettype( retoken.str ) ;
+    retoken.str = Setstr( retoken.str ) ;
+    
+    if ( retoken.type == INT )
+      retoken.intnum = Decodeint( retoken.str ) ;
+    else if ( retoken.type == FLOAT ) {
+      retoken.floatnum = Decodefloat( retoken.str ) ;
+      retoken.str = Setfloatstr( retoken.str ) ;
+    } // else if
+      
+
+    retoken.iscomd = false ;
+
+    return retoken ;
+  } // Gettoken()
+  
+  Type Gettype( string str ) {
+    Type numtype = Numtype( str ) ;
+    if ( str == "(" ) return LPAREN ;
+    else if ( str == ")" ) return RPAREN ;
+    else if ( str == "." ) return DOT ;
+    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
+    else if ( str == "t" || str == "#t" ) return T ;
+    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
+    else if ( str == "'" ) return QUOTE ;
+    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
+    else if ( str == ";" ) return COMMENT ;
+    else return SYMBOL ;  
+      
+  } // Gettype()
+  
+  string Setstr( string str ) {
+    
+    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
+    else if ( str == "t" || str == "#t" ) return "#t" ;
+    else return str ; 
+    
+  } // Setstr()
+  
+  string Gettokenstr() {
+    Readnwschar() ;
+    
+    if ( mch == '\"' ) {
+      
+      return Getstring( mch ) ;
+    } // if
+    else if ( Isseparators( mch ) ) {
+      return Getseparators( mch ) ;
+    } // else if
+    else {
+      return Getothers( mch ) ;
+    } // else
+  } // Gettokenstr() 
+  
+  string Getstring( char & mch ) {
+    string temp = "" ;
+    temp += mch ;
+    
+    Token tk ;
+    tk.line = gLine ;  
+    tk.column = gColumn ;
+    Getchar() ;
+
+      
+    while ( mch != '\"' && !gEnd )  {
+      
+      if ( mch == '\n' ) {
+
+        throw Stringerror( tk, 2 ) ;
+      } // if
+      
+      
+      bool check = true ;
+      if ( mch == '\\' ) {
+
+        if ( gColumn > tk.column )
+          tk.column = gColumn ;
+          
+        Getchar() ; 
+        if ( mch == 't' ) {
+          temp += '\t' ;
+        } // if
+        else if ( mch == 'n' ) {
+          temp += '\n' ;
+        } // else if
+        else if ( mch == '\"' ) {
+          temp += '\"' ;
+        } // else if
+        else if ( mch == '\\' ) {
+          temp += '\\' ;
+        } // else if
+        else if ( mch == '\n' ) {
+          throw Stringerror( tk, 2 ) ;
+        } // else if
+        else {
+          check = false ;
+          temp += '\\' ;
+        } // else
+      } // if()
+      else {
+        temp += mch ;
+        
+      } // else
+      
+      if ( gColumn > tk.column )
+        tk.column = gColumn ;
+        
+      if ( check )
+        Getchar() ; 
+       
+      if ( gEnd )
+        throw Stringerror( tk, 2 ) ;
+       
+      if ( gColumn > tk.column )
+        tk.column = gColumn ;
+          
+    } // while()
+    
+    
+  
+    
+    temp += mch ;
+    Getchar() ;
+    
+    return temp ;
+  } // Getstring() 
+
+  string Getseparators( char & mch ) {
+    string temp = "" ; 
+    temp += mch ;
+    Getchar() ;
+    if ( temp == "(" ) {
+      Readnwschar() ;
+      Skipcomment() ;
+      if ( mch == ')' ) {
+        temp += ")" ; 
+        Getchar() ;
+      } // if
+    } // if 
+    
+    return temp ;
+  } // Getseparators() 
+  
+  string Getothers( char & mch ) {
+    string temp = "" ; 
+    temp += mch ;
+    Getchar() ;
+    
+    while ( !Isseparators( mch ) && !gEnd ) {
+      temp += mch ;
+      Getchar() ; 
+      
+    } // while()
+
+    // if ( gEnd )
+    //   throw EndOfFileError() ; 
+      
+    return temp ;
+  } // Getothers() 
+  
+    
+  
+};
+
+class Treemaker {
+  public:
+  void Buildtree( vector<Token> & tokenlist, map< int, Token > & tokentree ) {
+    
+    int point = 1 ;
+    int index = 0 ;
+
+    if ( tokenlist.size() == 1 ) {
+      tokentree[1] = tokenlist.at( 0 ) ;
+    } // if
+    else {
+      Treerecursion( tokentree, tokenlist, point, index ) ;
+    } // else
+    
+  
+  } // Buildtree()
+      
+  private:    
+  
+
+  void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
+
+    if ( tokenlist.at( index ).type == LPAREN ) {
+      
+      index++ ;
+      Type type = tokenlist.at( index ).type ;
+      while ( type != DOT && type != RPAREN ) {
+        tokentree[ point ] = Maktoken( "." ) ;
+        Treerecursion( tokentree, tokenlist, 2 * point, index ) ; 
+        point = 2 * point + 1 ;
+        type = tokenlist.at( index ).type ;
+        
+      } // while
+        
+      if ( tokenlist.at( index ).type == DOT ) {
+        index++ ;  
+
+        Treerecursion( tokentree, tokenlist, point, index ) ;
+        index++ ; // problem
+      } // if
+      else {
+        tokentree[ point ] = Maktoken( "nil" ) ;
+        if ( index < tokenlist.size() - 1 ) {
+          index++ ;
+        } // if
+      } // else
+
+    } // if
+    else if ( tokenlist.at( index ).type == QUOTE ) {
+      
+      tokentree[ point ] = Maktoken( "." ) ;
+      
+      tokentree[ 2 * point ] = tokenlist.at( index ) ;
+      
+      index++ ;
+      
+      point = 2 * point + 1 ;
+      tokentree[ point ] = Maktoken( "." ) ;
+      Treerecursion( tokentree, tokenlist, 2 * point, index ) ;
+      tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
+      
+    } // else if
+    else {
+      tokentree[ point ] = tokenlist.at( index ) ;
+      index++ ;
+    } // else 
+    
+  } // Treerecursion()
+
+  Token Maktoken( string str ) {
+    Token retoken ;
+    retoken.column = -1 ;
+    retoken.line = -1 ;
+    retoken.str = str ;
+    retoken.iscomd = false ;
+    retoken.type = Gettype( retoken.str ) ;
+    retoken.str = Setstr( retoken.str ) ;
+    if ( retoken.type == INT )
+      retoken.intnum = Decodeint( retoken.str ) ;
+    else if ( retoken.type == FLOAT ) {
+      retoken.floatnum = Decodefloat( retoken.str ) ;
+      retoken.str = Setfloatstr( retoken.str ) ;
+    } // else if
+      
+      
+    return retoken ;
+  } // Maktoken()
+    
+};
+
+Scanner gScanner ;
+Printer gPrinter ;
+Treemaker gTreemaker ;
 
 class Evaler {
   private:
@@ -1874,7 +2285,17 @@ class Evaler {
     if ( Getsize( temp->right ) > 0 )
       throw ArgNumError( "Read" ) ;
     
-    return NewToken("nil") ;
+    map< int, Token > origintree ;
+    vector < Token > tokenlist ;
+    gLine = 1 ;  
+    while ( Iswhitespace( gScanner.Getch() ) && gScanner.Getch() != '\n' && !gEnd )
+      gScanner.Getchar() ; 
+        
+    gScanner.ReadSexp( tokenlist ) ;
+    gTreemaker.Buildtree( tokenlist, origintree ) ; 
+    Token * tokentree = SetTree( 1, origintree ) ;
+    // Token * tokentree = NewToken( "nil" ) ;
+    return tokentree ;
 
   } // Read()
 
@@ -2191,7 +2612,8 @@ class Evaler {
   bool Islist( Token * temp ) {
     Token * check = temp ;
     while ( check->right != NULL ) 
-      check = check->right ;    
+      check = check->right ; 
+
     if ( check->type == NIL ) {
       // cout << "islist" ;
       return true ;
@@ -2200,8 +2622,6 @@ class Evaler {
       return false ;
     } // else
   } // Islist()
-
-  Printer mprinter ;
 
   public:
   
@@ -2228,6 +2648,7 @@ class Evaler {
     } // if
     else if ( temp->left != NULL ) {
       if ( !Islist( temp ) ) {
+      	cout << temp->str ;
         throw NonListError() ;
       } // if
       
@@ -2406,396 +2827,15 @@ class Evaler {
   
 };
 
-class Scanner {
-  public:
-  char Getch() {
-    return mch ;
-  } // Getch()
-  
-  void Getchar() {
-    
-    int eof = scanf( "%c", &mch ) ;
-    if ( eof == EOF ) {
-
-      gEnd = true ;
-      mch = '\0' ;
-    } // if
-      
-    gColumn++ ;
-    if ( mch == '\n' ) {
-      
-      gColumn = 0 ;
-      gLine++ ;
-    } // if()
-  
-  } // Getchar() 
-  
-  void Readnwschar() {
-    while ( ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) && !gEnd ) {
-      Getchar() ;
-    } // while()
-    
-  } // Readnwschar() 
-  
-  void Skipcomment() {
-    while ( mch == ';' ) {
-      Getchar() ;
-      while ( mch != '\n' && !gEnd ) {
-        Getchar() ;
-      } // while
-      
-      Readnwschar() ;
-    } // while
-  } // Skipcomment() 
-  
-  void ReadSexp( vector<Token> & tokenlist ) {
-    Token temp ;
-    Readnwschar() ;
-    temp = Gettoken() ;
-
-    gReading = true ;
-    if ( temp.type == LPAREN ) {
-
-      tokenlist.push_back( temp ) ;
-      ReadSexp( tokenlist ) ;
-      
-      Readnwschar() ;
-      Skipcomment() ; 
-      
-      while ( !gEnd && mch != ')' && ! ( mch == '.' && Justdot() ) ) {
-        ReadSexp( tokenlist ) ;
-        Readnwschar() ;
-        Skipcomment() ;
-      } // while
-
-      if ( mch == '.' && Justdot() ) {
-
-        temp = Gettoken() ;
-
-        tokenlist.push_back( temp ) ;
-        ReadSexp( tokenlist ) ;
-        Readnwschar() ;
-      } // if
-        
-      Readnwschar() ;
-      Skipcomment() ;
-
-      if ( gEnd ) {
-        // cout << " f" ;
-        throw EndOfFileError() ;// error
-      } // if
-      else if ( mch == ')' ) {
-       
-        temp = Gettoken() ;
-        tokenlist.push_back( temp ) ;
-      } // else if
-      else {
-        temp = Gettoken() ;
-        throw Stringerror( temp, 1 ) ;// error
-      } // else
-      
-    } // if
-    else if ( Isatomtype( temp.type ) ) {
-
-      tokenlist.push_back( temp ) ;
-    } // else if
-    else if ( temp.type == QUOTE ) {
-      tokenlist.push_back( temp ) ;
-      ReadSexp( tokenlist ) ;
-    } // else if 
-    else {
-      throw Stringerror( temp, 0 ) ;// error
-    } // else
-    
-  } // ReadSexp()  
-    
-  private:  
-  char mch ; 
-  
-  Token Gettoken() {
-    Token retoken ;
-
-    Readnwschar() ; 
-    retoken.column = gColumn ;
-    retoken.line = gLine ;
-    retoken.str = Gettokenstr() ;
-    while ( retoken.str == ";" ) {
-      while ( mch != '\n' && !gEnd )
-        Getchar() ;
-      
-      if ( gEnd )  
-        throw EndOfFileError() ;
-      else
-        Readnwschar() ; 
-        
-      retoken.column = gColumn ;
-      retoken.line = gLine ;
-      retoken.str = Gettokenstr() ;
-    } // while
-    
-    retoken.type = Gettype( retoken.str ) ;
-    retoken.str = Setstr( retoken.str ) ;
-    
-    if ( retoken.type == INT )
-      retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT ) {
-      retoken.floatnum = Decodefloat( retoken.str ) ;
-      retoken.str = Setfloatstr( retoken.str ) ;
-    } // else if
-      
-
-    retoken.iscomd = false ;
-
-    return retoken ;
-  } // Gettoken()
-  
-  Type Gettype( string str ) {
-    Type numtype = Numtype( str ) ;
-    if ( str == "(" ) return LPAREN ;
-    else if ( str == ")" ) return RPAREN ;
-    else if ( str == "." ) return DOT ;
-    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
-    else if ( str == "t" || str == "#t" ) return T ;
-    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if ( str == "'" ) return QUOTE ;
-    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
-    else if ( str == ";" ) return COMMENT ;
-    else return SYMBOL ;  
-      
-  } // Gettype()
-  
-  string Setstr( string str ) {
-    
-    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
-    else if ( str == "t" || str == "#t" ) return "#t" ;
-    else return str ; 
-    
-  } // Setstr()
-  
-  string Gettokenstr() {
-    Readnwschar() ;
-    
-    if ( mch == '\"' ) {
-      
-      return Getstring( mch ) ;
-    } // if
-    else if ( Isseparators( mch ) ) {
-      return Getseparators( mch ) ;
-    } // else if
-    else {
-      return Getothers( mch ) ;
-    } // else
-  } // Gettokenstr() 
-  
-  string Getstring( char & mch ) {
-    string temp = "" ;
-    temp += mch ;
-    
-    Token tk ;
-    tk.line = gLine ;  
-    tk.column = gColumn ;
-    Getchar() ;
-
-      
-    while ( mch != '\"' && !gEnd )  {
-      
-      if ( mch == '\n' ) {
-
-        throw Stringerror( tk, 2 ) ;
-      } // if
-      
-      
-      bool check = true ;
-      if ( mch == '\\' ) {
-
-        if ( gColumn > tk.column )
-          tk.column = gColumn ;
-          
-        Getchar() ; 
-        if ( mch == 't' ) {
-          temp += '\t' ;
-        } // if
-        else if ( mch == 'n' ) {
-          temp += '\n' ;
-        } // else if
-        else if ( mch == '\"' ) {
-          temp += '\"' ;
-        } // else if
-        else if ( mch == '\\' ) {
-          temp += '\\' ;
-        } // else if
-        else if ( mch == '\n' ) {
-          throw Stringerror( tk, 2 ) ;
-        } // else if
-        else {
-          check = false ;
-          temp += '\\' ;
-        } // else
-      } // if()
-      else {
-        temp += mch ;
-        
-      } // else
-      
-      if ( gColumn > tk.column )
-        tk.column = gColumn ;
-        
-      if ( check )
-        Getchar() ; 
-       
-      if ( gEnd )
-        throw Stringerror( tk, 2 ) ;
-       
-      if ( gColumn > tk.column )
-        tk.column = gColumn ;
-          
-    } // while()
-    
-    
-  
-    
-    temp += mch ;
-    Getchar() ;
-    
-    return temp ;
-  } // Getstring() 
-
-  string Getseparators( char & mch ) {
-    string temp = "" ; 
-    temp += mch ;
-    Getchar() ;
-    if ( temp == "(" ) {
-      Readnwschar() ;
-      Skipcomment() ;
-      if ( mch == ')' ) {
-        temp += ")" ; 
-        Getchar() ;
-      } // if
-    } // if 
-    
-    return temp ;
-  } // Getseparators() 
-  
-  string Getothers( char & mch ) {
-    string temp = "" ; 
-    temp += mch ;
-    Getchar() ;
-    
-    while ( !Isseparators( mch ) && !gEnd ) {
-      temp += mch ;
-      Getchar() ; 
-      
-    } // while()
-
-    // if ( gEnd )
-    //   throw EndOfFileError() ; 
-      
-    return temp ;
-  } // Getothers() 
-  
-    
-  
-};
-
-class Treemaker {
-  public:
-  void Buildtree( vector<Token> & tokenlist, map< int, Token > & tokentree ) {
-    
-    int point = 1 ;
-    int index = 0 ;
-
-    if ( tokenlist.size() == 1 ) {
-      tokentree[1] = tokenlist.at( 0 ) ;
-    } // if
-    else {
-      Treerecursion( tokentree, tokenlist, point, index ) ;
-    } // else
-    
-  
-  } // Buildtree()
-      
-  private:    
-  
-
-  void Treerecursion( map< int, Token > & tokentree, vector<Token> tokenlist, int point, int & index ) {
-
-    if ( tokenlist.at( index ).type == LPAREN ) {
-      
-      index++ ;
-      Type type = tokenlist.at( index ).type ;
-      while ( type != DOT && type != RPAREN ) {
-        tokentree[ point ] = Maktoken( "." ) ;
-        Treerecursion( tokentree, tokenlist, 2 * point, index ) ; 
-        point = 2 * point + 1 ;
-        type = tokenlist.at( index ).type ;
-        
-      } // while
-        
-      if ( tokenlist.at( index ).type == DOT ) {
-        index++ ;  
-
-        Treerecursion( tokentree, tokenlist, point, index ) ;
-        index++ ; // problem
-      } // if
-      else {
-        tokentree[ point ] = Maktoken( "nil" ) ;
-        if ( index < tokenlist.size() - 1 ) {
-          index++ ;
-        } // if
-      } // else
-
-    } // if
-    else if ( tokenlist.at( index ).type == QUOTE ) {
-      
-      tokentree[ point ] = Maktoken( "." ) ;
-      
-      tokentree[ 2 * point ] = tokenlist.at( index ) ;
-      
-      index++ ;
-      
-      point = 2 * point + 1 ;
-      tokentree[ point ] = Maktoken( "." ) ;
-      Treerecursion( tokentree, tokenlist, 2 * point, index ) ;
-      tokentree[ 2 * point + 1 ] = Maktoken( "nil" ) ;
-      
-    } // else if
-    else {
-      tokentree[ point ] = tokenlist.at( index ) ;
-      index++ ;
-    } // else 
-    
-  } // Treerecursion()
-
-  Token Maktoken( string str ) {
-    Token retoken ;
-    retoken.column = -1 ;
-    retoken.line = -1 ;
-    retoken.str = str ;
-    retoken.iscomd = false ;
-    retoken.type = Gettype( retoken.str ) ;
-    retoken.str = Setstr( retoken.str ) ;
-    if ( retoken.type == INT )
-      retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT ) {
-      retoken.floatnum = Decodefloat( retoken.str ) ;
-      retoken.str = Setfloatstr( retoken.str ) ;
-    } // else if
-      
-      
-    return retoken ;
-  } // Maktoken()
-    
-};
-
 class Interpreter{
   public:
    
   
   Interpreter() {
     // mch = '\0' ;
-    mprinter = Printer() ;
-    mscanner = Scanner() ;
-    mtreemaker = Treemaker() ;
+    // gPrinter = Printer() ;
+    // gScanner = Scanner() ;
+    // gTreemaker = Treemaker() ;
   } // Interpreter() 
   
   void Gettokenlist() {
@@ -2815,17 +2855,17 @@ class Interpreter{
       
       try {
         gLine = 1 ;  
-        while ( Iswhitespace( mscanner.Getch() ) && mscanner.Getch() != '\n' && !gEnd )
-          mscanner.Getchar() ; 
+        while ( Iswhitespace( gScanner.Getch() ) && gScanner.Getch() != '\n' && !gEnd )
+          gScanner.Getchar() ; 
         
-        mscanner.ReadSexp(  mtokenlist ) ;
+        gScanner.ReadSexp(  mtokenlist ) ;
         
       } // try
       catch ( Stringerror e ) {
         printf( "%s\n", e.merrorstr.c_str() ) ;
         gReading = false ;
-        while ( !gEnd && mscanner.Getch() != '\n' )
-          mscanner.Getchar() ;
+        while ( !gEnd && gScanner.Getch() != '\n' )
+          gScanner.Getchar() ;
           
         mtokenlist.clear() ;
         err = true ;
@@ -2841,8 +2881,8 @@ class Interpreter{
       
       if ( !err ) {
         bool evalerr = false ;
-        mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
-        mtokentree = SetTree( 1 ) ;
+        gTreemaker.Buildtree( mtokenlist, morigintree ) ; 
+        mtokentree = SetTree( 1, morigintree ) ;
         Token * outtree ;
         vector< Symbol > localsymlist ;
         localsymlist.clear() ;
@@ -2862,22 +2902,22 @@ class Interpreter{
                     e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            mprinter.Printtree( e.mhead ) ; 
+            gPrinter.Printtree( e.mhead ) ; 
           } // else if
           else if ( e.mname == "NoReturnErrorgogo" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            mprinter.Printtree( e.mhead ) ; 
+            gPrinter.Printtree( e.mhead ) ; 
           } // else if
           else if ( e.mname == "FormatError" || e.mname == "UnboundCondiError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            mprinter.Printtree( e.mhead ) ; 
+            gPrinter.Printtree( e.mhead ) ; 
           } // else if
           else if ( e.mname == "NonListError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            mprinter.Printtree( mtokentree ) ;
+            gPrinter.Printtree( mtokentree ) ;
           } // else if
           else { // if ( e.mname == "Callend" || e.mname == "EndOfFileError" )
             throw e ;
@@ -2885,7 +2925,7 @@ class Interpreter{
         } // catch
         
         if ( !evalerr ) {
-          mprinter.Printtree( outtree ) ; 
+          gPrinter.Printtree( outtree ) ; 
         } // if
           
         
@@ -2894,21 +2934,21 @@ class Interpreter{
       printf( "\n" ) ;
       
       int c = gColumn ;
-      char ch = mscanner.Getch() ;
+      char ch = gScanner.Getch() ;
       while ( Iswhitespace( ch ) && ch != '\n' ) {
-        mscanner.Getchar() ;
-        ch = mscanner.Getch() ;
+        gScanner.Getchar() ;
+        ch = gScanner.Getch() ;
       } // while
       
-      ch = mscanner.Getch() ;
+      ch = gScanner.Getch() ;
       if ( ch == ';' ) {
         while ( ch != '\n' && !gEnd ) {
-          mscanner.Getchar() ;
-          ch = mscanner.Getch() ;
+          gScanner.Getchar() ;
+          ch = gScanner.Getch() ;
         } // while
       } // if
 
-      if ( mscanner.Getch() == '\n' )
+      if ( gScanner.Getch() == '\n' )
         gColumn = 0 ; 
       else
         gColumn = gColumn - c + 1 ;
@@ -2921,44 +2961,21 @@ class Interpreter{
   
   private:
   
-  Printer mprinter ;
-  Scanner mscanner ;
+
   Evaler mevaler ;
-  Treemaker mtreemaker ;
+
   vector<Token> mtokenlist ;
   map< int, Token > morigintree ;
-  Token * mtokentree ; 
-  
-  Token * NewToken( Token token ) {
-    Token * retoken = new Token ;
-    retoken->str = token.str ;
-    retoken->line = token.line ;
-    retoken->column = token.column ;
-    retoken->intnum = token.intnum ;
-    retoken->floatnum = token.floatnum ;
-    retoken->type = token.type ;
-    retoken->iscomd = false ;
-    retoken->left = NULL ;
-    retoken->right = NULL ;
-    
-    return retoken ;
-  } // NewToken()
-  
-  Token * SetTree( int index ) {
-    if ( morigintree.find( index ) == morigintree.end() )
-      return NULL ;
-    else {
-      Token * temp = NewToken( morigintree.find( index )->second ) ;
-      temp->left = SetTree( 2 * index ) ;
-      temp->right = SetTree( 2 * index + 1 ) ;  
-      return temp ;
-    } // else
-  } // SetTree()  
+  Token * mtokentree ;  
     
 };
 
 int main() {
+  
   Interpreter interpreter = Interpreter() ;
+  gPrinter = Printer() ;
+  gScanner = Scanner() ;
+  gTreemaker = Treemaker() ;
   char t ;
   scanf( "%d",  &gTestNum ) ;
   scanf( "%c",  &t ) ;
