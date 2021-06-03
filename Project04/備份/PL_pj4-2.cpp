@@ -19,7 +19,7 @@ int gColumn = 0 ;            // 「下一個要讀進來的字元」所在的col
 bool gReading = false ;
 int gTestNum ;
 bool gEnd = false ;
-int gCount = 0 ;
+
 struct Token {
   string str ;
   
@@ -1090,9 +1090,7 @@ class Evaler {
   int Findsymbol( string str, vector < Symbol > & localsymlist ) {
     int i = localsymlist.size() - 1 ;
     while ( i >= 0 ) {
-    	gCount++ ;
       if ( localsymlist.at( i ).name == str ) {
-      	
         if ( localsymlist.at( i ).args == NULL )
           return 1 ;
         else 
@@ -1107,7 +1105,6 @@ class Evaler {
     i = msymbollist.size() - 1 ;
     
     while ( i >= 0 ) {
-    	gCount++ ;
       if ( msymbollist.at( i ).name == str ) {
         if ( msymbollist.at( i ).args == NULL )
           return 1 ;
@@ -1152,12 +1149,10 @@ class Evaler {
   
   Token * Symbols( Token * temp, vector < Symbol > & localsymlist ) {
     
-    
-    
     int i = localsymlist.size() - 1 ;
     bool find = false ;
     while ( i >= 0 ) {
-      gCount++ ;
+
       if ( localsymlist.at( i ).name == temp->str )  {
         find = true ;
         
@@ -1173,7 +1168,7 @@ class Evaler {
     i = msymbollist.size() - 1 ;
     
     while ( i >= 0 ) {
-      gCount++ ;
+
       if ( msymbollist.at( i ).name == temp->str )  {
         find = true ;
         
@@ -1258,7 +1253,7 @@ class Evaler {
       msymbollist.push_back( newsymbol ) ;  
     else {
       for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-        gCount++ ;
+
         if ( msymbollist.at( i ).name == name ) {
 
           msymbollist.at( i ).info = newsymbol.info ;
@@ -1314,7 +1309,6 @@ class Evaler {
       
     bool seted = false ;
     for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
-    	gCount++ ;
       if ( localsymlist.at( i ).name == name ) {
         // localsymlist.push_back( newsymbol ) ;
         localsymlist.at( i ).info = newsymbol.info ;
@@ -1328,7 +1322,7 @@ class Evaler {
         msymbollist.push_back( newsymbol ) ;  
       else {
         for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-          gCount++ ;
+
           if ( msymbollist.at( i ).name == name ) {
 
             msymbollist.at( i ).info = newsymbol.info ;
@@ -1364,7 +1358,7 @@ class Evaler {
       msymbollist.push_back( newsymbol ) ;  
     else {
       for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-        gCount++ ;
+
         if ( msymbollist.at( i ).name == name ) {
           msymbollist.at( i ).info = newsymbol.info ;
           msymbollist.at( i ).args = newsymbol.args ;
@@ -1387,9 +1381,7 @@ class Evaler {
     Token * args ;
     Token * retoken ;
     while ( i >= 0 && !find ) {
-    	gCount++ ;
       if ( msymbollist.at( i ).name == str )  {
-      	gCount++ ;
         argname = msymbollist.at( i ).args ;
         method = msymbollist.at( i ).info ;
         find = true ;
@@ -1532,23 +1524,29 @@ class Evaler {
         retoken = ans ;
       } // try
       catch ( Exception e ) {
-
+        // cout << "lambda" ;
         if ( e.mname == "NoReturnError" ) {
           e.mhead = temp ;
           if ( method->right->type == NIL ) {
-
+            // for ( int i = 0 ; i < argsnum ; i++ )
+            //   msymbollist.pop_back() ;
             throw e ;
           } // if
         } // if
         else {
-
+          // for ( int i = 0 ; i < argsnum ; i++ )
+          //   msymbollist.pop_back() ;
           throw e ;
         } // else
       } // catch
 
       method = method->right ;
     } // while
-
+    /*
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    */
     return retoken ;
   } // Lambda()
   
@@ -1613,19 +1611,25 @@ class Evaler {
         if ( e.mname == "NoReturnError" ) {
           if ( t->right->type == NIL ) {
             e.mhead = temp1 ;
-
+            // for ( int i = 0 ; i < argsnum ; i++ )
+            //   msymbollist.pop_back() ;
             throw e ;
           } // if
         } // if
         else {
-
+          // for ( int i = 0 ; i < argsnum ; i++ )
+          //   msymbollist.pop_back() ;
           throw e ;
         } // else
       } // catch
       
       t = t->right ;
     } // while
-
+    /*
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    */
     return result ;
 
   } // Let()
@@ -2802,7 +2806,6 @@ class Evaler {
   public:
   
   Token * Evalexp( Token * temp, int head, vector < Symbol > & localsymlist ) {
-    // cout << msymbollist.size() << " " << localsymlist.size() << endl;
 
     if ( Isatomtype( temp->type ) ) {
       string str = temp->str ;
@@ -3183,5 +3186,4 @@ int main() {
   // scanner.Print() ;
   printf( "\nThanks for using OurScheme!" ) ;
   
-  cout << gCount << endl ;
 } // main()

@@ -2,7 +2,7 @@ Welcome to OurScheme!
 
 > a defined
 
-> "=============== Problem 1 viewable case ================="
+> "=============== Problem 3 viewable case ================="
 
 > environment cleaned
 
@@ -50,324 +50,55 @@ Welcome to OurScheme!
 
 > PrintListOfSymbolsNumbersStringsAsSentence defined
 
-> SwitchSubject defined
+> @size@ defined
 
-> AdjustVerb defined
+> @price@ defined
 
-> Adverb defined
-
-> KindOfVerb defined
-
-> UnknownVerb defined
-
-> VerbToBe defined
-
-> AskEliza defined
-
-> Eliza defined
-
-> $Eliza defined
-
-> 3
-
-> 3
-
-> 7
-
-> 5
-
-> ( is
-  what
-  going
-  on
-  here
-  ?
-)
-
-> ERROR (unbound symbol) : rest
-
-> ( is
-  what
-  going
-  on
-  here
-  ?
-)
-
-> ( going
-  on
-  here
-  ?
-)
-
-> ( I
-  must
-  say
-  is
-  what
-  going
-  on
-  here
-  ?
-)
+> @quality@ defined
 
-> ( 10
-  12
-  ( 18
-    29
-  )
-  ( 3
-    5
-  )
-)
+> ResetTransactionState defined
 
-> ( cons
-  10
-  20
-  12
-  18
-)
+> ProductIndex defined
 
-> x defined
+> TransactionState defined
 
-> y defined
+> Top? defined
 
-> 30
+> Bottom? defined
 
-> 3
+> TopPrice? defined
 
-> ( ( 6
-    7
-    7
-  )
-  .
-  6
-)
+> BottomPrice? defined
 
-> ( 4
-  5
-  3
-  4
-  5
-)
+> TopSize? defined
 
-> ( ( 4
-    5
-  )
-  4
-  .
-  5
-)
+> BottomSize? defined
 
-> ( ( ( ( 4
-        5
-      )
-      4
-      .
-      5
-    )
-    x
-  )
-  ( cons
-    4
-    5
-  )
-)
+> TopQuality? defined
 
-> ------------------
+> BottomQuality? defined
 
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+> Downgrade defined
 
-Your say > 
-Why do you like Lisa ? 
+> Upgrade defined
 
-------------------
+> DowngradeSize defined
 
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+> DowngradePrice defined
 
-Your say > 
-Why do I like Jolin ? 
+> DowngradeQuality defined
 
-------------------
+> UpgradeSize defined
 
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+> UpgradePrice defined
 
-Your say > 
-Why does Jolin like to perform ? 
+> UpgradeQuality defined
 
-------------------
+> Abs defined
 
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+> PriceTag defined
 
-Your say > 
-Why does LinSanity like playing basketball ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why does LinSanity play basketball ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why do you hate you ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why are you happy ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why am I a genius ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why am I really, really talkative ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why am I a terribly strange thing ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why does Do you think I am a good guy ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why is this not funny ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why are you going to get crazy ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why does Can we talk about Donald Trump please ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Why does Please listen very carefully to what I am saying ? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Hmmm... 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > 
-Could you please be more specific about it? 
-
-------------------
-
-Please use a list notation such as : (I think the weather is nice)
-To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
-
-Your say > Bye!
-
-> a defined
-
-> "=============== Problem 2 viewable case ================="
-
-> environment cleaned
-
-> cadr defined
-
-> caddr defined
-
-> caar defined
-
-> caadr defined
-
-> caaddr defined
-
-> % defined
-
-> $%%% defined
-
-> KeyPair defined
-
-> RealKey defined
-
-> ListAppend defined
-
-> $ListAppend defined
-
-> ListLength defined
-
-> $ListLength defined
-
-> NthElementOf defined
-
-> $NthElementOf defined
-
-> WithNthElementOfListReplaced defined
-
-> $WithNthElementOfListReplaced defined
-
-> DivisibleBy defined
-
-> PrintListOfStringsAsSentence defined
-
-> PrintListOfSymbolsAsSentence defined
-
-> PrintListOfSymbolsStringsAsSentence defined
-
-> PrintListOfSymbolsNumbersStringsAsSentence defined
-
-> ExampleExpertise defined
+> OverSpent defined
 
 > $expertise-DB defined
 
@@ -385,10 +116,10 @@ Your say > Bye!
 
 > $IndexOfExpertiseEntry defined
 
-> ruleList-01 defined
+> ruleList-Exaggerated defined
 
-> Expertise-01 defined
-The expertise Expertise-01 has been established. 
+> Exaggerated defined
+The expertise Exaggerated has been established. 
 #t
 
 > rule-139 defined
@@ -434,171 +165,8 @@ Available choices are
 7 or Quit or quit ;
 Please enter the number (or item-name) of your choice > Expertise-03
 Expertise-02
-Expertise-01
-ExampleExpertise
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Please give the name of the expertise > ( ( ( DivisibleBy
-      n
-      15
-    )
-    ( +
-      n
-      150
-    )
-  )
-  ( ( DivisibleBy
-      n
-      7
-    )
-    ( +
-      n
-      70
-    )
-  )
-  ( ( DivisibleBy
-      n
-      4
-    )
-    ( +
-      n
-      40
-    )
-  )
-  ( else
-    ( +
-      n
-      n
-    )
-  )
-)
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Please give the name of the expertise > ( ( ( DivisibleBy
-      n
-      3
-    )
-    ( +
-      n
-      30
-    )
-  )
-  ( ( DivisibleBy
-      n
-      5
-    )
-    ( +
-      n
-      50
-    )
-  )
-  ( ( DivisibleBy
-      n
-      4
-    )
-    ( +
-      n
-      40
-    )
-  )
-  ( else
-    ( +
-      n
-      n
-    )
-  )
-)
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Please give the name of the expertise > ( ( ( DivisibleBy
-      n
-      15
-    )
-    ( +
-      n
-      150
-    )
-  )
-  ( ( DivisibleBy
-      n
-      5
-    )
-    ( +
-      n
-      50
-    )
-  )
-  ( ( DivisibleBy
-      n
-      4
-    )
-    ( +
-      n
-      40
-    )
-  )
-  ( else
-    ( +
-      n
-      n
-    )
-  )
-)
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Please give the name of the expertise > ( ( ( DivisibleBy
-      n
-      3
-    )
-    ( +
-      n
-      30
-    )
-  )
-  ( ( DivisibleBy
-      n
-      5
-    )
-    ( +
-      n
-      50
-    )
-  )
-  ( else
-    ( *
-      n
-      100
-    )
-  )
-)
+Exaggerated
+OverSpent
 ------------------
 Available choices are
 1 or DefineExpertise ,
@@ -610,39 +178,73 @@ Available choices are
 7 or Quit or quit ;
 Please enter the number (or item-name) of your choice > Bye!
 
-> 210
+> "quality : 3 size : 4 price : 3 ProductIndex : 7"
 
-> 570
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
 
-> 98
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
 
-> 60
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
 
-> 74
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
 
-> 18
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
 
-> 90
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
 
-> 70
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
 
-> 72
+> "quality : 5 size : 4 price : 5 ProductIndex : 20"
 
-> 52
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
 
-> 180
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
 
-> 70
+> "quality : 5 size : 2 price : 5 ProductIndex : 18"
 
-> 56
+> "quality : 5 size : 1 price : 5 ProductIndex : 17"
 
-> 36
+> "quality : 5 size : 1 price : 4 ProductIndex : 18"
 
-> 90
+> "quality : 5 size : 1 price : 3 ProductIndex : 19"
 
-> 90
+> "quality : 5 size : 1 price : 2 ProductIndex : 20"
 
-> 5600
+> "quality : 5 size : 1 price : 1 ProductIndex : 21"
+
+> "quality : 4 size : 1 price : 1 ProductIndex : 15"
+
+> "quality : 3 size : 1 price : 1 ProductIndex : 2"
+
+> "quality : 3 size : 2 price : 1 ProductIndex : 3"
+
+> "quality : 3 size : 3 price : 1 ProductIndex : 4"
+
+> "quality : 3 size : 4 price : 1 ProductIndex : 5"
+
+> "quality : 3 size : 5 price : 1 ProductIndex : 6"
+
+> "quality : 3 size : 5 price : 2 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 4 size : 5 price : 4 ProductIndex : 16"
+
+> "quality : 4 size : 5 price : 3 ProductIndex : 17"
+
+> "quality : 4 size : 4 price : 3 ProductIndex : 16"
+
+> "quality : 4 size : 4 price : 3 ProductIndex : 16"
+
+> "quality : 4 size : 4 price : 3 ProductIndex : 16"
 
 > ------------------
 Available choices are
@@ -653,8 +255,8 @@ Available choices are
 5 or ReplaceRuleSet ,
 6 or ReplaceRuleOfRuleSet ,
 7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Name of the expertise you want to replace its rule > Ordering of the rule that is to be replaced - Please enter a number (e.g., 3) > The new rule to be used in its place > Expertise-01 defined
-The specified rule of Expertise-01 has been replaced. 
+Please enter the number (or item-name) of your choice > Name of the new expertise > The set of rules to be used by the new expertise > Modest defined
+The expertise Modest has been established. 
 ------------------
 Available choices are
 1 or DefineExpertise ,
@@ -666,9 +268,43 @@ Available choices are
 7 or Quit or quit ;
 Please enter the number (or item-name) of your choice > Bye!
 
-> 32
+> #t
 
-> 48
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
+
+> "quality : 3 size : 1 price : 3 ProductIndex : 4"
+
+> "quality : 3 size : 1 price : 3 ProductIndex : 4"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> #t
+
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
+
+> "quality : 3 size : 1 price : 3 ProductIndex : 4"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> #t
+
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
+
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
+
+> #t
+
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
+
+> "quality : 3 size : 1 price : 3 ProductIndex : 4"
+
+> "quality : 3 size : 1 price : 3 ProductIndex : 4"
 
 > ------------------
 Available choices are
@@ -679,8 +315,8 @@ Available choices are
 5 or ReplaceRuleSet ,
 6 or ReplaceRuleOfRuleSet ,
 7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Name of the expertise you want to replace its rule-set > The new set of rules to be used by this expertise > ExampleExpertise defined
-The rule-set of ExampleExpertise has been replaced. 
+Please enter the number (or item-name) of your choice > Name of the expertise you want to replace its rule > Ordering of the rule that is to be replaced - Please enter a number (e.g., 3) > The new rule to be used in its place > Modest defined
+The specified rule of Modest has been replaced. 
 ------------------
 Available choices are
 1 or DefineExpertise ,
@@ -692,127 +328,27 @@ Available choices are
 7 or Quit or quit ;
 Please enter the number (or item-name) of your choice > Bye!
 
-> 90
+> #t
 
-> 90
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
-> 560
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
-> ------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Name of the new expertise > The set of rules to be used by the new expertise > Expertise-04 defined
-The expertise Expertise-04 has been established. 
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Bye!
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
-> 90
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
-> 90
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
-> 560
+> "quality : 3 size : 3 price : 3 ProductIndex : 6"
 
-> GreaterThanThreshold defined
+> "quality : 3 size : 3 price : 3 ProductIndex : 6"
 
-> $Strange defined
+> "quality : 3 size : 3 price : 3 ProductIndex : 6"
 
-> ------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Name of the expertise you want to replace its rule > Ordering of the rule that is to be replaced - Please enter a number (e.g., 3) > The new rule to be used in its place > Expertise-03 defined
-The specified rule of Expertise-03 has been replaced. 
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Bye!
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
-> 210
-
-> 570
-
-> 328
-
-> 60
-
-> 337
-
-> 18
-
-> ------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Expertise-04
-Expertise-03
-Expertise-02
-Expertise-01
-ExampleExpertise
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Name of the expertise to remove > The expertise named ExampleExpertise has been removed from the expertise database. 
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Expertise-04
-Expertise-03
-Expertise-02
-Expertise-01
-------------------
-Available choices are
-1 or DefineExpertise ,
-2 or RemoveExpertise ,
-3 or ListExpertiseNames ,
-4 or ListRuleSet ,
-5 or ReplaceRuleSet ,
-6 or ReplaceRuleOfRuleSet ,
-7 or Quit or quit ;
-Please enter the number (or item-name) of your choice > Bye!
-
-> ERROR (attempt to apply non-function) : nil
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
 > 
 Thanks for using OurScheme!
