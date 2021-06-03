@@ -166,7 +166,7 @@ Token * CreatToken( Token token ) {
   retoken->right = NULL ;
   
   return retoken ;
-} // NewToken()
+} // CreatToken()
 
 Token * SetTree( int index, map< int, Token > morigintree ) {
   if ( morigintree.find( index ) == morigintree.end() )
@@ -579,7 +579,7 @@ class Printer {
     Token * temp = tokentree ;
     if ( Isatomtype( temp->type ) ) {
       Printtoken( temp );
-      printf( "\n" );
+      // printf( "\n" );
     } // if
     else  
       PrintRe( temp, 0 ) ;
@@ -594,17 +594,18 @@ class Printer {
       printf( "\n" ) ;
     } // if
     else if ( type == DOT ) {
-
+      
       printf( "( " ) ;
       
       type = temp->left->type ;
 
-      if ( type == DOT )
+      if ( type == DOT ) {
         PrintRe( temp->left, spacenum + 2 ) ;
+      } // if
       else {
-
+        
         Printtoken( temp->left ) ;  
-        printf( "\n" ) ;
+
       } // else
                   
       temp = temp->right ;
@@ -614,22 +615,24 @@ class Printer {
           type = temp->left->type ;
             
           if ( type == DOT ) {
+            printf( "\n" ) ;
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
             PrintRe( temp->left, spacenum + 2 ) ;
           } // if
           else {
-              
+            printf( "\n" ) ;
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
                 
             Printtoken( temp->left ) ;
-            printf( "\n" ) ;
+
           } // else
         } // if
         else {
           type = temp->type ;
           if ( type != NIL ) {
+            printf( "\n" ) ; 
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
             
@@ -644,11 +647,13 @@ class Printer {
         temp = temp->right ;
 
       } // while
-        
+      
+      printf( "\n" ) ; 
+      
       for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
           
-      printf( ")\n" ) ;
+      printf( ")" ) ;
       
     } // else if
     else {
@@ -658,11 +663,12 @@ class Printer {
         for ( int i = 0 ; i < spacenum ; i++ )
           printf( " " ) ;
         Printtoken( temp ) ;
-        printf( "\n" ) ;  
+        // printf( "\n" ) ;  
       } // else
 
     } // else
-
+    
+    // printf( "\n" ) ;
   } // PrintRe()  
   
   
@@ -1257,7 +1263,8 @@ class Evaler {
 
     } // else
 
-    return NewToken( name + " defined" ) ;
+    printf( "%s defined\n", name.c_str() ) ;
+    return NULL ;
   } // Define()
 
   Token * Set( Token * temp1, vector < Symbol > & localsymlist ) {
@@ -1361,7 +1368,8 @@ class Evaler {
 
     } // else
 
-    return NewToken( name + " defined" ) ;
+    printf( "%s defined\n", name.c_str() ) ;
+    return NULL ;
   } // Definefunc()
   
   Token * Customfunc( Token * temp, int head, vector < Symbol > & localsymlist ) {
@@ -2820,7 +2828,7 @@ class Evaler {
     } // if
     else if ( temp->left != NULL ) {
       if ( !Islist( temp ) ) {
-      	cout << temp->str ;
+        cout << temp->str ;
         throw NonListError() ;
       } // if
       
@@ -3074,7 +3082,7 @@ class Interpreter{
         catch ( Exception e ) {
           if ( e.mname == "LevelError" || e.mname == "ArgNumError" ||
                e.mname == "UnboundError" || e.mname == "DivideZeroError" ) {
-            printf( "%s\n", e.merrorstr.c_str() ) ;
+            printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
           } // if
           else if ( e.mname == "NonFuncError" || e.mname == "ArgTypeError" ||
@@ -3101,10 +3109,13 @@ class Interpreter{
           else { // if ( e.mname == "Callend" || e.mname == "EndOfFileError" )
             throw e ;
           } // else if
+          
+          printf( "\n" ) ;
         } // catch
         
-        if ( !evalerr ) {
+        if ( !evalerr && outtree != NULL ) {
           gPrinter.Printtree( outtree ) ; 
+          printf( "\n" ) ;
         } // if
           
         
