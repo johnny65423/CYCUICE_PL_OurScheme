@@ -86,9 +86,19 @@ Welcome to OurScheme!
 
 > ERROR (unbound symbol) : rest
 
-> ERROR (unbound symbol) : set!
+> ( is
+  what
+  going
+  on
+  here
+  ?
+)
 
-> ERROR (unbound symbol) : rest
+> ( going
+  on
+  here
+  ?
+)
 
 > ( I
   must
@@ -101,9 +111,8 @@ Welcome to OurScheme!
   ?
 )
 
-> ERROR (unbound symbol) : eval
-
-> ( 12
+> ( 10
+  12
   ( 18
     29
   )
@@ -112,9 +121,12 @@ Welcome to OurScheme!
   )
 )
 
-> ERROR (unbound symbol) : eval
-
-> ERROR (attempt to apply non-function) : 12
+> ( cons
+  10
+  20
+  12
+  18
+)
 
 > x defined
 
@@ -122,65 +134,450 @@ Welcome to OurScheme!
 
 > 30
 
-> ERROR (unbound symbol) : eval
+> 3
+
+> ( ( 6
+    7
+    7
+  )
+  .
+  6
+)
 
 > ( 4
   5
+  3
+  4
+  5
 )
-
-> ERROR (unbound symbol) : eval
 
 > ( ( 4
-    ( 5
-    )
+    5
   )
-  6
-  7
+  4
+  .
+  5
 )
 
-> ERROR (unbound symbol) : set!
+> ( ( ( ( 4
+        5
+      )
+      4
+      .
+      5
+    )
+    x
+  )
+  ( cons
+    4
+    5
+  )
+)
 
-> ERROR (unbound symbol) : eval
+> ------------------
 
-> ERROR (unbound symbol) : eval
 
-> ERROR (unbound symbol) : display-string
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
 
-> ERROR (unbound symbol) : I
+Your say > 
 
-> ERROR (unbound symbol) : You
+Why
+ 
+do
+ 
+you
+ 
+like
+ 
+Lisa
+ 
+?
+ 
 
-> ERROR (unbound symbol) : Jolin
 
-> ERROR (unbound symbol) : LinSanity
+------------------
 
-> ERROR (unbound symbol) : LinSanity
 
-> ERROR (unbound symbol) : I
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
 
-> ERROR (unbound symbol) : I
+Your say > 
 
-> ERROR (unbound symbol) : You
+Why
+ 
+do
+ 
+I
+ 
+like
+ 
+Jolin
+ 
+?
+ 
 
-> ERROR (unbound symbol) : You
 
-> ERROR (unbound symbol) : You
+------------------
 
-> ERROR (unbound symbol) : Do
 
-> ERROR (unbound symbol) : This
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
 
-> ERROR (unbound symbol) : I
+Your say > 
 
-> ERROR (unbound symbol) : Can
+Why
+ 
+does
+ 
+Jolin
+ 
+like
+ 
+to
+ 
+perform
+ 
+?
+ 
 
-> ERROR (unbound symbol) : Please
 
-> ERROR (unbound symbol) : NOOOOOOO!
+------------------
 
-> ERROR (unbound symbol) : I
 
-> ERROR (unbound symbol) : quit
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+does
+ 
+LinSanity
+ 
+like
+ 
+playing
+ 
+basketball
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+does
+ 
+LinSanity
+ 
+play
+ 
+basketball
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+do
+ 
+you
+ 
+hate
+ 
+you
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+are
+ 
+you
+ 
+happy
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+am
+ 
+I
+ 
+a
+ 
+genius
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+am
+ 
+I
+ 
+really,
+ 
+really
+ 
+talkative
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+am
+ 
+I
+ 
+a
+ 
+terribly
+ 
+strange
+ 
+thing
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+does
+ 
+Do
+ 
+you
+ 
+think
+ 
+I
+ 
+am
+ 
+a
+ 
+good
+ 
+guy
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+is
+ 
+this
+ 
+not
+ 
+funny
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+are
+ 
+you
+ 
+going
+ 
+to
+ 
+get
+ 
+crazy
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+does
+ 
+Can
+ 
+we
+ 
+talk
+ 
+about
+ 
+Donald
+ 
+Trump
+ 
+please
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Why
+ 
+does
+ 
+Please
+ 
+listen
+ 
+very
+ 
+carefully
+ 
+to
+ 
+what
+ 
+I
+ 
+am
+ 
+saying
+ 
+?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Hmmm...
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+
+Could you please be more specific about it?
+ 
+
+
+------------------
+
+
+Please use a list notation such as : (I think the weather is nice)
+To quit 'AskEliza', just enter the word 'Bye' or 'bye' or 'Quit' or 'quit'.
+
+Your say > 
+Bye!
 
 > 
 Thanks for using OurScheme!
