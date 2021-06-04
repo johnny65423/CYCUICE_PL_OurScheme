@@ -19,7 +19,7 @@ int gColumn = 0 ;            // 「下一個要讀進來的字元」所在的col
 bool gReading = false ;
 int gTestNum ;
 bool gEnd = false ;
-int gCount = 0 ;
+
 struct Token {
   string str ;
   
@@ -153,32 +153,6 @@ string Tofloat( float num ) {
   } // else
 } // Tofloat()
 
-Token * CreatToken( Token token ) {
-  Token * retoken = new Token ;
-  retoken->str = token.str ;
-  retoken->line = token.line ;
-  retoken->column = token.column ;
-  retoken->intnum = token.intnum ;
-  retoken->floatnum = token.floatnum ;
-  retoken->type = token.type ;
-  retoken->iscomd = false ;
-  retoken->left = NULL ;
-  retoken->right = NULL ;
-  
-  return retoken ;
-} // CreatToken()
-
-Token * SetTree( int index, map< int, Token > morigintree ) {
-  if ( morigintree.find( index ) == morigintree.end() )
-    return NULL ;
-  else {
-    Token * temp = CreatToken( morigintree.find( index )->second ) ;
-    temp->left = SetTree( 2 * index, morigintree ) ;
-    temp->right = SetTree( 2 * index + 1, morigintree ) ;  
-    return temp ;
-  } // else
-} // SetTree() 
-
 int Decodeint( string str ) {
   int positive = 1 ;
   if ( str[0] == '+' )
@@ -306,12 +280,6 @@ bool Isspfunc( string str ) {
     return true ;
   else if ( str == "let" || str == "exit" || str == "lambda" ) 
     return true ;
-  else if ( str == "read" || str == "set!" || str == "eval" ) 
-    return true ; 
-  else if ( str == "write" || str == "display-string" || str == "newline" ) 
-    return true ; 
-  else if ( str == "symbol->string" || str == "number->string" || str == "newline" ) 
-    return true ; 
   else 
     return false ;
 } // Isspfunc()
@@ -579,7 +547,7 @@ class Printer {
     Token * temp = tokentree ;
     if ( Isatomtype( temp->type ) ) {
       Printtoken( temp );
-      // printf( "\n" );
+      printf( "\n" );
     } // if
     else  
       PrintRe( temp, 0 ) ;
@@ -594,18 +562,17 @@ class Printer {
       printf( "\n" ) ;
     } // if
     else if ( type == DOT ) {
-      
+
       printf( "( " ) ;
       
       type = temp->left->type ;
 
-      if ( type == DOT ) {
+      if ( type == DOT )
         PrintRe( temp->left, spacenum + 2 ) ;
-      } // if
       else {
-        
-        Printtoken( temp->left ) ;  
 
+        Printtoken( temp->left ) ;  
+        printf( "\n" ) ;
       } // else
                   
       temp = temp->right ;
@@ -615,24 +582,22 @@ class Printer {
           type = temp->left->type ;
             
           if ( type == DOT ) {
-            printf( "\n" ) ;
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
             PrintRe( temp->left, spacenum + 2 ) ;
           } // if
           else {
-            printf( "\n" ) ;
+              
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
                 
             Printtoken( temp->left ) ;
-
+            printf( "\n" ) ;
           } // else
         } // if
         else {
           type = temp->type ;
           if ( type != NIL ) {
-            printf( "\n" ) ; 
             for ( int i = 0 ; i < spacenum + 2 ; i++ )
               printf( " " ) ;
             
@@ -647,13 +612,11 @@ class Printer {
         temp = temp->right ;
 
       } // while
-      
-      printf( "\n" ) ; 
-      
+        
       for ( int i = 0 ; i < spacenum ; i++ )
         printf( " " ) ;
           
-      printf( ")" ) ;
+      printf( ")\n" ) ;
       
     } // else if
     else {
@@ -663,14 +626,1769 @@ class Printer {
         for ( int i = 0 ; i < spacenum ; i++ )
           printf( " " ) ;
         Printtoken( temp ) ;
-        // printf( "\n" ) ;  
+        printf( "\n" ) ;  
       } // else
 
     } // else
-    
-    // printf( "\n" ) ;
+
   } // PrintRe()  
   
+  
+};
+
+class Evaler {
+  private:
+    
+  vector< Symbol > msymbollist ;
+    
+  Token * NewToken( string str ) {
+    Token * retoken = new Token ;
+    retoken->str = Setstr( str ) ;
+    retoken->type = Gettype( retoken->str ) ;
+    retoken->intnum = Decodeint( retoken->str ) ;
+    retoken->floatnum = Decodefloat( retoken->str ) ;
+    if ( retoken->type == FLOAT ) 
+      retoken->str = Setfloatstr( retoken->str ) ;
+    retoken->iscomd = false ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+      
+    return retoken ;
+  } // NewToken()
+    
+  int Getsize( Token * temp ) {
+    if ( temp == NULL || temp->type == NIL )
+      return 0 ;
+    else
+      return 1 + Getsize( temp->right ) ;
+    
+  } // Getsize()
+  
+  int Findsymbol( string str, vector < Symbol > localsymlist ) {
+    int i = localsymlist.size() - 1 ;
+    while ( i >= 0 ) {
+      if ( localsymlist.at( i ).name == str ) {
+        if ( localsymlist.at( i ).args == NULL )
+          return 1 ;
+        else 
+          return 2 ;
+
+      } // if
+        
+      i-- ;  
+      
+    } // while
+    
+    i = msymbollist.size() - 1 ;
+    
+    while ( i >= 0 ) {
+      if ( msymbollist.at( i ).name == str ) {
+        if ( msymbollist.at( i ).args == NULL )
+          return 1 ;
+        else 
+          return 2 ;
+
+      } // if
+        
+      i-- ;  
+      
+    } // while
+    
+    return 0 ;
+  } // Findsymbol()
+  
+  Token * Interfunc( Token * temp ) {
+    stringstream ss ;
+    ss << "#<procedure " << temp->str << ">" ;
+    return NewToken( ss.str() ) ;
+  } // Interfunc()
+  
+  Token * Exit( Token * temp ) {
+
+    if ( Getsize( temp ) != 0 )
+      throw ArgNumError( "exit" ) ;
+    else if ( Getsize( temp ) == 0 )
+      throw Callend() ;
+  
+    return NewToken( "exit" ) ;
+  } // Exit()
+
+  Token * Copytoken( Token * temp ) {
+    if ( temp != NULL ) {
+      Token * ntemp = NewToken( temp->str ) ;
+      ntemp->left = Copytoken( temp->left ) ;
+      ntemp->right = Copytoken( temp->right ) ;
+      return ntemp ;
+    } // if
+    else 
+      return NULL ;
+  } // Copytoken()
+  
+  Token * Symbols( Token * temp, vector < Symbol > localsymlist ) {
+    
+    int i = localsymlist.size() - 1 ;
+    bool find = false ;
+    while ( i >= 0 ) {
+
+      if ( localsymlist.at( i ).name == temp->str )  {
+        find = true ;
+        
+        Token * retoken = localsymlist.at( i ).info ;
+        return retoken ;
+      } // if
+      
+    
+      i-- ;  
+      
+    } // while
+    
+    i = msymbollist.size() - 1 ;
+    
+    while ( i >= 0 ) {
+
+      if ( msymbollist.at( i ).name == temp->str )  {
+        find = true ;
+        
+        Token * retoken = msymbollist.at( i ).info ;
+        return retoken ;
+      } // if
+      
+    
+      i-- ;  
+      
+    } // while
+    
+    if ( !find ) {
+    
+      throw UnboundError( temp->str ) ;
+    
+    } // if 
+    
+    return NULL ;
+  } // Symbols()
+
+  void Change( Token * temp, vector < Symbol > localsymlist ) {
+    if ( temp != NULL ) {
+      if ( temp->left != NULL && Findsymbol( temp->left->str, localsymlist ) == 1 ) {
+        temp->left = Copytoken( Symbols( temp->left, localsymlist ) ) ;
+      } // if
+
+      if ( temp->right != NULL && Findsymbol( temp->right->str, localsymlist ) == 1 ) {
+        temp->right = Copytoken( Symbols( temp->right, localsymlist ) ) ;
+      } // if    
+
+      Change( temp->left, localsymlist ) ;
+      Change( temp->right, localsymlist ) ;
+    } // if
+
+  }  // Change()
+
+  Token * Define( Token * temp1, vector < Symbol > localsymlist ) {
+    Token * temp = temp1->right ;
+    
+    if ( temp->left != NULL && temp->left->type == DOT )
+      return Definefunc( temp1, localsymlist ) ;   
+ 
+    if ( Getsize( temp ) != 2 )
+      throw FormatError( "DEFINE", temp1 ) ;
+
+  
+    
+    Symbol newsymbol ;
+    string name = temp->left->str ;
+    newsymbol.name = name ;
+    newsymbol.args = NULL ;
+    
+    
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE", temp1 ) ;
+    } // if
+    
+    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
+      Token * check = Copytoken( temp->right->left ) ;
+      Change( check, localsymlist ) ;
+      newsymbol.info = check ;
+    } // if
+    else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
+      temp->right->left->left->iscomd = true ;
+      newsymbol.info = temp->right->left ;
+    } // else if
+    else { 
+      try {
+        newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          e.mname = "NoReturnErrorgogo" ;
+
+        throw e ;
+      } // catch
+    } // else 
+      
+
+    if ( Findsymbol( name, localsymlist ) == 0 )
+      msymbollist.push_back( newsymbol ) ;  
+    else {
+      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
+
+        if ( msymbollist.at( i ).name == name ) {
+
+          msymbollist.at( i ).info = newsymbol.info ;
+          msymbollist.at( i ).args = NULL ;
+        } // if
+      } // for
+
+    } // else
+
+    return NewToken( name + " defined" ) ;
+  } // Define()
+
+  Token * Definefunc( Token * temp1, vector < Symbol > localsymlist ) {
+    Token * temp = temp1->right ;
+    
+    if ( Getsize( temp ) < 2 )
+      throw FormatError( "DEFINE", temp1 ) ;  
+    
+    Symbol newsymbol ;
+    string name = temp->left->left->str ;
+    newsymbol.name = name ;
+    newsymbol.args = temp->left->right ;
+    
+    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->left->type != SYMBOL ) { 
+      throw FormatError( "DEFINE", temp1 ) ;
+    } // if
+    
+    newsymbol.info = temp->right ;
+
+    if ( Findsymbol( name, localsymlist ) == 0 )
+      msymbollist.push_back( newsymbol ) ;  
+    else {
+      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
+
+        if ( msymbollist.at( i ).name == name ) {
+          msymbollist.at( i ).info = newsymbol.info ;
+          msymbollist.at( i ).args = newsymbol.args ;
+          
+        } // if
+      } // for
+
+    } // else
+
+    return NewToken( name + " defined" ) ;
+  } // Definefunc()
+  
+  Token * Customfunc( Token * temp, int head, vector < Symbol > localsymlist ) {
+    int i = msymbollist.size() - 1 ;
+    string str = temp->left->str ;
+    bool find = false ;
+    Token * argname ;
+    Token * method ;
+    Token * args ;
+    Token * retoken ;
+    while ( i >= 0 && !find ) {
+      if ( msymbollist.at( i ).name == str )  {
+        argname = msymbollist.at( i ).args ;
+        method = msymbollist.at( i ).info ;
+        find = true ;
+      } // if
+      
+      i-- ;  
+    } // while
+    
+    args = temp->right ;
+    int argsnum = Getsize( argname ) ;
+    
+    if ( argsnum != Getsize( args ) )
+      throw ArgNumError( str ) ;
+      
+    vector < Symbol > templist ;  
+    while ( argname->type != NIL ) {
+      Symbol sym ;
+      sym.name = argname->left->str ;
+      sym.args = NULL ;
+      try {
+        sym.info = Evalexp( args->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( args->left ) ;
+        
+        throw e ;
+      } // catch
+      templist.push_back( sym ) ;
+      
+      argname = argname->right ;
+      args = args->right ;
+    } // while 
+    
+    Token * ans = NULL ;
+    retoken = NULL ;
+
+    while ( method->type != NIL ) {
+      try {
+        ans = Evalexp( method->left, head, templist ) ;
+        retoken = ans ;
+      } // try
+      catch ( Exception e ) {
+        
+        if ( e.mname == "NoReturnError" ) {
+          e.mhead = temp ;
+          if ( method->right->type == NIL ) {
+            // for ( int i = 0 ; i < argsnum ; i++ )
+            //   msymbollist.pop_back() ;
+            throw e ;
+          } // if
+        } // if
+        else {
+          // for ( int i = 0 ; i < argsnum ; i++ )
+          //   msymbollist.pop_back() ;
+          throw e ;
+        } // else
+      } // catch
+
+      method = method->right ;
+    } // while
+
+    if ( retoken == NULL )
+      throw NoReturnError( temp ) ;
+    return retoken ;
+  } // Customfunc()
+  
+  Token * Setlambda( Token * temp, int head, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp->right ) < 2 )
+      throw FormatError( "LAMBDA", temp ) ;
+
+
+    Token * argname = temp->right->left ;
+    Token * method = temp->right->right ;
+
+    if ( argname->type != DOT && argname->type != NIL )
+      throw FormatError( "LAMBDA", temp ) ;
+    
+    Token * t = argname ;
+    
+    while ( t != NULL && t->type != NIL ) {
+      if ( t->left->type != SYMBOL )
+        throw FormatError( "LAMBDA", temp ) ;
+      
+      t = t->right ;
+    } // while
+
+    Token * retoken = NewToken( "lambda" ) ;
+    retoken->left = argname ;
+    retoken->right = method ;
+    
+    retoken->iscomd = true ;
+    return retoken ;
+    
+    
+  } // Setlambda()
+  
+  Token * Lambda( Token * temp, int head, vector < Symbol > localsymlist ) {
+
+    Token * argname = temp->left->left ;
+    Token * method = temp->left->right ;
+    Token * args = temp->right ;
+
+    int argsnum = Getsize( argname ) ;
+    
+    if ( argsnum != Getsize( args ) )
+      throw ArgNumError( "lambda" ) ;
+      
+    vector < Symbol > templist ;  
+    while ( argname->type != NIL ) {
+      Symbol sym ;
+      sym.name = argname->left->str ;
+      sym.args = NULL ;
+      try {
+        sym.info = Evalexp( args->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( args->left ) ;
+        throw e ;
+      } // catch
+      templist.push_back( sym ) ;
+      
+      argname = argname->right ;
+      args = args->right ;
+    } // while  
+    /*
+    for ( int i = 0 ; i < templist.size() ; i++ ) {
+      msymbollist.push_back( templist.at( i ) ) ;
+    } // for
+    */
+    Token * ans = NULL ;
+    Token * retoken ;
+
+    while ( method->type != NIL ) {
+      try {
+        ans = Evalexp( method->left, head, templist ) ;
+        retoken = ans ;
+      } // try
+      catch ( Exception e ) {
+        // cout << "lambda" ;
+        if ( e.mname == "NoReturnError" ) {
+          e.mhead = temp ;
+          if ( method->right->type == NIL ) {
+            // for ( int i = 0 ; i < argsnum ; i++ )
+            //   msymbollist.pop_back() ;
+            throw e ;
+          } // if
+        } // if
+        else {
+          // for ( int i = 0 ; i < argsnum ; i++ )
+          //   msymbollist.pop_back() ;
+          throw e ;
+        } // else
+      } // catch
+
+      method = method->right ;
+    } // while
+    /*
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    */
+    return retoken ;
+  } // Lambda()
+  
+  Token * Let( Token * temp1, vector < Symbol > localsymlist ) {
+    Token * temp = temp1->right ;
+    if ( Getsize( temp ) < 2 )
+      throw FormatError( "LET", temp1 ) ;
+    
+    Token * args = temp->left ;
+    int argsnum = Getsize( args ) ;
+    vector < Symbol > templist ;  
+    
+    while ( args->type != NIL ) {
+      if ( Getsize( args->left ) != 2 )
+        throw FormatError( "LET", temp1 ) ;
+      args = args->right ;
+    } // while  
+    
+    args = temp->left ;
+    while ( args->type != NIL ) {
+
+      Symbol sym ;
+      Token * argtemp = args->left ;
+      if ( argtemp->type != DOT )
+        throw FormatError( "LET", temp1 ) ;
+      string name = argtemp->left->str ; 
+      if ( Isinternalfunc( name ) || Isspfunc( name ) || argtemp->left->type != SYMBOL ) { 
+        throw FormatError( "LET", temp1 ) ;
+      } // if
+      
+      sym.name = name ;
+      sym.args = NULL ;
+      
+      try {
+        sym.info = Evalexp( argtemp->right->left, 0, localsymlist ) ;
+      } // try 
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          e.mname = "NoReturnErrorgogo" ;
+        throw e ;        
+      } // catch
+      templist.push_back( sym ) ;
+      
+      args = args->right ;
+    } // while  
+    
+
+    for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
+      templist.insert( templist.begin(), localsymlist.at( i ) ) ;
+    } // for
+
+    
+    Token * t = temp->right ;
+    Token * result = NULL;
+    Token * ans = NULL;
+    while ( t != NULL && t->type != NIL ) {
+      try {
+        ans = Evalexp( t->left, 1, templist ) ;
+        result = ans ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" ) {
+          if ( t->right->type == NIL ) {
+            e.mhead = temp1 ;
+            // for ( int i = 0 ; i < argsnum ; i++ )
+            //   msymbollist.pop_back() ;
+            throw e ;
+          } // if
+        } // if
+        else {
+          // for ( int i = 0 ; i < argsnum ; i++ )
+          //   msymbollist.pop_back() ;
+          throw e ;
+        } // else
+      } // catch
+      
+      t = t->right ;
+    } // while
+    /*
+    for ( int i = 0 ; i < argsnum ; i++ ) {
+      msymbollist.pop_back() ;
+    } // for
+    */
+    return result ;
+
+  } // Let()
+
+  Token * If( Token * temp1, vector < Symbol > localsymlist ) {
+    Token * temp = temp1->right ;
+    int size = Getsize( temp ) ;
+    if ( size != 2 && size != 3 )
+      throw ArgNumError( "if" ) ;
+    
+    Token * check ;
+    Token * result ;
+    
+    try {
+      check = Evalexp( temp->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+        // unboundtest
+      throw e ;
+    } // catch
+
+
+
+    if ( check->type != NIL ) {
+      result = Evalexp( temp->right->left, 1, localsymlist ) ;
+    } // if
+    else {
+      if ( size == 2 )
+        throw NoReturnError( temp1 ) ;
+      else {
+        result = Evalexp( temp->right->right->left, 1, localsymlist ) ;
+      } // else
+
+    } // else
+
+    return result ;
+
+  } // If()
+
+  Token * Decide( Token * temp, bool last, bool & done, Token * temp1, vector < Symbol > localsymlist ) {
+
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND", temp1 ) ;
+    else if ( Isatomtype( temp->type ) ) {
+      throw FormatError( "COND", temp1 ) ;
+    } // else if
+    else if ( ( last && temp->left->str == "else" ) ) {
+      done = true ;
+      return Begincond( temp->right, temp1, localsymlist ) ;
+    } // if
+
+    Token * check ;
+    Token * result ;
+
+    try {
+      check = Evalexp( temp->left, 1, localsymlist );
+    } // try 
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+        // unboundtest
+      throw e ;
+    } // catch
+
+    if ( check->type != NIL ) {
+      done = true ;
+      return Begincond( temp->right, temp1, localsymlist ) ;
+    } // if
+    else {
+      done = false ;
+      return NewToken( "nil" ) ;
+    } // else
+
+  } // Decide()
+
+  Token * Cond( Token * temp1, vector < Symbol > localsymlist ) {
+    Token * temp = temp1->right ;
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND", temp1 ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t->type != NIL ) {
+      if ( Isatomtype( t->left->type ) ) {
+        throw FormatError( "COND", temp1 ) ;
+      } // if
+      else if ( Getsize( t->left ) < 2 ) {
+        throw FormatError( "COND", temp1 ) ;
+      } // else if
+
+      t = t->right ;
+    } // while
+
+    t = temp ;
+
+    while ( t->type != NIL ) {
+      if ( t->right->type == NIL ) {
+
+        result = Decide( t->left, true, done, temp1, localsymlist ) ;
+
+      } // if
+      else {
+        result = Decide( t->left, false, done, temp1, localsymlist ) ;
+      } // else
+
+      if ( done ) {
+        return result ;
+      } // if
+
+      t = t->right ;
+    } // while
+
+    throw NoReturnError( temp1 ) ;
+
+  } // Cond()
+  
+  Token * Begin( Token * temp, vector < Symbol > localsymlist ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw ArgNumError( "begin" ) ;
+    
+    Token * t = temp ;
+    bool done = true ;
+    Token * result = NULL ;
+    Token * ans ;
+    while ( t != NULL && t->type != NIL ) {
+      done = true ;
+      // error ;
+      try {
+        ans = Evalexp( t->left, 1, localsymlist ) ;
+        result = ans ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" ) {
+          if ( t->right->type == NIL ) {
+            // e.mhead = temp1 ;
+            throw e ;
+          } // if
+        } // if
+        else 
+          throw e ;
+
+      } // catch
+
+
+      t = t->right ;
+    } // while
+    
+    if ( result == NULL ) {
+      throw NoReturnError( temp ) ;
+    } // if
+    
+    return result ;
+
+  } // Begin()
+
+  Token * Begincond( Token * temp, Token * temp1, vector < Symbol > localsymlist ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 1 )
+      throw FormatError( "COND", temp1 ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result = NULL ;
+    Token * ans ;
+    while ( t != NULL && t->type != NIL ) {
+      // result = Evalexp( t->left, 1, localsymlist ) ;
+      // error
+      try {
+        ans = Evalexp( t->left, 1, localsymlist ) ;
+        result = ans ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" ) {
+          if ( t->right->type == NIL )
+            throw e ;
+        } // if
+        else
+          throw e ;
+      } // catch
+
+      
+      t = t->right ;
+    } // while
+
+    if ( result == NULL ) {
+      throw NoReturnError( temp ) ;
+    } // if
+    
+    return result ;
+
+  } // Begincond()
+
+  Token * Quote( Token * temp ) {
+    temp->left->iscomd = false ;
+    return temp->left ; 
+  } // Quote()
+
+  Token * Cons( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "cons" ) ;
+    
+    Token * retoken = NewToken( "." ) ;
+    TokenPtr ans[2] ;
+    Token * t = temp ;
+    for ( int i = 0 ; i < 2 ; i++ ) {
+      try {
+        ans[i] = Evalexp( t->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      t = t->right ;
+    } // for
+
+    retoken->left = ans[0] ;
+    retoken->right = ans[1] ;
+
+    return retoken ;  
+    
+    
+  } // Cons()
+
+  Token * List( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) == 0 )
+      return NewToken( "nil" ) ;
+    else if ( !Islist( temp ) ) {
+      throw NonListError() ;
+    } // else if
+    // not done
+    Token * retoken = NewToken( "." ) ;
+    Token * ret = retoken ;
+    Token * t = temp ;
+
+    while ( t->type != NIL ) {
+      try {
+        ret->left = Evalexp( t->left, 1, localsymlist ) ; 
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      if ( t->right->type != NIL )
+        ret->right = NewToken( "." ) ;
+      else 
+        ret->right = NewToken( "nil" ) ;
+    
+      ret = ret->right ;
+      t = t->right ;
+
+    } // while
+    
+    return retoken ;  
+  } // List()
+
+  Token * Car( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "car" ) ;
+      
+    Token * check ;  
+    try {
+      check = Evalexp( temp->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+    
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "car", check ) ;
+      
+    return check->left ;
+    
+  } // Car()
+
+  Token * Cdr( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "cdr" ) ;
+    
+    Token * check ;  
+    try {
+      check = Evalexp( temp->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+
+    
+    if ( Isatomtype( check->type ) )
+      throw ArgTypeError( "cdr", check ) ;
+      
+    return check->right ;
+    
+  } // Cdr()
+  
+  Token * Not( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( "not" ) ;
+    Token * check ;
+    try {
+      check = Evalexp( temp->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+    
+    if ( check->type == NIL )     
+      return NewToken( "#t" ) ;
+    else 
+      return NewToken( "nil" ) ;
+    
+  } // Not()
+  
+  Token * Greater( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      
+      
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( ">", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( ">", check2 ) ;
+
+      if ( Getnum( check1 ) <= Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Greater()
+
+  Token * Less( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "<", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "<", check2 ) ;
+
+      if ( Getnum( check1 ) >= Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Less()  
+
+  Token * Nogreater( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "<=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "<=", check2 ) ;
+
+      if ( Getnum( check1 ) > Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Nogreater()
+
+  Token * Noless( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( ">=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( ">=", check2 ) ;
+
+      if ( Getnum( check1 ) < Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Noless()
+  
+  Token * Equalnum( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+  
+      if ( check1->type != INT && check1->type != FLOAT )
+        throw ArgTypeError( "=", check1 ) ;
+      else if ( check2->type != INT && check2->type != FLOAT )
+        throw ArgTypeError( "=", check2 ) ;
+      if ( Getnum( check1 ) != Getnum( check2 ) )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Equalnum()
+
+  Token * Strappend( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "" ;
+    while ( temp->type != NIL && temp != NULL ) {
+      Token * nstr ;
+      try {
+        nstr = Evalexp( temp->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      if ( nstr->type != STRING )
+        throw ArgTypeError( "string-append", nstr ) ;
+
+      check = Mergestr( check, nstr->str ) ;
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strappend()
+
+  Token * Strgreat( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string>?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string>?", check2 ) ;
+      if ( check1->str.compare( check2->str ) <= 0 )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strgreat()
+
+  Token * Strless( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string<?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string<?", check2 ) ;
+      if ( check1->str.compare( check2->str ) >= 0 )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strless()
+
+  Token * Strequal( Token * temp, vector < Symbol > localsymlist ) {
+    string check = "#t" ;
+    while ( temp->right->type != NIL && temp->right != NULL ) {
+      Token * check1 ;
+      Token * check2 ;
+      try {
+        check1 = Evalexp( temp->left, 1, localsymlist ) ;
+        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+      
+        throw e ;
+      } // catch
+      
+      if ( check1->type != STRING )
+        throw ArgTypeError( "string=?", check1 ) ;
+      else if ( check2->type != STRING )
+        throw ArgTypeError( "string=?", check2 ) ;
+      if ( check1->str.compare( check2->str ) != 0 )
+        check = "nil" ;
+      
+      temp = temp->right ;
+    } // while
+
+    return NewToken( check ) ;
+
+  } // Strequal()
+
+  Token * Eqv( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "eqv?" ) ;
+    Token * check1 ;
+    Token * check2 ;
+    try {
+      check1 = Evalexp( temp->left, 1, localsymlist ) ;
+      check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+      
+    if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
+         check1->type != STRING && check2->type != STRING ) {
+      if ( check1->str.compare( check2->str ) == 0 )
+        return NewToken( "#t" ) ;
+      else 
+        return NewToken( "nil" ) ;
+    } // if
+    else {
+      if ( check1 == check2 )
+        return NewToken( "#t" ) ;
+      else 
+        return NewToken( "nil" ) ;
+    } // else
+
+    
+
+  } // Eqv()
+
+  bool Issame( Token * t1, Token * t2 ) {
+    if ( t1 == NULL && t2 == NULL )
+      return true ;
+    else if ( t1->str.compare( t2->str ) != 0 )
+      return false ;
+    else 
+      return Issame( t1->left, t2->left ) && Issame( t1->right, t2->right ) ;
+
+  } // Issame()
+
+  Token * Equal( Token * temp, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 2 )
+      throw ArgNumError( "equ?" ) ;
+    
+    Token * check1 ;
+    Token * check2 ;
+    try {
+      check1 = Evalexp( temp->left, 1, localsymlist ) ;
+      check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+      
+    if ( Issame( check1, check2 ) ) 
+      return NewToken( "#t" ) ;
+    else 
+      return NewToken( "nil" ) ;
+
+  } // Equal()
+  
+  Token * Or( Token * temp, vector < Symbol > localsymlist ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "Or" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+    while ( t != NULL && t->type != NIL ) {
+      try {
+        result = Evalexp( t->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" ) {
+          throw UnboundCondiError( e.mhead ) ;
+        } // if
+        else {
+          throw e ;
+        } // else
+      } // catch
+    
+      if ( result->type != NIL )
+        return result ;
+
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // Or()
+
+  Token * And( Token * temp, vector < Symbol > localsymlist ) {
+    int size = Getsize( temp ) ;
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( "And" ) ;
+    
+    Token * t = temp ;
+    bool check, done ;
+    Token * result ;
+
+    while ( t != NULL && t->type != NIL ) {
+      try {
+        result = Evalexp( t->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" ) {
+          throw UnboundCondiError( e.mhead ) ;
+        } // if
+        else {
+          throw e ;
+        } // else
+      } // catch
+    
+      
+      if ( result->type == NIL )
+        return result ;
+      t = t->right ;
+    } // while
+
+    return result ;
+
+  } // And()
+
+  Token * Primitivepredicates( Token * temp, string str, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) != 1 )
+      throw ArgNumError( str ) ;
+    Token * check ;
+    try {
+      check = Evalexp( temp->left, 1, localsymlist ) ;
+    } // try
+    catch ( Exception e ) {
+      if ( e.mname == "NoReturnError" )
+        throw UnboundParaError( e.mhead ) ;
+    
+      throw e ;
+    } // catch
+      
+    if ( str == "atom?" ) {
+      if ( check->type != DOT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // if
+    else if ( str == "pair?" ) {
+      if ( check->type == DOT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "list?" ) {
+      while ( check->right != NULL ) 
+        check = check->right ;    
+      if ( check->type == NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "null?" ) {
+      if ( check->type == NIL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "integer?" ) {
+      if ( check->type == INT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "real?" ) {
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "number?" ) {
+      if ( check->type == INT || check->type == FLOAT )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "string?" ) {
+      if ( check->type == STRING )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "boolean?" ) {
+      if ( check->type == NIL || check->type == T )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else if ( str == "symbol?" ) {
+      if ( check->type == SYMBOL )
+        return NewToken( "#t" ) ;
+      else return NewToken( "nil" ) ;
+    } // else if
+    else return NewToken( "nil" ) ;
+
+  } // Primitivepredicates()
+
+  Token * Arith( Token * temp, string str, vector < Symbol > localsymlist ) {
+    if ( Getsize( temp ) < 2 )
+      throw ArgNumError( str ) ;
+    stringstream ss;
+    bool isfloat = false ;
+    if ( str == "+" ) {
+      float num = 0 ;
+      num = Add( temp, isfloat, localsymlist ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // if
+    else if ( str == "-" ) {
+      float num = 0 ;
+      num = Sub( temp, isfloat, localsymlist ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "*" ) {
+      float num = 0 ;
+      num = Mul( temp, isfloat, localsymlist ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == "/" ) {
+      float num = 0 ;
+      num = Div( temp, isfloat, localsymlist ) ;
+      if ( !isfloat )
+        ss << ( int ) num ;
+      else
+        ss << Tofloat( num ) ;
+      return NewToken( ss.str() ) ;
+    } // else if
+    else if ( str == ">" ) {
+      return Greater( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "<" ) {
+      return Less( temp, localsymlist ) ;
+    } // else if
+    else if ( str == ">=" ) {
+      return Noless( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "<=" ) {
+      return Nogreater( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "=" ) {
+      return Equalnum( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "string-append" ) {
+      return Strappend( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "string>?" ) {
+      return Strgreat( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "string<?" ) {
+      return Strless( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "string=?" ) {
+      return Strequal( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "or" ) {
+      return Or( temp, localsymlist ) ;
+    } // else if
+    else if ( str == "and" ) {
+      return And( temp, localsymlist ) ;
+    } // else if
+    else return NewToken( "nil" ) ;
+
+  } // Arith()
+ 
+  float Add( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+    if ( temp->left != NULL ) {
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "+", check ) ;
+      return Getnum( check ) + Add( temp->right, isfloat, localsymlist ) ;
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else    
+  } // Add()
+
+  float Sub( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+    if ( temp->left != NULL ) {
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
+      
+      float num = Getnum( check ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      check = temp->right ;
+      while ( check != NULL && check->type != NIL ) {
+        Token * check2 ;
+        try {
+          check2 = Evalexp( check->left, 1, localsymlist ) ;
+        } // try
+        catch ( Exception e ) {
+          if ( e.mname == "NoReturnError" )
+            throw UnboundParaError( e.mhead ) ;
+      
+          throw e ;
+        } // catch
+        if ( check2->type == FLOAT )
+          isfloat = true ;
+        else if ( check2->type != INT && check2->type != FLOAT )
+          throw ArgTypeError( "-", check2 ) ;
+        num -= Getnum( check2 ) ;
+
+        check = check->right ;
+        
+      } // while
+
+      return num ;
+
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else    
+  } // Sub()
+
+  float Mul( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+    if ( temp->left != NULL ) {
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "*", check ) ;
+
+      return Getnum( check ) * Mul( temp->right, isfloat, localsymlist ) ;
+    } // if
+    else {
+      float z = 1 ;
+      return z ;
+    } // else   
+  } // Mul()
+
+  float Div( Token * temp, bool & isfloat, vector < Symbol > localsymlist ) {
+    if ( temp->left != NULL ) {
+      Token * check ;
+      try {
+        check = Evalexp( temp->left, 1, localsymlist ) ;
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          throw UnboundParaError( e.mhead ) ;
+    
+        throw e ;
+      } // catch
+      float num = Getnum( check ) ;
+      if ( check->type == FLOAT )
+        isfloat = true ;
+      check = temp->right ;
+      while ( check != NULL && check->type != NIL ) {
+        Token * check2 ;
+        try {
+          check2 = Evalexp( check->left, 1, localsymlist ) ;
+        } // try
+        catch ( Exception e ) {
+          if ( e.mname == "NoReturnError" )
+            throw UnboundParaError( e.mhead ) ;
+      
+          throw e ;
+        } // catch
+        if ( check2->type == FLOAT )
+          isfloat = true ;
+        else if ( check2->type != INT && check2->type != FLOAT )
+          throw ArgTypeError( "/", check2 ) ;
+
+        float number = Getnum( check2 ) ;
+        if ( number == 0 )
+          throw DivideZeroError() ;        
+
+        num /= number ;
+
+        check = check->right ;
+        
+      } // while
+
+      return num ;
+
+    } // if
+    else {
+      float z = 0 ;
+      return z ;
+    } // else      
+  } // Div()
+
+  string Mergestr( string str1, string str2 ) {
+    if ( str1.size() == 0 )
+      return str2 ;      
+    else if ( str2.size() == 0 )
+      return str1 ;      
+    else {
+      str1.erase( str1.size() - 1, 1 ) ;
+      str2.erase( 0, 1 ) ;
+      return str1 + str2 ;
+    } // else
+
+    
+  } // Mergestr()
+
+  bool Islist( Token * temp ) {
+    Token * check = temp ;
+    while ( check->right != NULL ) 
+      check = check->right ;    
+    if ( check->type == NIL ) {
+      // cout << "islist" ;
+      return true ;
+    } // if
+    else {
+      return false ;
+    } // else
+  } // Islist()
+
+  Printer mprinter ;
+
+  public:
+  
+  Token * Evalexp( Token * temp, int head, vector < Symbol > localsymlist ) {
+
+    if ( Isatomtype( temp->type ) ) {
+      string str = temp->str ;
+      
+      if ( temp->type == SYMBOL ) {
+        if ( Findsymbol( str, localsymlist ) == 1 ) {
+          Token * retoken = Symbols( temp, localsymlist ) ;
+          return retoken ; 
+
+        } // if
+        else if ( Isspfunc( str ) || Isinternalfunc( str ) || Findsymbol( str, localsymlist ) == 2 ) {
+          temp->iscomd = true ;
+          return temp ;
+        }  // else if
+        else 
+          throw UnboundError( str ) ;
+      } // if
+      else
+        return temp ;
+    } // if
+    else if ( temp->left != NULL ) {
+      if ( !Islist( temp ) ) {
+        throw NonListError() ;
+      } // if
+      
+      try {
+        if ( temp->left->str == "clean-environment" ) {
+          if ( head != 0 )
+            throw LevelError( "CLEAN-ENVIRONMENT" ) ;
+          // else if ( Getsize( temp->right ) != 0 )
+          msymbollist.clear() ;
+          return NewToken( "environment cleaned" ) ;  
+        } // if
+        else if ( temp->left->str == "define" ) {
+          if ( head != 0 )
+            throw LevelError( "DEFINE" ) ;
+          
+          return Define( temp, localsymlist ) ;    
+        } // else if
+        else if ( temp->left->str == "exit" ) {
+          if ( head != 0 )
+            throw LevelError( "EXIT" ) ;
+          return Exit( temp->right ) ;    
+        } // else if
+        else if ( temp->left->type == QUOTE || temp->left->str == "quote" )
+          return Quote( temp->right ) ;   
+        else if ( temp->left->str == "cons" )
+          return Cons( temp->right, localsymlist ) ;
+        else if ( temp->left->str == "list" )
+          return List( temp->right, localsymlist ) ;
+        else if ( temp->left->str == "car" )
+          return Car( temp->right, localsymlist ) ;  
+        else if ( temp->left->str == "cdr" )
+          return Cdr( temp->right, localsymlist ) ; 
+        else if ( temp->left->str == "not" )
+          return Not( temp->right, localsymlist ) ; 
+        else if ( Isprimitivepredicates( temp->left->str ) ) 
+          return Primitivepredicates( temp->right, temp->left->str, localsymlist ) ; 
+        else if ( IsArith( temp->left->str ) ) 
+          return Arith( temp->right, temp->left->str, localsymlist ) ; 
+        else if ( temp->left->str == "eqv?" ) {
+          return Eqv( temp->right, localsymlist ) ;
+        } // else if
+        else if ( temp->left->str == "equal?" ) {
+          return Equal( temp->right, localsymlist ) ;
+        } // else if
+        else if ( temp->left->str == "if" ) {
+          return If( temp, localsymlist ) ;
+        } // else if
+        else if ( temp->left->str == "cond" ) {
+          return Cond( temp, localsymlist ) ;
+        } // else if
+        else if ( temp->left->str == "begin" ) {
+          return Begin( temp->right, localsymlist ) ;
+        } // else if
+        else if ( temp->left->str == "lambda" ) {
+          if ( temp->left->right == NULL )
+            return Setlambda( temp, head, localsymlist ) ;
+          else
+            return Lambda( temp, head, localsymlist ) ;
+          // Token * re = NewToken( "lambda" ) ;
+          // temp->left->iscomd = true ;
+          // return temp ;
+        } // else if
+        else if ( temp->left->str == "let" ) {
+          return Let( temp, localsymlist ) ;
+        } // else if
+        else if ( temp->left->type == SYMBOL ) {
+
+          string str = temp->left->str ;
+          int mode = Findsymbol( str, localsymlist ) ;
+          Token * sym = Symbols( temp->left, localsymlist ) ;
+          
+          if ( mode != 0 ) {
+            if ( mode == 2 ) {
+
+              return Customfunc( temp, head, localsymlist ) ;
+            } // if
+            else if ( Findsymbol( sym->str, localsymlist ) == 2 ) {
+              Token * ntemp = NewToken( "." ) ;
+              ntemp->left = Symbols( temp->left, localsymlist ) ;
+              ntemp->right = temp->right ;
+              return Evalexp( ntemp, head, localsymlist ) ;
+            } // else if
+            else if ( ( Isspfunc( sym->str ) || Isinternalfunc( sym->str ) ) && sym->iscomd ) {
+              // cout <<"gogo" ;
+              Token * ntemp = NewToken( "." ) ;
+              ntemp->left = Symbols( temp->left, localsymlist ) ;
+              ntemp->right = temp->right ;
+              
+              return Evalexp( ntemp, head, localsymlist ) ;
+            } // else if
+            else if ( sym->left != NULL && sym->left->str == "lambda" ) {
+              Token * ntemp = NewToken( "." ) ;
+              ntemp->left = Symbols( temp->left, localsymlist ) ;
+              ntemp->right = temp->right ;
+              
+              return Evalexp( ntemp, head, localsymlist ) ;
+            } // else if
+            else {
+              throw NonFuncError( Symbols( temp->left, localsymlist ) ) ;
+            } // else
+          } // if
+          else {
+            string str = temp->left->str ;
+            throw UnboundError( str ) ;
+          } // else
+          
+          
+          return temp ;
+        } // else if
+        else if ( temp->left->type == DOT ) {
+          // if ( temp->left->left->str == "lambda" ) {
+          if ( 0 == 1 ) {
+            return Lambda( temp, head, localsymlist ) ;
+            /*
+            try {
+              return Lambda( temp, head ) ;
+            } // try
+            catch ( Exception e ) {
+              if ( e.mname == "NoReturnError" ) {
+
+                e.mname = "NoReturnErrorgogo" ;
+
+                throw e ;
+              } // if
+              
+              throw e ;
+            } // catch
+            */
+          } // if
+          else {
+            Token * check ;
+            try {
+              check = Evalexp( temp->left, head + 1, localsymlist ) ;
+            } // try 
+            catch ( Exception e ) {
+              if ( e.mname == "NoReturnError" ) {
+
+                e.mname = "NoReturnErrorgogo" ;
+
+                throw e ;
+              } // if
+              
+              throw e ;
+            } // catch
+            temp->left = check ;
+            if ( check->type == SYMBOL  ) {
+              if ( !check->iscomd )
+                throw NonFuncError( temp->left ) ;
+            } // if
+            else if ( check->left != NULL && check->left->str != "lambda" )
+              throw NonFuncError( temp->left ) ;
+
+            return Evalexp( temp, head, localsymlist ) ;
+          } // else
+
+        } // else if
+        else {
+          throw NonFuncError( temp->left ) ;
+        } // else
+      } // try
+      catch ( Exception e ) {
+        if ( e.mname == "NoReturnError" )
+          e.mhead = temp ;
+        throw e ;
+      } // catch        
+      
+    } // else if         
+    else 
+      return temp ;
+      
+      
+  } // Evalexp()
   
 };
 
@@ -1055,1971 +2773,15 @@ class Treemaker {
     
 };
 
-Scanner gScanner ;
-Printer gPrinter ;
-Treemaker gTreemaker ;
-
-class Evaler {
-  private:
-    
-  vector< Symbol > msymbollist ;
-    
-  Token * NewToken( string str ) {
-    Token * retoken = new Token ;
-    retoken->str = Setstr( str ) ;
-    retoken->type = Gettype( retoken->str ) ;
-    retoken->intnum = Decodeint( retoken->str ) ;
-    retoken->floatnum = Decodefloat( retoken->str ) ;
-    if ( retoken->type == FLOAT ) 
-      retoken->str = Setfloatstr( retoken->str ) ;
-    retoken->iscomd = false ;
-    retoken->left = NULL ;
-    retoken->right = NULL ;
-      
-    return retoken ;
-  } // NewToken()
-    
-  int Getsize( Token * temp ) {
-    if ( temp == NULL || temp->type == NIL )
-      return 0 ;
-    else
-      return 1 + Getsize( temp->right ) ;
-    
-  } // Getsize()
-  
-  int Findsymbol( string str, vector < Symbol > & localsymlist ) {
-    int i = localsymlist.size() - 1 ;
-    while ( i >= 0 ) {
-    	gCount++ ;
-      if ( localsymlist.at( i ).name == str ) {
-      	
-        if ( localsymlist.at( i ).args == NULL )
-          return 1 ;
-        else 
-          return 2 ;
-
-      } // if
-        
-      i-- ;  
-      
-    } // while
-    
-    i = msymbollist.size() - 1 ;
-    
-    while ( i >= 0 ) {
-    	gCount++ ;
-      if ( msymbollist.at( i ).name == str ) {
-        if ( msymbollist.at( i ).args == NULL )
-          return 1 ;
-        else 
-          return 2 ;
-
-      } // if
-        
-      i-- ;  
-      
-    } // while
-    
-    return 0 ;
-  } // Findsymbol()
-  
-  Token * Interfunc( Token * temp ) {
-    stringstream ss ;
-    ss << "#<procedure " << temp->str << ">" ;
-    return NewToken( ss.str() ) ;
-  } // Interfunc()
-  
-  Token * Exit( Token * temp ) {
-
-    if ( Getsize( temp ) != 0 )
-      throw ArgNumError( "exit" ) ;
-    else if ( Getsize( temp ) == 0 )
-      throw Callend() ;
-  
-    return NewToken( "exit" ) ;
-  } // Exit()
-
-  Token * Copytoken( Token * temp ) {
-    if ( temp != NULL ) {
-      Token * ntemp = NewToken( temp->str ) ;
-      ntemp->left = Copytoken( temp->left ) ;
-      ntemp->right = Copytoken( temp->right ) ;
-      return ntemp ;
-    } // if
-    else 
-      return NULL ;
-  } // Copytoken()
-  
-  Token * Symbols( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    
-    
-    int i = localsymlist.size() - 1 ;
-    bool find = false ;
-    while ( i >= 0 ) {
-      gCount++ ;
-      if ( localsymlist.at( i ).name == temp->str )  {
-        find = true ;
-        
-        Token * retoken = localsymlist.at( i ).info ;
-        return retoken ;
-      } // if
-      
-    
-      i-- ;  
-      
-    } // while
-    
-    i = msymbollist.size() - 1 ;
-    
-    while ( i >= 0 ) {
-      gCount++ ;
-      if ( msymbollist.at( i ).name == temp->str )  {
-        find = true ;
-        
-        Token * retoken = msymbollist.at( i ).info ;
-        return retoken ;
-      } // if
-      
-    
-      i-- ;  
-      
-    } // while
-    
-    if ( !find ) {
-    
-      throw UnboundError( temp->str ) ;
-    
-    } // if 
-    
-    return NULL ;
-  } // Symbols()
-
-  void Change( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( temp != NULL ) {
-      if ( temp->left != NULL && Findsymbol( temp->left->str, localsymlist ) == 1 ) {
-        temp->left = Copytoken( Symbols( temp->left, localsymlist ) ) ;
-      } // if
-
-      if ( temp->right != NULL && Findsymbol( temp->right->str, localsymlist ) == 1 ) {
-        temp->right = Copytoken( Symbols( temp->right, localsymlist ) ) ;
-      } // if    
-
-      Change( temp->left, localsymlist ) ;
-      Change( temp->right, localsymlist ) ;
-    } // if
-
-  }  // Change()
-
-  Token * Define( Token * temp1, vector < Symbol > & localsymlist ) {
-    Token * temp = temp1->right ;
-    
-    if ( temp->left != NULL && temp->left->type == DOT )
-      return Definefunc( temp1, localsymlist ) ;   
- 
-    if ( Getsize( temp ) != 2 )
-      throw FormatError( "DEFINE", temp1 ) ;
-
-  
-    
-    Symbol newsymbol ;
-    string name = temp->left->str ;
-    newsymbol.name = name ;
-    newsymbol.args = NULL ;
-    
-    
-    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
-      throw FormatError( "DEFINE", temp1 ) ;
-    } // if
-    
-    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
-      Token * check = Copytoken( temp->right->left ) ;
-      Change( check, localsymlist ) ;
-      newsymbol.info = check ;
-    } // if
-    else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
-      temp->right->left->left->iscomd = true ;
-      newsymbol.info = temp->right->left ;
-    } // else if
-    else { 
-      try {
-        newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          e.mname = "NoReturnErrorgogo" ;
-
-        throw e ;
-      } // catch
-    } // else 
-      
-
-    if ( Findsymbol( name, localsymlist ) == 0 )
-      msymbollist.push_back( newsymbol ) ;  
-    else {
-      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-        gCount++ ;
-        if ( msymbollist.at( i ).name == name ) {
-
-          msymbollist.at( i ).info = newsymbol.info ;
-          msymbollist.at( i ).args = NULL ;
-        } // if
-      } // for
-
-    } // else
-
-    printf( "%s defined\n", name.c_str() ) ;
-    return NULL ;
-  } // Define()
-
-  Token * Set( Token * temp1, vector < Symbol > & localsymlist ) {
-    Token * temp = temp1->right ;
-    
-    if ( temp->left != NULL && temp->left->type == DOT )
-      throw FormatError( "SET", temp1 ) ;  
- 
-    if ( Getsize( temp ) != 2 )
-      throw FormatError( "SET", temp1 ) ;
-    
-    Symbol newsymbol ;
-    string name = temp->left->str ;
-    newsymbol.name = name ;
-    newsymbol.args = NULL ;
-    
-    
-    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
-      throw FormatError( "SET", temp1 ) ;
-    } // if
-    
-    if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
-      Token * check = Copytoken( temp->right->left ) ;
-      Change( check, localsymlist ) ;
-      newsymbol.info = check ;
-    } // if
-    else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
-      temp->right->left->left->iscomd = true ;
-      newsymbol.info = temp->right->left ;
-    } // else if
-    else { 
-      try {
-        newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          e.mname = "NoReturnErrorgogo" ;
-
-        throw e ;
-      } // catch
-    } // else 
-      
-    bool seted = false ;
-    for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
-    	gCount++ ;
-      if ( localsymlist.at( i ).name == name ) {
-        // localsymlist.push_back( newsymbol ) ;
-        localsymlist.at( i ).info = newsymbol.info ;
-        localsymlist.at( i ).args = NULL ;
-        seted = true ;
-      } // if
-    } // for
-    
-    if ( !seted ) {
-      if ( Findsymbol( name, localsymlist ) == 0 )
-        msymbollist.push_back( newsymbol ) ;  
-      else {
-        for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-          gCount++ ;
-          if ( msymbollist.at( i ).name == name ) {
-
-            msymbollist.at( i ).info = newsymbol.info ;
-            msymbollist.at( i ).args = NULL ;
-          } // if
-        } // for
-
-      } // else
-    } // if
-
-
-    return newsymbol.info ;
-  } // Set()
-
-  Token * Definefunc( Token * temp1, vector < Symbol > & localsymlist ) {
-    Token * temp = temp1->right ;
-    
-    if ( Getsize( temp ) < 2 )
-      throw FormatError( "DEFINE", temp1 ) ;  
-    
-    Symbol newsymbol ;
-    string name = temp->left->left->str ;
-    newsymbol.name = name ;
-    newsymbol.args = temp->left->right ;
-    
-    if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->left->type != SYMBOL ) { 
-      throw FormatError( "DEFINE", temp1 ) ;
-    } // if
-    
-    newsymbol.info = temp->right ;
-
-    if ( Findsymbol( name, localsymlist ) == 0 )
-      msymbollist.push_back( newsymbol ) ;  
-    else {
-      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-        gCount++ ;
-        if ( msymbollist.at( i ).name == name ) {
-          msymbollist.at( i ).info = newsymbol.info ;
-          msymbollist.at( i ).args = newsymbol.args ;
-          
-        } // if
-      } // for
-
-    } // else
-
-    printf( "%s defined\n", name.c_str() ) ;
-    return NULL ;
-  } // Definefunc()
-  
-  Token * Customfunc( Token * temp, int head, vector < Symbol > & localsymlist ) {
-    int i = msymbollist.size() - 1 ;
-    string str = temp->left->str ;
-    bool find = false ;
-    Token * argname ;
-    Token * method ;
-    Token * args ;
-    Token * retoken ;
-    while ( i >= 0 && !find ) {
-    	gCount++ ;
-      if ( msymbollist.at( i ).name == str )  {
-      	gCount++ ;
-        argname = msymbollist.at( i ).args ;
-        method = msymbollist.at( i ).info ;
-        find = true ;
-      } // if
-      
-      i-- ;  
-    } // while
-    
-    args = temp->right ;
-    int argsnum = Getsize( argname ) ;
-    
-    if ( argsnum != Getsize( args ) )
-      throw ArgNumError( str ) ;
-      
-    vector < Symbol > templist ;  
-    while ( argname->type != NIL ) {
-      Symbol sym ;
-      sym.name = argname->left->str ;
-      sym.args = NULL ;
-      try {
-        sym.info = Evalexp( args->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( args->left ) ;
-        
-        throw e ;
-      } // catch
-      templist.push_back( sym ) ;
-      
-      argname = argname->right ;
-      args = args->right ;
-    } // while 
-    
-    Token * ans = NULL ;
-    retoken = NULL ;
-
-    while ( method->type != NIL ) {
-      try {
-        ans = Evalexp( method->left, head, templist ) ;
-        retoken = ans ;
-      } // try
-      catch ( Exception e ) {
-        
-        if ( e.mname == "NoReturnError" ) {
-          e.mhead = temp ;
-          if ( method->right->type == NIL ) {
-            // for ( int i = 0 ; i < argsnum ; i++ )
-            //   msymbollist.pop_back() ;
-            throw e ;
-          } // if
-        } // if
-        else {
-          // for ( int i = 0 ; i < argsnum ; i++ )
-          //   msymbollist.pop_back() ;
-          throw e ;
-        } // else
-      } // catch
-
-      method = method->right ;
-    } // while
-
-    if ( retoken == NULL )
-      throw NoReturnError( temp ) ;
-    return retoken ;
-  } // Customfunc()
-  
-  Token * Setlambda( Token * temp, int head, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp->right ) < 2 )
-      throw FormatError( "LAMBDA", temp ) ;
-
-
-    Token * argname = temp->right->left ;
-    Token * method = temp->right->right ;
-
-    if ( argname->type != DOT && argname->type != NIL )
-      throw FormatError( "LAMBDA", temp ) ;
-    
-    Token * t = argname ;
-    
-    while ( t != NULL && t->type != NIL ) {
-      if ( t->left->type != SYMBOL )
-        throw FormatError( "LAMBDA", temp ) ;
-      
-      t = t->right ;
-    } // while
-
-    Token * retoken = NewToken( "lambda" ) ;
-    retoken->left = argname ;
-    retoken->right = method ;
-    
-    retoken->iscomd = true ;
-    return retoken ;
-    
-    
-  } // Setlambda()
-  
-  Token * Lambda( Token * temp, int head, vector < Symbol > & localsymlist ) {
-
-    Token * argname = temp->left->left ;
-    Token * method = temp->left->right ;
-    Token * args = temp->right ;
-
-    int argsnum = Getsize( argname ) ;
-    
-    if ( argsnum != Getsize( args ) )
-      throw ArgNumError( "lambda" ) ;
-      
-    vector < Symbol > templist ;  
-    while ( argname->type != NIL ) {
-      Symbol sym ;
-      sym.name = argname->left->str ;
-      sym.args = NULL ;
-      try {
-        sym.info = Evalexp( args->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( args->left ) ;
-        throw e ;
-      } // catch
-      templist.push_back( sym ) ;
-      
-      argname = argname->right ;
-      args = args->right ;
-    } // while  
-    /*
-    for ( int i = 0 ; i < templist.size() ; i++ ) {
-      msymbollist.push_back( templist.at( i ) ) ;
-    } // for
-    */
-    Token * ans = NULL ;
-    Token * retoken ;
-
-    while ( method->type != NIL ) {
-      try {
-        ans = Evalexp( method->left, head, templist ) ;
-        retoken = ans ;
-      } // try
-      catch ( Exception e ) {
-
-        if ( e.mname == "NoReturnError" ) {
-          e.mhead = temp ;
-          if ( method->right->type == NIL ) {
-
-            throw e ;
-          } // if
-        } // if
-        else {
-
-          throw e ;
-        } // else
-      } // catch
-
-      method = method->right ;
-    } // while
-
-    return retoken ;
-  } // Lambda()
-  
-  Token * Let( Token * temp1, vector < Symbol > & localsymlist ) {
-    Token * temp = temp1->right ;
-    if ( Getsize( temp ) < 2 )
-      throw FormatError( "LET", temp1 ) ;
-    
-    Token * args = temp->left ;
-    int argsnum = Getsize( args ) ;
-    vector < Symbol > templist ;  
-    
-    while ( args->type != NIL ) {
-      if ( Getsize( args->left ) != 2 )
-        throw FormatError( "LET", temp1 ) ;
-      args = args->right ;
-    } // while  
-    
-    args = temp->left ;
-    while ( args->type != NIL ) {
-
-      Symbol sym ;
-      Token * argtemp = args->left ;
-      if ( argtemp->type != DOT )
-        throw FormatError( "LET", temp1 ) ;
-      string name = argtemp->left->str ; 
-      if ( Isinternalfunc( name ) || Isspfunc( name ) || argtemp->left->type != SYMBOL ) { 
-        throw FormatError( "LET", temp1 ) ;
-      } // if
-      
-      sym.name = name ;
-      sym.args = NULL ;
-      
-      try {
-        sym.info = Evalexp( argtemp->right->left, 0, localsymlist ) ;
-      } // try 
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          e.mname = "NoReturnErrorgogo" ;
-        throw e ;        
-      } // catch
-      templist.push_back( sym ) ;
-      
-      args = args->right ;
-    } // while  
-    
-
-    for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
-      templist.insert( templist.begin(), localsymlist.at( i ) ) ;
-    } // for
-
-    
-    Token * t = temp->right ;
-    Token * result = NULL;
-    Token * ans = NULL;
-    while ( t != NULL && t->type != NIL ) {
-      try {
-        ans = Evalexp( t->left, 1, templist ) ;
-        result = ans ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          if ( t->right->type == NIL ) {
-            e.mhead = temp1 ;
-
-            throw e ;
-          } // if
-        } // if
-        else {
-
-          throw e ;
-        } // else
-      } // catch
-      
-      t = t->right ;
-    } // while
-
-    return result ;
-
-  } // Let()
-
-  Token * If( Token * temp1, vector < Symbol > & localsymlist ) {
-    Token * temp = temp1->right ;
-    int size = Getsize( temp ) ;
-    if ( size != 2 && size != 3 )
-      throw ArgNumError( "if" ) ;
-    
-    Token * check ;
-    Token * result ;
-    
-    try {
-      check = Evalexp( temp->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-        // unboundtest
-      throw e ;
-    } // catch
-
-
-
-    if ( check->type != NIL ) {
-      result = Evalexp( temp->right->left, 1, localsymlist ) ;
-    } // if
-    else {
-      if ( size == 2 )
-        throw NoReturnError( temp1 ) ;
-      else {
-        result = Evalexp( temp->right->right->left, 1, localsymlist ) ;
-      } // else
-
-    } // else
-
-    return result ;
-
-  } // If()
-
-  Token * Decide( Token * temp, bool last, bool & done, Token * temp1, vector < Symbol > & localsymlist ) {
-
-    if ( Getsize( temp ) < 1 )
-      throw FormatError( "COND", temp1 ) ;
-    else if ( Isatomtype( temp->type ) ) {
-      throw FormatError( "COND", temp1 ) ;
-    } // else if
-    else if ( ( last && temp->left->str == "else" ) ) {
-      done = true ;
-      return Begincond( temp->right, temp1, localsymlist ) ;
-    } // if
-
-    Token * check ;
-    Token * result ;
-
-    try {
-      check = Evalexp( temp->left, 1, localsymlist );
-    } // try 
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-        // unboundtest
-      throw e ;
-    } // catch
-
-    if ( check->type != NIL ) {
-      done = true ;
-      return Begincond( temp->right, temp1, localsymlist ) ;
-    } // if
-    else {
-      done = false ;
-      return NewToken( "nil" ) ;
-    } // else
-
-  } // Decide()
-
-  Token * Cond( Token * temp1, vector < Symbol > & localsymlist ) {
-    Token * temp = temp1->right ;
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 1 )
-      throw FormatError( "COND", temp1 ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-
-    while ( t->type != NIL ) {
-      if ( Isatomtype( t->left->type ) ) {
-        throw FormatError( "COND", temp1 ) ;
-      } // if
-      else if ( Getsize( t->left ) < 2 ) {
-        throw FormatError( "COND", temp1 ) ;
-      } // else if
-
-      t = t->right ;
-    } // while
-
-    t = temp ;
-
-    while ( t->type != NIL ) {
-      if ( t->right->type == NIL ) {
-
-        result = Decide( t->left, true, done, temp1, localsymlist ) ;
-
-      } // if
-      else {
-        result = Decide( t->left, false, done, temp1, localsymlist ) ;
-      } // else
-
-      if ( done ) {
-        return result ;
-      } // if
-
-      t = t->right ;
-    } // while
-
-    throw NoReturnError( temp1 ) ;
-
-  } // Cond()
-  
-  Token * Begin( Token * temp, vector < Symbol > & localsymlist ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 1 )
-      throw ArgNumError( "begin" ) ;
-    
-    Token * t = temp ;
-    bool done = true ;
-    Token * result = NULL ;
-    Token * ans ;
-    while ( t != NULL && t->type != NIL ) {
-      done = true ;
-      // error ;
-      try {
-        ans = Evalexp( t->left, 1, localsymlist ) ;
-        result = ans ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          if ( t->right->type == NIL ) {
-            // e.mhead = temp1 ;
-            throw e ;
-          } // if
-        } // if
-        else 
-          throw e ;
-
-      } // catch
-
-
-      t = t->right ;
-    } // while
-    
-    if ( result == NULL ) {
-      throw NoReturnError( temp ) ;
-    } // if
-    
-    return result ;
-
-  } // Begin()
-
-  Token * Begincond( Token * temp, Token * temp1, vector < Symbol > & localsymlist ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 1 )
-      throw FormatError( "COND", temp1 ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result = NULL ;
-    Token * ans ;
-    while ( t != NULL && t->type != NIL ) {
-      // result = Evalexp( t->left, 1, localsymlist ) ;
-      // error
-      try {
-        ans = Evalexp( t->left, 1, localsymlist ) ;
-        result = ans ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          if ( t->right->type == NIL )
-            throw e ;
-        } // if
-        else
-          throw e ;
-      } // catch
-
-      
-      t = t->right ;
-    } // while
-
-    if ( result == NULL ) {
-      throw NoReturnError( temp ) ;
-    } // if
-    
-    return result ;
-
-  } // Begincond()
-
-  Token * Quote( Token * temp ) {
-    temp->left->iscomd = false ;
-    return temp->left ; 
-  } // Quote()
-
-  Token * Cons( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "cons" ) ;
-    
-    Token * retoken = NewToken( "." ) ;
-    TokenPtr ans[2] ;
-    Token * t = temp ;
-    for ( int i = 0 ; i < 2 ; i++ ) {
-      try {
-        ans[i] = Evalexp( t->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      t = t->right ;
-    } // for
-
-    retoken->left = ans[0] ;
-    retoken->right = ans[1] ;
-
-    return retoken ;  
-    
-    
-  } // Cons()
-
-  Token * List( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) == 0 )
-      return NewToken( "nil" ) ;
-    else if ( !Islist( temp ) ) {
-      throw NonListError() ;
-    } // else if
-    // not done
-    Token * retoken = NewToken( "." ) ;
-    Token * ret = retoken ;
-    Token * t = temp ;
-
-    while ( t->type != NIL ) {
-      try {
-        ret->left = Evalexp( t->left, 1, localsymlist ) ; 
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      if ( t->right->type != NIL )
-        ret->right = NewToken( "." ) ;
-      else 
-        ret->right = NewToken( "nil" ) ;
-    
-      ret = ret->right ;
-      t = t->right ;
-
-    } // while
-    
-    return retoken ;  
-  } // List()
-
-  Token * Car( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "car" ) ;
-      
-    Token * check ;  
-    try {
-      check = Evalexp( temp->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-    
-      throw e ;
-    } // catch
-    
-    if ( Isatomtype( check->type ) )
-      throw ArgTypeError( "car", check ) ;
-      
-    return check->left ;
-    
-  } // Car()
-
-  Token * Cdr( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "cdr" ) ;
-    
-    Token * check ;  
-    try {
-      check = Evalexp( temp->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-    
-      throw e ;
-    } // catch
-
-    
-    if ( Isatomtype( check->type ) )
-      throw ArgTypeError( "cdr", check ) ;
-      
-    return check->right ;
-    
-  } // Cdr()
-  
-  Token * Not( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( "not" ) ;
-    Token * check ;
-    try {
-      check = Evalexp( temp->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-    
-      throw e ;
-    } // catch
-    
-    if ( check->type == NIL )     
-      return NewToken( "#t" ) ;
-    else 
-      return NewToken( "nil" ) ;
-    
-  } // Not()
-  
-  Token * Greater( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      
-      
-      if ( check1->type != INT && check1->type != FLOAT )
-        throw ArgTypeError( ">", check1 ) ;
-      else if ( check2->type != INT && check2->type != FLOAT )
-        throw ArgTypeError( ">", check2 ) ;
-
-      if ( Getnum( check1 ) <= Getnum( check2 ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Greater()
-
-  Token * Less( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      if ( check1->type != INT && check1->type != FLOAT )
-        throw ArgTypeError( "<", check1 ) ;
-      else if ( check2->type != INT && check2->type != FLOAT )
-        throw ArgTypeError( "<", check2 ) ;
-
-      if ( Getnum( check1 ) >= Getnum( check2 ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Less()  
-
-  Token * Nogreater( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      if ( check1->type != INT && check1->type != FLOAT )
-        throw ArgTypeError( "<=", check1 ) ;
-      else if ( check2->type != INT && check2->type != FLOAT )
-        throw ArgTypeError( "<=", check2 ) ;
-
-      if ( Getnum( check1 ) > Getnum( check2 ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Nogreater()
-
-  Token * Noless( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      if ( check1->type != INT && check1->type != FLOAT )
-        throw ArgTypeError( ">=", check1 ) ;
-      else if ( check2->type != INT && check2->type != FLOAT )
-        throw ArgTypeError( ">=", check2 ) ;
-
-      if ( Getnum( check1 ) < Getnum( check2 ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Noless()
-  
-  Token * Equalnum( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-  
-      if ( check1->type != INT && check1->type != FLOAT )
-        throw ArgTypeError( "=", check1 ) ;
-      else if ( check2->type != INT && check2->type != FLOAT )
-        throw ArgTypeError( "=", check2 ) ;
-      if ( Getnum( check1 ) != Getnum( check2 ) )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Equalnum()
-
-  Token * Strappend( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "" ;
-    while ( temp->type != NIL && temp != NULL ) {
-      Token * nstr ;
-      try {
-        nstr = Evalexp( temp->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      if ( nstr->type != STRING )
-        throw ArgTypeError( "string-append", nstr ) ;
-
-      check = Mergestr( check, nstr->str ) ;
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strappend()
-
-  Token * Strgreat( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      if ( check1->type != STRING )
-        throw ArgTypeError( "string>?", check1 ) ;
-      else if ( check2->type != STRING )
-        throw ArgTypeError( "string>?", check2 ) ;
-      if ( check1->str.compare( check2->str ) <= 0 )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strgreat()
-
-  Token * Strless( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      if ( check1->type != STRING )
-        throw ArgTypeError( "string<?", check1 ) ;
-      else if ( check2->type != STRING )
-        throw ArgTypeError( "string<?", check2 ) ;
-      if ( check1->str.compare( check2->str ) >= 0 )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strless()
-
-  Token * Strequal( Token * temp, vector < Symbol > & localsymlist ) {
-    string check = "#t" ;
-    while ( temp->right->type != NIL && temp->right != NULL ) {
-      Token * check1 ;
-      Token * check2 ;
-      try {
-        check1 = Evalexp( temp->left, 1, localsymlist ) ;
-        check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-      
-        throw e ;
-      } // catch
-      
-      if ( check1->type != STRING )
-        throw ArgTypeError( "string=?", check1 ) ;
-      else if ( check2->type != STRING )
-        throw ArgTypeError( "string=?", check2 ) ;
-      if ( check1->str.compare( check2->str ) != 0 )
-        check = "nil" ;
-      
-      temp = temp->right ;
-    } // while
-
-    return NewToken( check ) ;
-
-  } // Strequal()
-
-  Token * Eqv( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "eqv?" ) ;
-    Token * check1 ;
-    Token * check2 ;
-    try {
-      check1 = Evalexp( temp->left, 1, localsymlist ) ;
-      check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-    
-      throw e ;
-    } // catch
-      
-    if ( Isatomtype( check1->type ) && Isatomtype( check2->type ) && 
-         check1->type != STRING && check2->type != STRING ) {
-      if ( check1->str.compare( check2->str ) == 0 )
-        return NewToken( "#t" ) ;
-      else 
-        return NewToken( "nil" ) ;
-    } // if
-    else {
-      if ( check1 == check2 )
-        return NewToken( "#t" ) ;
-      else 
-        return NewToken( "nil" ) ;
-    } // else
-
-    
-
-  } // Eqv()
-
-  bool Issame( Token * t1, Token * t2 ) {
-    if ( t1 == NULL && t2 == NULL )
-      return true ;
-    else if ( t1->str.compare( t2->str ) != 0 )
-      return false ;
-    else 
-      return Issame( t1->left, t2->left ) && Issame( t1->right, t2->right ) ;
-
-  } // Issame()
-
-  Token * Equal( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 2 )
-      throw ArgNumError( "equ?" ) ;
-    
-    Token * check1 ;
-    Token * check2 ;
-    try {
-      check1 = Evalexp( temp->left, 1, localsymlist ) ;
-      check2 = Evalexp( temp->right->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-    
-      throw e ;
-    } // catch
-      
-    if ( Issame( check1, check2 ) ) 
-      return NewToken( "#t" ) ;
-    else 
-      return NewToken( "nil" ) ;
-
-  } // Equal()
-  
-  Token * Or( Token * temp, vector < Symbol > & localsymlist ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "Or" ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-    while ( t != NULL && t->type != NIL ) {
-      try {
-        result = Evalexp( t->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          throw UnboundCondiError( e.mhead ) ;
-        } // if
-        else {
-          throw e ;
-        } // else
-      } // catch
-    
-      if ( result->type != NIL )
-        return result ;
-
-      t = t->right ;
-    } // while
-
-    return result ;
-
-  } // Or()
-
-  Token * And( Token * temp, vector < Symbol > & localsymlist ) {
-    int size = Getsize( temp ) ;
-    if ( Getsize( temp ) < 2 )
-      throw ArgNumError( "And" ) ;
-    
-    Token * t = temp ;
-    bool check, done ;
-    Token * result ;
-
-    while ( t != NULL && t->type != NIL ) {
-      try {
-        result = Evalexp( t->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" ) {
-          throw UnboundCondiError( e.mhead ) ;
-        } // if
-        else {
-          throw e ;
-        } // else
-      } // catch
-    
-      
-      if ( result->type == NIL )
-        return result ;
-      t = t->right ;
-    } // while
-
-    return result ;
-
-  } // And()
-
-  Token * Read( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    if ( Getsize( temp->right ) > 0 ) {
-      throw ArgNumError( "Read" ) ;
-    } // if
-    
-    map< int, Token > origintree ;
-    vector < Token > tokenlist ;
-    gLine = 1 ;  
-    while ( Iswhitespace( gScanner.Getch() ) && gScanner.Getch() != '\n' && !gEnd )
-      gScanner.Getchar() ; 
-        
-    gScanner.ReadSexp( tokenlist ) ;
-    gTreemaker.Buildtree( tokenlist, origintree ) ; 
-    Token * tokentree = SetTree( 1, origintree ) ;
-    // Token * tokentree = NewToken( "nil" ) ;
-    return tokentree ;
-
-  } // Read()
-  
-  Token * Write( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    if ( Getsize( temp->right ) != 1 ) {
-      throw ArgNumError( "write" ) ;
-    } // if
-    
-    Token * check = Evalexp( temp->right->left, 1, localsymlist ) ;
-    
-    gPrinter.Printtree( check ) ;
-    
-    return check ;
-
-  } // Write()
-  
-  Token * Displaystr( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    if ( Getsize( temp->right ) != 1 ) {
-      throw ArgNumError( "Display-String" ) ;
-    } // if
-    
-    Token * check = Evalexp( temp->right->left, 1, localsymlist ) ;
-    if ( check->type != STRING )
-      throw ArgNumError( "Display-String-type" ) ;
-    
-    string str = check->str ;
-    
-    str.erase( 0, 1 ) ;
-    str.erase( str.size() - 1, 1 ) ;
-    
-    Token * ans = NewToken( str ) ;
-    
-    gPrinter.Printtree( ans ) ;
-    
-    return ans ;
-
-  } // Displaystr()
-
-  Token * Newline( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp->right ) != 0 )
-      throw ArgNumError( "newline" ) ;
-    
-    printf( "\n" ) ;
-    
-    return NewToken( "nil" ) ;
-  } // Newline()
-  
-  Token * Symtostr( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    if ( Getsize( temp->right ) != 1 ) {
-      throw ArgNumError( "symbol->String" ) ;
-    } // if
-    
-    Token * check = Evalexp( temp->right->left, 1, localsymlist ) ;
-    if ( check->type != SYMBOL )
-      throw ArgNumError( "Symbol-String-type" ) ;
-    
-    string str = check->str ;
-    
-    str = "\"" + str ;
-    str = str + "\"" ;
-    
-    Token * ans = NewToken( str ) ;
-    
-    return ans ;
-
-  } // Symtostr()
-
-  Token * Numtostr( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    if ( Getsize( temp->right ) != 1 ) {
-      throw ArgNumError( "number->String" ) ;
-    } // if
-    
-    Token * check = Evalexp( temp->right->left, 1, localsymlist ) ;
-    if ( check->type != INT && check->type != FLOAT )
-      throw ArgNumError( "Number-String-type" ) ;
-    
-    string str = check->str ;
-    
-    str = "\"" + str ;
-    str = str + "\"" ;
-    
-    Token * ans = NewToken( str ) ;
-    
-    return ans ;
-
-  } // Numtostr()
-
-  Token * Eval( Token * temp, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp->right ) != 1 )
-      throw ArgNumError( "eval" ) ;
-    
-    Token * exp = Evalexp( temp->right->left, 1, localsymlist ) ;
-    
-    return Evalexp( exp, 0, localsymlist ) ;
-  } // Eval()
-
-  Token * Primitivepredicates( Token * temp, string str, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) != 1 )
-      throw ArgNumError( str ) ;
-    Token * check ;
-    try {
-      check = Evalexp( temp->left, 1, localsymlist ) ;
-    } // try
-    catch ( Exception e ) {
-      if ( e.mname == "NoReturnError" )
-        throw UnboundParaError( e.mhead ) ;
-    
-      throw e ;
-    } // catch
-      
-    if ( str == "atom?" ) {
-      if ( check->type != DOT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // if
-    else if ( str == "pair?" ) {
-      if ( check->type == DOT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "list?" ) {
-      while ( check->right != NULL ) 
-        check = check->right ;    
-      if ( check->type == NIL )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "null?" ) {
-      if ( check->type == NIL )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "integer?" ) {
-      if ( check->type == INT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "real?" ) {
-      if ( check->type == INT || check->type == FLOAT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "number?" ) {
-      if ( check->type == INT || check->type == FLOAT )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "string?" ) {
-      if ( check->type == STRING )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "boolean?" ) {
-      if ( check->type == NIL || check->type == T )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else if ( str == "symbol?" ) {
-      if ( check->type == SYMBOL )
-        return NewToken( "#t" ) ;
-      else return NewToken( "nil" ) ;
-    } // else if
-    else return NewToken( "nil" ) ;
-
-  } // Primitivepredicates()
-
-  Token * Arith( Token * temp, string str, vector < Symbol > & localsymlist ) {
-    if ( Getsize( temp ) < 2 )
-      throw ArgNumError( str ) ;
-    stringstream ss;
-    bool isfloat = false ;
-    if ( str == "+" ) {
-      float num = 0 ;
-      num = Add( temp, isfloat, localsymlist ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // if
-    else if ( str == "-" ) {
-      float num = 0 ;
-      num = Sub( temp, isfloat, localsymlist ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // else if
-    else if ( str == "*" ) {
-      float num = 0 ;
-      num = Mul( temp, isfloat, localsymlist ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // else if
-    else if ( str == "/" ) {
-      float num = 0 ;
-      num = Div( temp, isfloat, localsymlist ) ;
-      if ( !isfloat )
-        ss << ( int ) num ;
-      else
-        ss << Tofloat( num ) ;
-      return NewToken( ss.str() ) ;
-    } // else if
-    else if ( str == ">" ) {
-      return Greater( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "<" ) {
-      return Less( temp, localsymlist ) ;
-    } // else if
-    else if ( str == ">=" ) {
-      return Noless( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "<=" ) {
-      return Nogreater( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "=" ) {
-      return Equalnum( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "string-append" ) {
-      return Strappend( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "string>?" ) {
-      return Strgreat( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "string<?" ) {
-      return Strless( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "string=?" ) {
-      return Strequal( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "or" ) {
-      return Or( temp, localsymlist ) ;
-    } // else if
-    else if ( str == "and" ) {
-      return And( temp, localsymlist ) ;
-    } // else if
-    else return NewToken( "nil" ) ;
-
-  } // Arith()
- 
-  float Add( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
-    if ( temp->left != NULL ) {
-      Token * check ;
-      try {
-        check = Evalexp( temp->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-    
-        throw e ;
-      } // catch
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      else if ( check->type != INT && check->type != FLOAT )
-        throw ArgTypeError( "+", check ) ;
-      return Getnum( check ) + Add( temp->right, isfloat, localsymlist ) ;
-    } // if
-    else {
-      float z = 0 ;
-      return z ;
-    } // else    
-  } // Add()
-
-  float Sub( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
-    if ( temp->left != NULL ) {
-      Token * check ;
-      try {
-        check = Evalexp( temp->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-    
-        throw e ;
-      } // catch
-      
-      float num = Getnum( check ) ;
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      check = temp->right ;
-      while ( check != NULL && check->type != NIL ) {
-        Token * check2 ;
-        try {
-          check2 = Evalexp( check->left, 1, localsymlist ) ;
-        } // try
-        catch ( Exception e ) {
-          if ( e.mname == "NoReturnError" )
-            throw UnboundParaError( e.mhead ) ;
-      
-          throw e ;
-        } // catch
-        if ( check2->type == FLOAT )
-          isfloat = true ;
-        else if ( check2->type != INT && check2->type != FLOAT )
-          throw ArgTypeError( "-", check2 ) ;
-        num -= Getnum( check2 ) ;
-
-        check = check->right ;
-        
-      } // while
-
-      return num ;
-
-    } // if
-    else {
-      float z = 0 ;
-      return z ;
-    } // else    
-  } // Sub()
-
-  float Mul( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
-    if ( temp->left != NULL ) {
-      Token * check ;
-      try {
-        check = Evalexp( temp->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-    
-        throw e ;
-      } // catch
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      else if ( check->type != INT && check->type != FLOAT )
-        throw ArgTypeError( "*", check ) ;
-
-      return Getnum( check ) * Mul( temp->right, isfloat, localsymlist ) ;
-    } // if
-    else {
-      float z = 1 ;
-      return z ;
-    } // else   
-  } // Mul()
-
-  float Div( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
-    if ( temp->left != NULL ) {
-      Token * check ;
-      try {
-        check = Evalexp( temp->left, 1, localsymlist ) ;
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          throw UnboundParaError( e.mhead ) ;
-    
-        throw e ;
-      } // catch
-      float num = Getnum( check ) ;
-      if ( check->type == FLOAT )
-        isfloat = true ;
-      check = temp->right ;
-      while ( check != NULL && check->type != NIL ) {
-        Token * check2 ;
-        try {
-          check2 = Evalexp( check->left, 1, localsymlist ) ;
-        } // try
-        catch ( Exception e ) {
-          if ( e.mname == "NoReturnError" )
-            throw UnboundParaError( e.mhead ) ;
-      
-          throw e ;
-        } // catch
-        if ( check2->type == FLOAT )
-          isfloat = true ;
-        else if ( check2->type != INT && check2->type != FLOAT )
-          throw ArgTypeError( "/", check2 ) ;
-
-        float number = Getnum( check2 ) ;
-        if ( number == 0 )
-          throw DivideZeroError() ;        
-
-        num /= number ;
-
-        check = check->right ;
-        
-      } // while
-
-      return num ;
-
-    } // if
-    else {
-      float z = 0 ;
-      return z ;
-    } // else      
-  } // Div()
-
-  string Mergestr( string str1, string str2 ) {
-    if ( str1.size() == 0 )
-      return str2 ;      
-    else if ( str2.size() == 0 )
-      return str1 ;      
-    else {
-      str1.erase( str1.size() - 1, 1 ) ;
-      str2.erase( 0, 1 ) ;
-      return str1 + str2 ;
-    } // else
-
-    
-  } // Mergestr()
-
-  bool Islist( Token * temp ) {
-    Token * check = temp ;
-    while ( check->right != NULL ) 
-      check = check->right ; 
-
-    if ( check->type == NIL ) {
-      // cout << "islist" ;
-      return true ;
-    } // if
-    else {
-      return false ;
-    } // else
-  } // Islist()
-
-  public:
-  
-  Token * Evalexp( Token * temp, int head, vector < Symbol > & localsymlist ) {
-    // cout << msymbollist.size() << " " << localsymlist.size() << endl;
-
-    if ( Isatomtype( temp->type ) ) {
-      string str = temp->str ;
-      
-      if ( temp->type == SYMBOL ) {
-        if ( Findsymbol( str, localsymlist ) == 1 ) {
-          Token * retoken = Symbols( temp, localsymlist ) ;
-          return retoken ; 
-
-        } // if
-        else if ( Isspfunc( str ) || Isinternalfunc( str ) || Findsymbol( str, localsymlist ) == 2 ) {
-          temp->iscomd = true ;
-          return temp ;
-        }  // else if
-        else 
-          throw UnboundError( str ) ;
-      } // if
-      else
-        return temp ;
-    } // if
-    else if ( temp->left != NULL ) {
-      if ( !Islist( temp ) ) {
-        cout << temp->str ;
-        throw NonListError() ;
-      } // if
-      
-      try {
-        if ( temp->left->str == "clean-environment" ) {
-          if ( head != 0 )
-            throw LevelError( "CLEAN-ENVIRONMENT" ) ;
-          // else if ( Getsize( temp->right ) != 0 )
-          msymbollist.clear() ;
-          return NewToken( "environment cleaned" ) ;  
-        } // if
-        else if ( temp->left->str == "define" ) {
-          if ( head != 0 )
-            throw LevelError( "DEFINE" ) ;
-          
-          return Define( temp, localsymlist ) ;    
-        } // else if
-        else if ( temp->left->str == "set!" ) {
-          return Set( temp, localsymlist ) ;    
-        } // else if
-        else if ( temp->left->str == "exit" ) {
-          if ( head != 0 )
-            throw LevelError( "EXIT" ) ;
-          return Exit( temp->right ) ;    
-        } // else if
-        else if ( temp->left->type == QUOTE || temp->left->str == "quote" )
-          return Quote( temp->right ) ;   
-        else if ( temp->left->str == "cons" )
-          return Cons( temp->right, localsymlist ) ;
-        else if ( temp->left->str == "list" )
-          return List( temp->right, localsymlist ) ;
-        else if ( temp->left->str == "car" )
-          return Car( temp->right, localsymlist ) ;  
-        else if ( temp->left->str == "cdr" )
-          return Cdr( temp->right, localsymlist ) ; 
-        else if ( temp->left->str == "not" )
-          return Not( temp->right, localsymlist ) ; 
-        else if ( Isprimitivepredicates( temp->left->str ) ) 
-          return Primitivepredicates( temp->right, temp->left->str, localsymlist ) ; 
-        else if ( IsArith( temp->left->str ) ) 
-          return Arith( temp->right, temp->left->str, localsymlist ) ; 
-        else if ( temp->left->str == "eqv?" ) {
-          return Eqv( temp->right, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "equal?" ) {
-          return Equal( temp->right, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "if" ) {
-          return If( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "cond" ) {
-          return Cond( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "begin" ) {
-          return Begin( temp->right, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "lambda" ) {
-          if ( temp->left->right == NULL )
-            return Setlambda( temp, head, localsymlist ) ;
-          else
-            return Lambda( temp, head, localsymlist ) ;
-          // Token * re = NewToken( "lambda" ) ;
-          // temp->left->iscomd = true ;
-          // return temp ;
-        } // else if
-        else if ( temp->left->str == "let" ) {
-          return Let( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "eval" ) {
-          return Eval( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "read" ) {
-          return Read( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "write" ) {
-          return Write( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "display-string" ) {
-          return Displaystr( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "newline" ) {
-          return Newline( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "symbol->string" ) {
-          return Symtostr( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->str == "number->string" ) {
-          return Numtostr( temp, localsymlist ) ;
-        } // else if
-        else if ( temp->left->type == SYMBOL ) {
-
-          string str = temp->left->str ;
-          int mode = Findsymbol( str, localsymlist ) ;
-          Token * sym = Symbols( temp->left, localsymlist ) ;
-          
-          if ( mode != 0 ) {
-            if ( mode == 2 ) {
-
-              return Customfunc( temp, head, localsymlist ) ;
-            } // if
-            else if ( Findsymbol( sym->str, localsymlist ) == 2 ) {
-              Token * ntemp = NewToken( "." ) ;
-              ntemp->left = Symbols( temp->left, localsymlist ) ;
-              ntemp->right = temp->right ;
-              return Evalexp( ntemp, head, localsymlist ) ;
-            } // else if
-            else if ( ( Isspfunc( sym->str ) || Isinternalfunc( sym->str ) ) && sym->iscomd ) {
-              // cout <<"gogo" ;
-              Token * ntemp = NewToken( "." ) ;
-              ntemp->left = Symbols( temp->left, localsymlist ) ;
-              ntemp->right = temp->right ;
-              
-              return Evalexp( ntemp, head, localsymlist ) ;
-            } // else if
-            else if ( sym->left != NULL && sym->left->str == "lambda" ) {
-              Token * ntemp = NewToken( "." ) ;
-              ntemp->left = Symbols( temp->left, localsymlist ) ;
-              ntemp->right = temp->right ;
-              
-              return Evalexp( ntemp, head, localsymlist ) ;
-            } // else if
-            else {
-              throw NonFuncError( Symbols( temp->left, localsymlist ) ) ;
-            } // else
-          } // if
-          else {
-            string str = temp->left->str ;
-            throw UnboundError( str ) ;
-          } // else
-          
-          
-          return temp ;
-        } // else if
-        else if ( temp->left->type == DOT ) {
-          // if ( temp->left->left->str == "lambda" ) {
-          if ( 0 == 1 ) {
-            return Lambda( temp, head, localsymlist ) ;
-
-          } // if
-          else {
-            Token * check ;
-            try {
-              check = Evalexp( temp->left, head + 1, localsymlist ) ;
-            } // try 
-            catch ( Exception e ) {
-              if ( e.mname == "NoReturnError" ) {
-
-                e.mname = "NoReturnErrorgogo" ;
-
-                throw e ;
-              } // if
-              
-              throw e ;
-            } // catch
-            temp->left = check ;
-            if ( check->type == SYMBOL  ) {
-              if ( !check->iscomd )
-                throw NonFuncError( temp->left ) ;
-            } // if
-            else if ( check->left != NULL && check->left->str != "lambda" )
-              throw NonFuncError( temp->left ) ;
-
-            return Evalexp( temp, head, localsymlist ) ;
-          } // else
-
-        } // else if
-        else {
-          throw NonFuncError( temp->left ) ;
-        } // else
-      } // try
-      catch ( Exception e ) {
-        if ( e.mname == "NoReturnError" )
-          e.mhead = temp ;
-        throw e ;
-      } // catch        
-      
-    } // else if         
-    else 
-      return temp ;
-      
-      
-  } // Evalexp()
-  
-};
-
 class Interpreter{
   public:
    
   
   Interpreter() {
     // mch = '\0' ;
-    // gPrinter = Printer() ;
-    // gScanner = Scanner() ;
-    // gTreemaker = Treemaker() ;
+    mprinter = Printer() ;
+    mscanner = Scanner() ;
+    mtreemaker = Treemaker() ;
   } // Interpreter() 
   
   void Gettokenlist() {
@@ -3039,17 +2801,17 @@ class Interpreter{
       
       try {
         gLine = 1 ;  
-        while ( Iswhitespace( gScanner.Getch() ) && gScanner.Getch() != '\n' && !gEnd )
-          gScanner.Getchar() ; 
+        while ( Iswhitespace( mscanner.Getch() ) && mscanner.Getch() != '\n' && !gEnd )
+          mscanner.Getchar() ; 
         
-        gScanner.ReadSexp(  mtokenlist ) ;
+        mscanner.ReadSexp(  mtokenlist ) ;
         
       } // try
       catch ( Stringerror e ) {
         printf( "%s\n", e.merrorstr.c_str() ) ;
         gReading = false ;
-        while ( !gEnd && gScanner.Getch() != '\n' )
-          gScanner.Getchar() ;
+        while ( !gEnd && mscanner.Getch() != '\n' )
+          mscanner.Getchar() ;
           
         mtokenlist.clear() ;
         err = true ;
@@ -3065,8 +2827,8 @@ class Interpreter{
       
       if ( !err ) {
         bool evalerr = false ;
-        gTreemaker.Buildtree( mtokenlist, morigintree ) ; 
-        mtokentree = SetTree( 1, morigintree ) ;
+        mtreemaker.Buildtree( mtokenlist, morigintree ) ; 
+        mtokentree = SetTree( 1 ) ;
         Token * outtree ;
         vector< Symbol > localsymlist ;
         localsymlist.clear() ;
@@ -3079,40 +2841,37 @@ class Interpreter{
         catch ( Exception e ) {
           if ( e.mname == "LevelError" || e.mname == "ArgNumError" ||
                e.mname == "UnboundError" || e.mname == "DivideZeroError" ) {
-            printf( "%s", e.merrorstr.c_str() ) ;
+            printf( "%s\n", e.merrorstr.c_str() ) ;
             evalerr = true ;
           } // if
           else if ( e.mname == "NonFuncError" || e.mname == "ArgTypeError" ||
                     e.mname == "NoReturnError" || e.mname == "UnboundParaError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            gPrinter.Printtree( e.mhead ) ; 
+            mprinter.Printtree( e.mhead ) ; 
           } // else if
           else if ( e.mname == "NoReturnErrorgogo" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            gPrinter.Printtree( e.mhead ) ; 
+            mprinter.Printtree( e.mhead ) ; 
           } // else if
           else if ( e.mname == "FormatError" || e.mname == "UnboundCondiError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            gPrinter.Printtree( e.mhead ) ; 
+            mprinter.Printtree( e.mhead ) ; 
           } // else if
           else if ( e.mname == "NonListError" ) {
             printf( "%s", e.merrorstr.c_str() ) ;
             evalerr = true ;
-            gPrinter.Printtree( mtokentree ) ;
+            mprinter.Printtree( mtokentree ) ;
           } // else if
           else { // if ( e.mname == "Callend" || e.mname == "EndOfFileError" )
             throw e ;
           } // else if
-          
-          printf( "\n" ) ;
         } // catch
         
-        if ( !evalerr && outtree != NULL ) {
-          gPrinter.Printtree( outtree ) ; 
-          printf( "\n" ) ;
+        if ( !evalerr ) {
+          mprinter.Printtree( outtree ) ; 
         } // if
           
         
@@ -3121,21 +2880,21 @@ class Interpreter{
       printf( "\n" ) ;
       
       int c = gColumn ;
-      char ch = gScanner.Getch() ;
+      char ch = mscanner.Getch() ;
       while ( Iswhitespace( ch ) && ch != '\n' ) {
-        gScanner.Getchar() ;
-        ch = gScanner.Getch() ;
+        mscanner.Getchar() ;
+        ch = mscanner.Getch() ;
       } // while
       
-      ch = gScanner.Getch() ;
+      ch = mscanner.Getch() ;
       if ( ch == ';' ) {
         while ( ch != '\n' && !gEnd ) {
-          gScanner.Getchar() ;
-          ch = gScanner.Getch() ;
+          mscanner.Getchar() ;
+          ch = mscanner.Getch() ;
         } // while
       } // if
 
-      if ( gScanner.Getch() == '\n' )
+      if ( mscanner.Getch() == '\n' )
         gColumn = 0 ; 
       else
         gColumn = gColumn - c + 1 ;
@@ -3148,28 +2907,51 @@ class Interpreter{
   
   private:
   
-
+  Printer mprinter ;
+  Scanner mscanner ;
   Evaler mevaler ;
-
+  Treemaker mtreemaker ;
   vector<Token> mtokenlist ;
   map< int, Token > morigintree ;
-  Token * mtokentree ;  
+  Token * mtokentree ; 
+  
+  Token * NewToken( Token token ) {
+    Token * retoken = new Token ;
+    retoken->str = token.str ;
+    retoken->line = token.line ;
+    retoken->column = token.column ;
+    retoken->intnum = token.intnum ;
+    retoken->floatnum = token.floatnum ;
+    retoken->type = token.type ;
+    retoken->iscomd = false ;
+    retoken->left = NULL ;
+    retoken->right = NULL ;
+    
+    return retoken ;
+  } // NewToken()
+  
+  Token * SetTree( int index ) {
+    if ( morigintree.find( index ) == morigintree.end() )
+      return NULL ;
+    else {
+      Token * temp = NewToken( morigintree.find( index )->second ) ;
+      temp->left = SetTree( 2 * index ) ;
+      temp->right = SetTree( 2 * index + 1 ) ;  
+      return temp ;
+    } // else
+  } // SetTree()  
     
 };
 
 int main() {
-  
   Interpreter interpreter = Interpreter() ;
-  gPrinter = Printer() ;
-  gScanner = Scanner() ;
-  gTreemaker = Treemaker() ;
   char t ;
-  // scanf( "%d",  &gTestNum ) ;
-  // scanf( "%c",  &t ) ;
+  scanf( "%d",  &gTestNum ) ;
+  scanf( "%c",  &t ) ;
   
   Token * temp = NULL ;
 
-  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     // if ( gTestNum != 2 ) 
     interpreter.Gettokenlist() ;
@@ -3183,5 +2965,4 @@ int main() {
   // scanner.Print() ;
   printf( "\nThanks for using OurScheme!" ) ;
   
-  cout << gCount << endl ;
 } // main()
