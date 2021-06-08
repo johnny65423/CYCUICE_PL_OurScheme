@@ -1062,7 +1062,8 @@ Treemaker gTreemaker ;
 class Evaler {
   private:
     
-  vector< Symbol > msymbollist ;
+  // vector< Symbol > msymbollist ;
+  map < string, TokenPtr > msymbollist ;
     
   Token * NewToken( string str ) {
     Token * retoken = new Token ;
@@ -1087,39 +1088,28 @@ class Evaler {
     
   } // Getsize()
   
-  int Findsymbol( string str, vector < Symbol > & localsymlist ) {
-    int i = localsymlist.size() - 1 ;
-    while ( i >= 0 ) {
-    	gCount++ ;
-      if ( localsymlist.at( i ).name == str ) {
-      	
-        if ( localsymlist.at( i ).args == NULL )
-          return 1 ;
-        else 
-          return 2 ;
+  int Findsymbol( string str, map < string, TokenPtr > & localsymlist ) {
 
-      } // if
+    if ( localsymlist.find( str ) != localsymlist.end() ) {
         
-      i-- ;  
-      
-    } // while
-    
-    i = msymbollist.size() - 1 ;
-    
-    while ( i >= 0 ) {
-    	gCount++ ;
-      if ( msymbollist.at( i ).name == str ) {
-        if ( msymbollist.at( i ).args == NULL )
-          return 1 ;
-        else 
-          return 2 ;
+      if ( localsymlist[str]->left == NULL )
+        return 1 ;
+      else 
+        return 2 ;
 
-      } // if
-        
-      i-- ;  
-      
-    } // while
+    } // if
+
     
+
+    if ( msymbollist.find( str ) != msymbollist.end() ) {
+      
+      if ( msymbollist[str]->left == NULL )
+        return 1 ;
+      else 
+        return 2 ;
+
+    } // if
+
     return 0 ;
   } // Findsymbol()
   
@@ -1150,41 +1140,24 @@ class Evaler {
       return NULL ;
   } // Copytoken()
   
-  Token * Symbols( Token * temp, vector < Symbol > & localsymlist ) {
-    
-    
-    
-    int i = localsymlist.size() - 1 ;
+  Token * Symbols( Token * temp, map < string, TokenPtr > & localsymlist ) {
     bool find = false ;
-    while ( i >= 0 ) {
-      gCount++ ;
-      if ( localsymlist.at( i ).name == temp->str )  {
-        find = true ;
+
+    if ( localsymlist.find( temp->str ) != localsymlist.end() )  {
+      find = true ; 
         
-        Token * retoken = localsymlist.at( i ).info ;
-        return retoken ;
-      } // if
-      
-    
-      i-- ;  
-      
-    } // while
-    
-    i = msymbollist.size() - 1 ;
-    
-    while ( i >= 0 ) {
-      gCount++ ;
-      if ( msymbollist.at( i ).name == temp->str )  {
-        find = true ;
+      Token * retoken = localsymlist[ temp->str ]->right ;
+      return retoken ;
+    } // if
+
+
+    if ( msymbollist.find( temp->str ) != msymbollist.end() )  {
+      find = true ;
         
-        Token * retoken = msymbollist.at( i ).info ;
-        return retoken ;
-      } // if
-      
-    
-      i-- ;  
-      
-    } // while
+      Token * retoken = msymbollist[temp->str]->right ;
+      return retoken ;
+    } // if
+
     
     if ( !find ) {
     
@@ -1195,7 +1168,7 @@ class Evaler {
     return NULL ;
   } // Symbols()
 
-  void Change( Token * temp, vector < Symbol > & localsymlist ) {
+  void Change( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( temp != NULL ) {
       if ( temp->left != NULL && Findsymbol( temp->left->str, localsymlist ) == 1 ) {
         temp->left = Copytoken( Symbols( temp->left, localsymlist ) ) ;
@@ -1211,7 +1184,7 @@ class Evaler {
 
   }  // Change()
 
-  Token * Define( Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Define( Token * temp1, map < string, TokenPtr > & localsymlist ) {
     Token * temp = temp1->right ;
     
     if ( temp->left != NULL && temp->left->type == DOT )
@@ -1222,10 +1195,11 @@ class Evaler {
 
   
     
-    Symbol newsymbol ;
+    // Symbol newsymbol ;
+    TokenPtr newsymbol = NewToken( "." ) ;
     string name = temp->left->str ;
-    newsymbol.name = name ;
-    newsymbol.args = NULL ;
+    // newsymbol.name = name ;
+    newsymbol->left = NULL ;
     
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
@@ -1235,15 +1209,15 @@ class Evaler {
     if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
       Token * check = Copytoken( temp->right->left ) ;
       Change( check, localsymlist ) ;
-      newsymbol.info = check ;
+      newsymbol->right = check ;
     } // if
     else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
       temp->right->left->left->iscomd = true ;
-      newsymbol.info = temp->right->left ;
+      newsymbol->right = temp->right->left ;
     } // else if
     else { 
       try {
-        newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
+        newsymbol->right = Evalexp( temp->right->left, 1, localsymlist ) ;
       } // try
       catch ( Exception e ) {
         if ( e.mname == "NoReturnError" )
@@ -1254,25 +1228,14 @@ class Evaler {
     } // else 
       
 
-    if ( Findsymbol( name, localsymlist ) == 0 )
-      msymbollist.push_back( newsymbol ) ;  
-    else {
-      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-        gCount++ ;
-        if ( msymbollist.at( i ).name == name ) {
+    msymbollist[name] = newsymbol ;  
 
-          msymbollist.at( i ).info = newsymbol.info ;
-          msymbollist.at( i ).args = NULL ;
-        } // if
-      } // for
-
-    } // else
 
     printf( "%s defined\n", name.c_str() ) ;
     return NULL ;
   } // Define()
 
-  Token * Set( Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Set( Token * temp1, map < string, TokenPtr > & localsymlist ) {
     Token * temp = temp1->right ;
     
     if ( temp->left != NULL && temp->left->type == DOT )
@@ -1281,10 +1244,11 @@ class Evaler {
     if ( Getsize( temp ) != 2 )
       throw FormatError( "SET", temp1 ) ;
     
-    Symbol newsymbol ;
+    // Symbol newsymbol ;
+    TokenPtr newsymbol = NewToken( "." ) ;
     string name = temp->left->str ;
-    newsymbol.name = name ;
-    newsymbol.args = NULL ;
+    // newsymbol.name = name ;
+    newsymbol->left = NULL ;
     
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->type != SYMBOL ) { 
@@ -1294,15 +1258,15 @@ class Evaler {
     if ( Isatomtype( temp->right->left->type ) && temp->right->left->type != SYMBOL ) {
       Token * check = Copytoken( temp->right->left ) ;
       Change( check, localsymlist ) ;
-      newsymbol.info = check ;
+      newsymbol->right = check ;
     } // if
     else if ( temp->right->left->type == DOT && temp->right->left->left->str == "lambda" ) { 
       temp->right->left->left->iscomd = true ;
-      newsymbol.info = temp->right->left ;
+      newsymbol->right = temp->right->left ;
     } // else if
     else { 
       try {
-        newsymbol.info = Evalexp( temp->right->left, 1, localsymlist ) ;
+        newsymbol->right = Evalexp( temp->right->left, 1, localsymlist ) ;
       } // try
       catch ( Exception e ) {
         if ( e.mname == "NoReturnError" )
@@ -1313,72 +1277,46 @@ class Evaler {
     } // else 
       
     bool seted = false ;
-    for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
-    	gCount++ ;
-      if ( localsymlist.at( i ).name == name ) {
-        // localsymlist.push_back( newsymbol ) ;
-        localsymlist.at( i ).info = newsymbol.info ;
-        localsymlist.at( i ).args = NULL ;
-        seted = true ;
-      } // if
-    } // for
+
+    if ( localsymlist.find( name ) != localsymlist.end() ) {
+      localsymlist[name] = newsymbol ;
+      seted = true ;
+    } // if
+
     
     if ( !seted ) {
-      if ( Findsymbol( name, localsymlist ) == 0 )
-        msymbollist.push_back( newsymbol ) ;  
-      else {
-        for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-          gCount++ ;
-          if ( msymbollist.at( i ).name == name ) {
-
-            msymbollist.at( i ).info = newsymbol.info ;
-            msymbollist.at( i ).args = NULL ;
-          } // if
-        } // for
-
-      } // else
+      msymbollist[name] = newsymbol ;  
     } // if
 
 
-    return newsymbol.info ;
+    return newsymbol->right ;
   } // Set()
 
-  Token * Definefunc( Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Definefunc( Token * temp1, map < string, TokenPtr > & localsymlist ) {
     Token * temp = temp1->right ;
     
     if ( Getsize( temp ) < 2 )
       throw FormatError( "DEFINE", temp1 ) ;  
     
-    Symbol newsymbol ;
+    // Symbol newsymbol ;
+    TokenPtr newsymbol = NewToken( "." ) ;
     string name = temp->left->left->str ;
-    newsymbol.name = name ;
-    newsymbol.args = temp->left->right ;
+    // newsymbol.name = name ;
+    newsymbol->left = temp->left->right ;
     
     if ( Isinternalfunc( name ) || Isspfunc( name ) || temp->left->left->type != SYMBOL ) { 
       throw FormatError( "DEFINE", temp1 ) ;
     } // if
     
-    newsymbol.info = temp->right ;
+    newsymbol->right = temp->right ;
 
-    if ( Findsymbol( name, localsymlist ) == 0 )
-      msymbollist.push_back( newsymbol ) ;  
-    else {
-      for ( int i = msymbollist.size() - 1 ; i >= 0 ; i-- ) {
-        gCount++ ;
-        if ( msymbollist.at( i ).name == name ) {
-          msymbollist.at( i ).info = newsymbol.info ;
-          msymbollist.at( i ).args = newsymbol.args ;
-          
-        } // if
-      } // for
-
-    } // else
+    msymbollist[name] = newsymbol ;  
 
     printf( "%s defined\n", name.c_str() ) ;
     return NULL ;
   } // Definefunc()
   
-  Token * Customfunc( Token * temp, int head, vector < Symbol > & localsymlist ) {
+  Token * Customfunc( Token * temp, int head, map < string, TokenPtr > & localsymlist ) {
     int i = msymbollist.size() - 1 ;
     string str = temp->left->str ;
     bool find = false ;
@@ -1386,31 +1324,27 @@ class Evaler {
     Token * method ;
     Token * args ;
     Token * retoken ;
-    while ( i >= 0 && !find ) {
-    	gCount++ ;
-      if ( msymbollist.at( i ).name == str )  {
-      	gCount++ ;
-        argname = msymbollist.at( i ).args ;
-        method = msymbollist.at( i ).info ;
-        find = true ;
-      } // if
-      
-      i-- ;  
-    } // while
+
+    
+    argname = msymbollist[str]->left ;
+    method = msymbollist[str]->right ;
+    find = true ;
+
+
     
     args = temp->right ;
     int argsnum = Getsize( argname ) ;
     
     if ( argsnum != Getsize( args ) )
       throw ArgNumError( str ) ;
-      
-    vector < Symbol > templist ;  
+
+    map <string, TokenPtr> templist ;
     while ( argname->type != NIL ) {
-      Symbol sym ;
-      sym.name = argname->left->str ;
-      sym.args = NULL ;
+      TokenPtr sym = NewToken( "." ) ;
+      string name = argname->left->str ;
+      sym->left = NULL ;
       try {
-        sym.info = Evalexp( args->left, 1, localsymlist ) ;
+        sym->right = Evalexp( args->left, 1, localsymlist ) ;
       } // try
       catch ( Exception e ) {
 
@@ -1419,7 +1353,8 @@ class Evaler {
         
         throw e ;
       } // catch
-      templist.push_back( sym ) ;
+      
+      templist[name] = sym ;
       
       argname = argname->right ;
       args = args->right ;
@@ -1438,14 +1373,12 @@ class Evaler {
         if ( e.mname == "NoReturnError" ) {
           e.mhead = temp ;
           if ( method->right->type == NIL ) {
-            // for ( int i = 0 ; i < argsnum ; i++ )
-            //   msymbollist.pop_back() ;
+
             throw e ;
           } // if
         } // if
         else {
-          // for ( int i = 0 ; i < argsnum ; i++ )
-          //   msymbollist.pop_back() ;
+
           throw e ;
         } // else
       } // catch
@@ -1458,7 +1391,7 @@ class Evaler {
     return retoken ;
   } // Customfunc()
   
-  Token * Setlambda( Token * temp, int head, vector < Symbol > & localsymlist ) {
+  Token * Setlambda( Token * temp, int head, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp->right ) < 2 )
       throw FormatError( "LAMBDA", temp ) ;
 
@@ -1488,7 +1421,7 @@ class Evaler {
     
   } // Setlambda()
   
-  Token * Lambda( Token * temp, int head, vector < Symbol > & localsymlist ) {
+  Token * Lambda( Token * temp, int head, map < string, TokenPtr > & localsymlist ) {
 
     Token * argname = temp->left->left ;
     Token * method = temp->left->right ;
@@ -1499,13 +1432,14 @@ class Evaler {
     if ( argsnum != Getsize( args ) )
       throw ArgNumError( "lambda" ) ;
       
-    vector < Symbol > templist ;  
+    map < string, TokenPtr > templist ;  
     while ( argname->type != NIL ) {
-      Symbol sym ;
-      sym.name = argname->left->str ;
-      sym.args = NULL ;
+      // Symbol sym ;
+      TokenPtr sym = NewToken( "." ) ;
+      string name = argname->left->str ;
+      sym->left = NULL ;
       try {
-        sym.info = Evalexp( args->left, 1, localsymlist ) ;
+        sym->right = Evalexp( args->left, 1, localsymlist ) ;
       } // try
       catch ( Exception e ) {
 
@@ -1513,16 +1447,12 @@ class Evaler {
           throw UnboundParaError( args->left ) ;
         throw e ;
       } // catch
-      templist.push_back( sym ) ;
+      templist[name] = sym ;
       
       argname = argname->right ;
       args = args->right ;
     } // while  
-    /*
-    for ( int i = 0 ; i < templist.size() ; i++ ) {
-      msymbollist.push_back( templist.at( i ) ) ;
-    } // for
-    */
+
     Token * ans = NULL ;
     Token * retoken ;
 
@@ -1552,25 +1482,33 @@ class Evaler {
     return retoken ;
   } // Lambda()
   
-  Token * Let( Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Let( Token * temp1, map < string, TokenPtr > & localsymlist ) {
     Token * temp = temp1->right ;
     if ( Getsize( temp ) < 2 )
       throw FormatError( "LET", temp1 ) ;
     
     Token * args = temp->left ;
     int argsnum = Getsize( args ) ;
-    vector < Symbol > templist ;  
+    // vector < Symbol > templist ;  
+    map < string, TokenPtr > templist ;
     
     while ( args->type != NIL ) {
       if ( Getsize( args->left ) != 2 )
         throw FormatError( "LET", temp1 ) ;
       args = args->right ;
     } // while  
+    // cout << localsymlist.size() << endl ;
+    if ( !localsymlist.empty() ) {
+      for ( map<string,TokenPtr>::iterator it = localsymlist.begin() ; it != localsymlist.end() ; it++ ) {
+        templist[ it->first ] = it->second ;
+      } // for
+    } // if
     
     args = temp->left ;
     while ( args->type != NIL ) {
 
-      Symbol sym ;
+      // Symbol sym ;
+      TokenPtr sym = NewToken( "." ) ;
       Token * argtemp = args->left ;
       if ( argtemp->type != DOT )
         throw FormatError( "LET", temp1 ) ;
@@ -1579,27 +1517,22 @@ class Evaler {
         throw FormatError( "LET", temp1 ) ;
       } // if
       
-      sym.name = name ;
-      sym.args = NULL ;
+      // sym.name = name ;
+      sym->left = NULL ;
       
       try {
-        sym.info = Evalexp( argtemp->right->left, 0, localsymlist ) ;
+        sym->right = Evalexp( argtemp->right->left, 0, localsymlist ) ;
       } // try 
       catch ( Exception e ) {
         if ( e.mname == "NoReturnError" )
           e.mname = "NoReturnErrorgogo" ;
         throw e ;        
       } // catch
-      templist.push_back( sym ) ;
+      templist[name] = sym ;
       
       args = args->right ;
     } // while  
     
-
-    for ( int i = localsymlist.size() - 1 ; i >= 0 ; i-- ) {
-      templist.insert( templist.begin(), localsymlist.at( i ) ) ;
-    } // for
-
     
     Token * t = temp->right ;
     Token * result = NULL;
@@ -1630,7 +1563,7 @@ class Evaler {
 
   } // Let()
 
-  Token * If( Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * If( Token * temp1, map < string, TokenPtr > & localsymlist ) {
     Token * temp = temp1->right ;
     int size = Getsize( temp ) ;
     if ( size != 2 && size != 3 )
@@ -1667,7 +1600,8 @@ class Evaler {
 
   } // If()
 
-  Token * Decide( Token * temp, bool last, bool & done, Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Decide( Token * temp, bool last, bool & done, Token * temp1, 
+                  map < string, TokenPtr > & localsymlist ) {
 
     if ( Getsize( temp ) < 1 )
       throw FormatError( "COND", temp1 ) ;
@@ -1703,7 +1637,7 @@ class Evaler {
 
   } // Decide()
 
-  Token * Cond( Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Cond( Token * temp1, map < string, TokenPtr > & localsymlist ) {
     Token * temp = temp1->right ;
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
@@ -1747,7 +1681,7 @@ class Evaler {
 
   } // Cond()
   
-  Token * Begin( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Begin( Token * temp, map < string, TokenPtr > & localsymlist ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
       throw ArgNumError( "begin" ) ;
@@ -1787,7 +1721,7 @@ class Evaler {
 
   } // Begin()
 
-  Token * Begincond( Token * temp, Token * temp1, vector < Symbol > & localsymlist ) {
+  Token * Begincond( Token * temp, Token * temp1, map < string, TokenPtr > & localsymlist ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 1 )
       throw FormatError( "COND", temp1 ) ;
@@ -1829,7 +1763,7 @@ class Evaler {
     return temp->left ; 
   } // Quote()
 
-  Token * Cons( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Cons( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "cons" ) ;
     
@@ -1858,7 +1792,7 @@ class Evaler {
     
   } // Cons()
 
-  Token * List( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * List( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) == 0 )
       return NewToken( "nil" ) ;
     else if ( !Islist( temp ) ) {
@@ -1893,7 +1827,7 @@ class Evaler {
     return retoken ;  
   } // List()
 
-  Token * Car( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Car( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "car" ) ;
       
@@ -1915,7 +1849,7 @@ class Evaler {
     
   } // Car()
 
-  Token * Cdr( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Cdr( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "cdr" ) ;
     
@@ -1938,7 +1872,7 @@ class Evaler {
     
   } // Cdr()
   
-  Token * Not( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Not( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( "not" ) ;
     Token * check ;
@@ -1959,7 +1893,7 @@ class Evaler {
     
   } // Not()
   
-  Token * Greater( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Greater( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -1992,7 +1926,7 @@ class Evaler {
 
   } // Greater()
 
-  Token * Less( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Less( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2022,7 +1956,7 @@ class Evaler {
 
   } // Less()  
 
-  Token * Nogreater( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Nogreater( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2052,7 +1986,7 @@ class Evaler {
 
   } // Nogreater()
 
-  Token * Noless( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Noless( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2082,7 +2016,7 @@ class Evaler {
 
   } // Noless()
   
-  Token * Equalnum( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Equalnum( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2112,7 +2046,7 @@ class Evaler {
 
   } // Equalnum()
 
-  Token * Strappend( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Strappend( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "" ;
     while ( temp->type != NIL && temp != NULL ) {
       Token * nstr ;
@@ -2137,7 +2071,7 @@ class Evaler {
 
   } // Strappend()
 
-  Token * Strgreat( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Strgreat( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2167,7 +2101,7 @@ class Evaler {
 
   } // Strgreat()
 
-  Token * Strless( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Strless( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2197,7 +2131,7 @@ class Evaler {
 
   } // Strless()
 
-  Token * Strequal( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Strequal( Token * temp, map < string, TokenPtr > & localsymlist ) {
     string check = "#t" ;
     while ( temp->right->type != NIL && temp->right != NULL ) {
       Token * check1 ;
@@ -2227,7 +2161,7 @@ class Evaler {
 
   } // Strequal()
 
-  Token * Eqv( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Eqv( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "eqv?" ) ;
     Token * check1 ;
@@ -2271,7 +2205,7 @@ class Evaler {
 
   } // Issame()
 
-  Token * Equal( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Equal( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 2 )
       throw ArgNumError( "equ?" ) ;
     
@@ -2295,7 +2229,7 @@ class Evaler {
 
   } // Equal()
   
-  Token * Or( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Or( Token * temp, map < string, TokenPtr > & localsymlist ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 2 )
       throw ArgNumError( "Or" ) ;
@@ -2326,7 +2260,7 @@ class Evaler {
 
   } // Or()
 
-  Token * And( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * And( Token * temp, map < string, TokenPtr > & localsymlist ) {
     int size = Getsize( temp ) ;
     if ( Getsize( temp ) < 2 )
       throw ArgNumError( "And" ) ;
@@ -2358,7 +2292,7 @@ class Evaler {
 
   } // And()
 
-  Token * Read( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Read( Token * temp, map < string, TokenPtr > & localsymlist ) {
     
     if ( Getsize( temp->right ) > 0 ) {
       throw ArgNumError( "Read" ) ;
@@ -2378,7 +2312,7 @@ class Evaler {
 
   } // Read()
   
-  Token * Write( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Write( Token * temp, map < string, TokenPtr > & localsymlist ) {
     
     if ( Getsize( temp->right ) != 1 ) {
       throw ArgNumError( "write" ) ;
@@ -2392,7 +2326,7 @@ class Evaler {
 
   } // Write()
   
-  Token * Displaystr( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Displaystr( Token * temp, map < string, TokenPtr > & localsymlist ) {
     
     if ( Getsize( temp->right ) != 1 ) {
       throw ArgNumError( "Display-String" ) ;
@@ -2415,7 +2349,7 @@ class Evaler {
 
   } // Displaystr()
 
-  Token * Newline( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Newline( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp->right ) != 0 )
       throw ArgNumError( "newline" ) ;
     
@@ -2424,7 +2358,7 @@ class Evaler {
     return NewToken( "nil" ) ;
   } // Newline()
   
-  Token * Symtostr( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Symtostr( Token * temp, map < string, TokenPtr > & localsymlist ) {
     
     if ( Getsize( temp->right ) != 1 ) {
       throw ArgNumError( "symbol->String" ) ;
@@ -2445,7 +2379,7 @@ class Evaler {
 
   } // Symtostr()
 
-  Token * Numtostr( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Numtostr( Token * temp, map < string, TokenPtr > & localsymlist ) {
     
     if ( Getsize( temp->right ) != 1 ) {
       throw ArgNumError( "number->String" ) ;
@@ -2466,7 +2400,7 @@ class Evaler {
 
   } // Numtostr()
 
-  Token * Eval( Token * temp, vector < Symbol > & localsymlist ) {
+  Token * Eval( Token * temp, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp->right ) != 1 )
       throw ArgNumError( "eval" ) ;
     
@@ -2475,7 +2409,7 @@ class Evaler {
     return Evalexp( exp, 0, localsymlist ) ;
   } // Eval()
 
-  Token * Primitivepredicates( Token * temp, string str, vector < Symbol > & localsymlist ) {
+  Token * Primitivepredicates( Token * temp, string str, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) != 1 )
       throw ArgNumError( str ) ;
     Token * check ;
@@ -2545,7 +2479,7 @@ class Evaler {
 
   } // Primitivepredicates()
 
-  Token * Arith( Token * temp, string str, vector < Symbol > & localsymlist ) {
+  Token * Arith( Token * temp, string str, map < string, TokenPtr > & localsymlist ) {
     if ( Getsize( temp ) < 2 )
       throw ArgNumError( str ) ;
     stringstream ss;
@@ -2623,7 +2557,7 @@ class Evaler {
 
   } // Arith()
  
-  float Add( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
+  float Add( Token * temp, bool & isfloat, map < string, TokenPtr > & localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2647,7 +2581,7 @@ class Evaler {
     } // else    
   } // Add()
 
-  float Sub( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
+  float Sub( Token * temp, bool & isfloat, map < string, TokenPtr > & localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2694,7 +2628,7 @@ class Evaler {
     } // else    
   } // Sub()
 
-  float Mul( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
+  float Mul( Token * temp, bool & isfloat, map < string, TokenPtr > & localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2720,7 +2654,7 @@ class Evaler {
     } // else   
   } // Mul()
 
-  float Div( Token * temp, bool & isfloat, vector < Symbol > & localsymlist ) {
+  float Div( Token * temp, bool & isfloat, map < string, TokenPtr > & localsymlist ) {
     if ( temp->left != NULL ) {
       Token * check ;
       try {
@@ -2801,8 +2735,8 @@ class Evaler {
 
   public:
   
-  Token * Evalexp( Token * temp, int head, vector < Symbol > & localsymlist ) {
-    // cout << msymbollist.size() << " " << localsymlist.size() << endl;
+  Token * Evalexp( Token * temp, int head, map < string, TokenPtr > & localsymlist ) {
+
 
     if ( Isatomtype( temp->type ) ) {
       string str = temp->str ;
@@ -2825,7 +2759,6 @@ class Evaler {
     } // if
     else if ( temp->left != NULL ) {
       if ( !Islist( temp ) ) {
-        cout << temp->str ;
         throw NonListError() ;
       } // if
       
@@ -3068,7 +3001,8 @@ class Interpreter{
         gTreemaker.Buildtree( mtokenlist, morigintree ) ; 
         mtokentree = SetTree( 1, morigintree ) ;
         Token * outtree ;
-        vector< Symbol > localsymlist ;
+        // vector< Symbol > localsymlist ;
+        map < string, TokenPtr > localsymlist ;
         localsymlist.clear() ;
         try {
           
@@ -3164,12 +3098,12 @@ int main() {
   gScanner = Scanner() ;
   gTreemaker = Treemaker() ;
   char t ;
-  // scanf( "%d",  &gTestNum ) ;
-  // scanf( "%c",  &t ) ;
+  scanf( "%d",  &gTestNum ) ;
+  scanf( "%c",  &t ) ;
   
   Token * temp = NULL ;
 
-  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     // if ( gTestNum != 2 ) 
     interpreter.Gettokenlist() ;
@@ -3183,5 +3117,5 @@ int main() {
   // scanner.Print() ;
   printf( "\nThanks for using OurScheme!" ) ;
   
-  cout << gCount << endl ;
+  // cout << gCount << endl ;
 } // main()
