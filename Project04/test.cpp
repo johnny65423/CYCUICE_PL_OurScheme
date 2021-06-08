@@ -3164,12 +3164,12 @@ int main() {
   gScanner = Scanner() ;
   gTreemaker = Treemaker() ;
   char t ;
-  // scanf( "%d",  &gTestNum ) ;
-  // scanf( "%c",  &t ) ;
+  scanf( "%d",  &gTestNum ) ;
+  scanf( "%c",  &t ) ;
   
   Token * temp = NULL ;
 
-  printf( "Welcome to OurScheme!(10727219)\n\n" ) ;
+  printf( "Welcome to OurScheme!\n\n" ) ;
   try {
     // if ( gTestNum != 2 ) 
     interpreter.Gettokenlist() ;

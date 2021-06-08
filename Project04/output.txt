@@ -351,4 +351,4 @@ Please enter the number (or item-name) of your choice > Bye!
 > "quality : 3 size : 2 price : 3 ProductIndex : 5"
 
 > 
-Thanks for using OurScheme!173522
+Thanks for using OurScheme!
