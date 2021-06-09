@@ -1,5 +1,939 @@
-1
-(define a "=============== Problem 9 viewable case =================")
+當測試「Test data 2 of 3」時，Input為>>2
+;;;;;;;;;;;;;;; Below 3-5  2/3 ;;;;;;;;;;;;;;;;
+
+(define a "=============== Problem 1 viewable case =================")
+a
+
+ ; define + lambda (用para.做為(initialized)"local para") - basic - incl.: COND IF BEGIN AND OR
+
+(clean-environment) ; first round ; no error
+
+(define x1 3)(define x2 4)(define x3 5)
+(define (Fcond x4 x1) (cond ((> x4 x1) (+ x4 x1)) ((< x4 x1)(* x4 x1))(else (- x4 x1))))
+(Fcond x1 x2)
+(Fcond x2 x3)
+(Fcond x1 x1)
+(define (Fif x1 x4 x3) (if (>= x2 x3) (+ x1 x3) (- x3 x4)))
+(Fif 30 40 50)
+(Fif x1 x2 x3)
+(Fif x3 x2 x1)
+(Fif x2 x2 80)
+(define (Fbegin x3) (begin (+ x1 x3) (- x2 x3)))
+(Fbegin x1)
+(Fbegin 80)
+(Fbegin x2)
+(define (Fand x4 x2 x5) (and (> x4 x2) (> x2 x5) (> x5 0)))
+(Fand x3 x2 x1)
+(Fand x3 10 x1)
+(Fand 7 6 x2)
+(Fand 7 1 -7)
+(define (For x1 x4 x3) (or (> x1 x4) (> x4 x3) (> x1 100) (> x4 100) (> x3 100)))
+(For 10 20 30)
+(For 1000 20 30)
+(For 30 40 20)
+(For x1 x2 x3)
+(For x2 x2 x2)
+(For x2 x1 20)
+(define x4 (lambda (x1) (* x1 2)))
+x4
+(x4 x3)
+x1
+x2
+
+(clean-environment)
+
+(define (cadr x) (car (cdr x))
+  )
+cadr
+(cadr '( (10 20) (30 40) (50 60) 70 . 80 ))
+(define cadr-clone cadr)
+cadr-clone
+(cadr-clone '( (10 20) (30 (40)) (50 60) 70 . 80 ))
+(define cadr-clone car)
+(cadr-clone '( (10 20) (30 (40)) (50 60) 70 . 80 ))
+(define cadr-clone cadr)
+(define (cdar y) (cdr (car y))
+  )
+(cdar '((1 2) (3 4) 5 6 7 . 8)
+  )
+(define first car)
+car
+first
+(first '(10 20 30))
+(define FFirst 'car)
+FFirst
+(define second cadr)
+(second '(10 20 30))
+(second '( (10 (20) 30) ((40 50) 60) (70 (80 (90))) )
+  )
+(first (second '( (10 (20) 30) ((40 50) 60) (70 (80 (90))) )
+         )
+  )
+(second (first (second '( (10 (20) 30) ((40 50) 60) (70 (80 (90))) )
+                 )
+          )
+  )
+(cdr (first (second '( (10 (20) 30) ((40 50) 60) (70 (80 (90))) )
+              )
+       )
+  )
+(define a "=============== Problem 2 viewable case =================")
+a
+
+ ; define + lambda (用para.做為(initialized)"local para") - complex - COND IF BEGIN AND OR (nested calls)
+
+(clean-environment) ; first round, no error
+
+(define x1 3)(define x2 4)(define x3 5)
+(define (Fcond x4 x1) 
+        (cond ( (> x4 x1) 
+                (+ x4 x1)
+                ( if (< x4 x1)
+                     (+ x4 x1 22)
+                     (+ x4 x1 33)
+                )
+              ) 
+              ( (< x4 x1) 
+                (* x4 x1)
+                ( if (< x4 x1)
+                     (* x4 x1 2)
+                     (* x4 x1 3)
+                )
+              )
+              ( else 
+                (- x4 x1)
+                (if (= x4 x1)
+                    (- x4 x1 20)
+                    (- x4 x1 30)
+                )
+              );else
+        );cond
+);define
+(Fcond x1 x2)
+(Fcond x2 x3)
+(Fcond x1 x1)
+(define (Fif x1 x4 x3) 
+        (if (>= x2 x3) 
+            ( begin 
+              (+ x1 x3) 
+              ( if ( and ( > x1 50 ) ( > x4 50 ) )
+                   (+ x1 x3 33)
+                   (+ x1 x3 44)
+              );if
+            );begin
+            ( begin 
+              (- x3 x4)
+              ( if ( and ( > x1 50 ) ( > x4 50 ) )
+                   (- x3 x4 33)
+                   (- x3 x4 44)
+              );if
+            );begin
+        );if
+);define
+(Fif 30 40 50)
+(Fif x1 x2 x3)
+(Fif x3 x2 x1)
+(Fif x2 x2 80)
+(define (Fbegin x3) 
+        ( begin 
+          ( begin (+ x1 x3) )
+          ( begin (- x2 x3) )
+          ( cond ( (> x3 x1) (+ x3 x1) ) 
+                 ( (< x3 x1) (* x3 x1) )
+                 ( else      (- x3 x1) )
+          );cond
+        );begin
+);define
+(Fbegin x1)
+(Fbegin 80)
+(Fbegin x2)
+(define (Fand x4 x2 x5) 
+        (and ( if ( > x1 0 )
+                  ( < x1 40 )
+                  ( > (- x1 x5) 27)
+             )
+             (> x4 x2) 
+             (> x2 x5) 
+             (> x5 0)
+        );and
+);define
+(Fand x3 x2 (+ x3 x2))
+(Fand x3 10 x1)
+(Fand 7 6 x2)
+(Fand (+ 7 x3) 1 (- -7 x2))
+(define (For x1 x4 x3) 
+        (or (and 
+              (> x1 50)
+              (> x4 170)
+            )
+            (> x1 x4) 
+            (> x4 x3) 
+            (> x1 100) 
+            (> x4 100) 
+            (> x3 100)
+        );or
+);define
+(For 10 20 30)
+(For 1000 20 30)
+(For 30 40 20)
+(For x1 x2 x3)
+(For x2 x2 x2)
+(For x2 x1 20)
+( define ( Flambda x1 )
+         ( if ( > x1 0 )
+              ( lambda ( x2 ) ( * x2 2 )
+              );lambda
+              ( lambda ( x3 ) ( * x3 3 )
+              );lambda
+         );if
+);define
+Flambda
+( Flambda 10 )
+( Flambda -10 )
+( ( Flambda 10 ) x1 )
+( ( Flambda -10 ) x1 )
+
+(clean-environment)
+
+( let ( (x 3) (y '(1 2 3))
+        )
+        (cons 1 '(4 5))       ; this will be evaluated ; but no use
+        (cons x (cdr y))      ; the value of this one is the value of LET
+  )
+(let ((x 3)
+       ) 
+       5     
+  )
+(let () 5           
+  )
+(clean-environment)
+(define a 5)
+(let ( (x 6) (y '(1 2 3))
+       )
+       (+ a x (car (cdr y))
+       )
+  )
+a
+(let ( (x 6) (y '(1 2 3))
+         (a 7)               ; local variable "shadows" global variable
+       )
+       (+ a x (car (cdr (cdr y)))
+       )
+  )
+a
+(let ( (x 6) (y '(1 2 3))
+         (a 7)
+       )
+       (+ a x (car (cdr (cdr y)))
+       )
+       (- a x (car (cdr (cdr y)))
+       )
+  )
+(let ( (x 6) (y '(1 2 3))
+         (a 7)
+       )
+       (+ a x (car (cdr (cdr y)))
+       )
+       (let ( (a 17) (x 11) 
+            )
+            (- a x (car (cdr (cdr y)))
+            )
+       )
+  )
+(let ( (x 6) (y '(1 2 3))
+         (a 7)
+       )
+       (+ a x (car (cdr (cdr y)))
+       )
+       (let ( (a 17) (x 11) 
+            )
+            (- a x (car (cdr (cdr y)))
+               (let ( (x 21) )
+                    (+ a x 5)
+                    (- 0 a x)
+               )
+            )
+       )
+  )
+
+(define a "=============== Problem 3 viewable case =================")
+a
+
+ ; define + lambda (用para.做為(initialized)"local para") - complex - COND IF BEGIN AND OR (nested calls)
+ ; + functional composition // functions 呼叫 functions
+ 
+(clean-environment) ; first round, no error.
+
+(define x1 3)(define x2 4)(define x3 5)
+(define (Fcond x4 x1) 
+        (cond ( (> x4 x1) 
+                (+ x4 x1)
+                ( if (< x4 x1)
+                     (+ x4 x1 22)
+                     (+ x4 x1 33)
+                )
+              ) 
+              ( (< x4 x1) 
+                (* x4 x1)
+                ( if (< x4 x1)
+                     (* x4 x1 2)
+                     (* x4 x1 3)
+                )
+              )
+              ( else 
+                (- x4 x1)
+                (if (= x4 x1)
+                    (- x4 x1 20)
+                    (- x4 x1 30)
+                )
+              );else
+        );cond
+);define
+(define (Fif x1 x4 x3) 
+        (if (>= x2 x3) 
+            ( begin 
+              (+ x1 x3) 
+              ( if ( and ( > x1 50 ) ( > x4 50 ) )
+                   (+ x1 x3 33)
+                   (+ x1 x3 44)
+              );if
+            );begin
+            ( begin 
+              (- x3 x4)
+              ( if ( and ( > x1 50 ) ( > x4 50 ) )
+                   (- x3 x4 33)
+                   (- x3 x4 44)
+              );if
+            );begin
+        );if
+);define
+(define (Fbegin x3) 
+        ( begin 
+          ( begin (+ x1 x3) )
+          ( begin (- x2 x3) )
+          ( cond ( (> x3 x1) (+ x3 x1) ) 
+                 ( (< x3 x1) (* x3 x1) )
+                 ( else      (- x3 x1) )
+          );cond
+        );begin
+);define
+(define (Fand x4 x2 x5) 
+        (and ( if ( > x1 0 )
+                  ( < x1 40 )
+                  ( > (- x1 x5) 27)
+             )
+             (> x4 x2) 
+             (> x2 x5) 
+             (> x5 0)
+        );and
+);define
+(define (For x1 x4 x3) 
+        (or (and 
+              (> x1 50)
+              (> x4 170)
+            )
+            (> x1 x4) 
+            (> x4 x3) 
+            (> x1 100) 
+            (> x4 100) 
+            (> x3 100)
+        );or
+);define
+
+; (Fcond x1 x2)
+; (Fcond x2 x3)
+; (Fcond x1 x1)
+; (Fif 30 40 50)
+; (Fif x1 x2 x3)
+; (Fif x3 x2 x1)
+; (Fif x2 x2 80)
+; (Fbegin x1)
+; (Fbegin 80)
+; (Fbegin x2)
+; (Fand x3 x2 x1)(Fand x3 10 x1)(Fand 7 6 x2)(Fand 7 1 -7)
+; (For 10 20 30)(For 1000 20 30)(For 30 40 20)(For x1 x2 x3)(For x2 x2 x2)(For x2 x1 20)
+
+(Fcond (Fif x1 x2 x3) (Fcond (Fbegin 80) x2))
+(Fcond (Fcond (Fbegin x1) x2) (Fif x1 x2 x3))
+(Fif (Fbegin x2) (Fcond (Fif x1 x2 x3) (Fcond x2 x3)) (Fif (+ x1 x2) x2 x3))
+(define (For x1 x4 x3) 
+        (or (and 
+              (> (Fif x1 x2 x3) 50)
+              (> (Fif x2 x2 80) 170)
+            )
+            (> (Fif x1 x2 x3) (Fif x2 x2 80)) 
+            (> x4 x3) 
+            (> x1 100) 
+            (> x4 100) 
+            (> x3 100)
+        );or
+);define
+(For 10 20 30)(For 1000 20 30)(For 30 40 20)(For x1 x2 x3)(For x2 x2 x2)(For x2 x1 20)
+( define ( Flambda x1 )
+         ( if ( > x1 0 )
+              ( lambda ( x2 ) ( * ( Fcond x2 x3 
+                                  );Fcond
+                                  3 
+                              );*
+              );lambda
+              ( lambda ( x3 ) ( * ( Fif ( Fcond x3 x1 
+                                        );Fcond 
+                                        x2 
+                                        x3 
+                                  );Fif
+                                  2 
+                              );*
+              );lambda
+         );if
+);define
+Flambda
+( Flambda 10 )
+( Flambda -10 )
+( ( Flambda 10 ) x3 )
+( ( Flambda -10 ) x3 )
+( ( Flambda 10 ) ( ( Flambda -10 ) x3) )
+( ( Flambda -10 ) ( ( Flambda 10 ) x3 ) )
+
+(clean-environment)
+
+( lambda (x) y z       ; the evaluation of a lambda expression
+                         ; produces an internal representation of a 
+  )                      ; function
+( lambda () y )
+( lambda () 5 )
+( lambda () () )      ; a parameter-less function that returns 'nil'
+( lambda () (+ c 5)    ; defines a function without calling it
+  )
+( ( lambda () (+ 5 5) (+ 5 6) 
+    )
+  )
+( define a 2 )
+( define f ( lambda (x) (+ x x c) ; the binding of 'f' is defined
+             )                      ; to be the internal representation
+  )                                 ; of a function
+f
+( define c 10 )
+(f a)
+( f ( ( lambda (x y)
+          (+ x y)
+        )
+        ( f a )
+        8
+      )
+  )
+(define x 20)
+(define y 30)
+(define g ( lambda (x)
+              (* x (+ 5 x)
+              )
+            )
+  )
+(g (+ (g (f a)
+        )
+        c
+     )
+  )
+( f ( ( lambda (x y)
+          (+ x y)
+        )
+        ( f x )
+        (* (- y x)
+           (g c)
+        )
+      )
+  )
+(define F 5)
+(define G 10)
+(+ F G)
+(define F (lambda (x) (+ x x x)))
+(+ (F 10) G)
+(define F (car (cons car cdr)))
+(+ (F (cons G G)) G)
+(define H (lambda (x)
+              (cond ( (= x 1) car )
+                    ( (= x 2) cons )
+                    ( (= x 3) cdr )
+                    ( (= x 4) F )
+                    ( (= x x) 100 ) ) ) )
+( (H 2) 3 5 )
+( (H 4) '(10 20 30))
+(define F cdr)
+( (H 4) '(10 20 30))
+(+ ((H 1) '(10 20 30)) (H 2015))
+(define (cadr x) (car (cdr x)))
+(define global '(10 20 30))
+(define (Try F) (F global))
+(Try cadr)
+(Try car)
+(Try cdr)
+(define a "=============== Problem 4 viewable case =================")
+a
+
+ ; define + lambda (用para.做為(initialized)"local para") - complex - COND IF BEGIN AND OR (nested calls)
+ ; + functional composition // functions 呼叫 functions
+ ; + let (local vs. global)
+ 
+(clean-environment) ; first round, no error
+
+(define x1 3)(define x2 4)(define x3 5)
+(let ((x1 (+ x1 x2)) (y (+ x1 x2))) x1)
+x1 x2
+( define ( Transform tag x1 x5 )
+  ( if ( > tag 0 )
+       ( let ( ( x3 (+ x1 x5) )
+             )
+             (+ x3 x2)
+       );let
+       ( let ( ( x3 (- x1 x5) )
+             )
+             (+ x3 x2)
+       );let
+   );if
+);define Transform
+( define x1 (Transform 3 x2 x3) )
+( define x2 (Transform -3 x1 x3) )
+x1 x2 x3
+( define (SumUp start end) 
+  
+  ; return the sum of start, start+1, start+2, ..., end
+  ; requirement : start <= end
+  ; integer version + some nonsense code, which should not hurt
+  
+  ( cond ( (= start end) start )
+         ( (> start end) "Illegal input! the first argument must be smaller or equal to the second.")
+         ( else
+             ( let ( ( new-start (+ start 1) )
+                     ( x1 (+ x1 x2) )
+                     ( x3 (+ x3 5) )
+                   )
+                   ( - x1 x3 )
+                   ( + start ( SumUp new-start end ) )
+             );let
+         );else
+  );cond
+   
+);define SumUp
+
+(SumUp 5 10)
+(SumUp 5 3)
+(SumUp 5 5)
+(+ x1 x2 x3)
+
+(define (SumUp start end) 
+
+  ; return the sum of start, start+1, start+2, ..., end
+  ; requirement : start <= end
+  ; float version + some nonsense code, which should not hurt
+  
+  (cond ( (= start end) start )
+        ( (> start end) "Illegal input! the first argument must be smaller or equal to the second.")
+        ( else
+            ( let ( ( new-start (+ start 1) )
+                    ( x1 (+ x1 x2) )
+                    ( x3 (+ x3 5) )
+                  )
+                  ( - x1 x3)
+                  ( + start 
+                      ( if ( > new-start end ) ; just in case we've got a float here
+                           end
+                          ( SumUp new-start end ) 
+                      );if
+                  );+
+            );let
+        );else
+  );cond
+  
+);define SumUp
+
+(SumUp 3.5 10)
+(SumUp 3.5 3)
+(SumUp 3.5 3.5)
+(SumUp 3.5 (SumUp 8 10))
+(+ x1 x2 x3)
+
+(clean-environment)
+
+; (define ( atom? exp )
+;      (not (pair? exp)
+;      )
+;   )
+(atom? "Hi!")
+(atom? '(1 2))
+(atom? (car '("Hi" "there!")))
+(define ( append exp1 exp2 )
+    (cond ( (or (and (atom? exp1)
+                     (not (null? exp1))
+                )
+                (and (atom? exp2)
+                     (not (null? exp2))
+                )
+            )
+            (list "invalid argument" exp1 exp2)
+          )
+          ; neither exp1 nor exp2 is a non-nil atom (anyone can be nil though)
+          ( (null? exp1)
+            exp2
+          )
+          ( (null? exp2)
+            exp1
+          )
+          ; neither exp1 nor exp2 is an atom
+          ( #t
+            (cons (car exp1)
+                  (append (cdr exp1)
+                          exp2
+                  )
+            ); cons
+          ); #t
+    ); cond
+  ); define
+(append '(1 2 3) '(4 5))
+(append '(10 ((20 30) 40)) '((50 (60)) (70 (80 90)))) 
+(append (append '(1 2) '(3 4))
+          (append '((5) 6) '(7 8))
+  )
+(append '(1 2 . 3) '(4 5))
+(append (cons 1 2)
+          (car '((3 4) 5))
+  )
+; ( define (list? exp)
+;      ( cond ( (null? exp)
+;               #t
+;             )
+;             ( (atom? exp) ; non-nil atom
+;               #f
+;             )
+;             ; pair
+;             ( #t
+;               (list? (cdr exp))
+;             )
+;      );cond
+;   );define
+(list? '(1 2 3 4))
+(list? '(1 2 3 . 4))
+(list? '(1 2 (3 . 4)))
+(list? '(13579 ((2 3) . 4) 5))
+(list? (list (car '(1 2 3)) 4 5))
+( define ( append1 exp1 exp2 )
+     (cond ( (or (not (list? exp1))
+                 (not (list? exp2))
+             )
+             "invalid argument"
+           )
+           ( #t
+             (append exp1 exp2)
+           )
+     );cond
+  );define
+(append1 '(1 2 . 3) '(4 5))
+(append1 (cons 1 2)
+           (car '((3 4) 5))
+  )
+(list? (append1 '(1 2) '(3 4))
+  )
+(list? (list? (append1 '(1 2) '(3 4)
+                )
+         )
+  )
+(append1 '(10 ((20 30) 40)) '((50 (60)) (70 (80 90)))) 
+(define (reverse exp)
+    (cond ( (atom? exp)
+            exp
+          )
+          ( (not (list? exp))
+            "invalid argument"
+          )
+          ( #t
+            (append (reverse (cdr exp))
+                    (list (car exp))
+            )
+          )
+    );cond
+  ); define
+(reverse '(1 2 3 4))
+(reverse "Hi")
+(reverse (car '(a b c)))
+(reverse (append1 '(10 ((20 30) 40)) 
+                    '((50 (60)) (70 (80 90)))
+           )
+  ) 
+(define (pairing exp)
+    (cond ((null? exp)
+           exp
+          )
+          ((atom? exp)
+           (cons exp (list exp))
+          )
+          ( #t
+            (let ((first (car exp))
+                 )
+               (cons (cons first (list first))
+                     (pairing (cdr exp))
+               )
+            );let
+          );#t
+    );cond
+  );define
+(pairing '(1 2 3 4))
+(reverse (pairing '(1 2 3 4)))
+(define (AllAdd aList aNum)
+          (if (null? aList) 
+              aList
+              (cons (+ (car aList) aNum)
+                    (AllAdd (cdr aList) aNum)
+              )
+          )
+  )
+(AllAdd '(1 2 3 4) 5)
+(define a "=============== Problem 5 viewable case =================")
+a
+
+ ; define + lambda (用para.做為(initialized)"local para") - complex - COND IF BEGIN AND OR (nested calls)
+ ; + functional composition // functions 呼叫 functions
+ ; + let (local vs. global)
+ ; + nested locals vs. globals
+ 
+(clean-environment) ; first round, no error
+
+(define x1 3)(define x2 4)(define x3 5)
+
+( define (TrickySumUp start end) 
+  
+  ; return the sum of start, start+1, start+2, ..., end
+  ; requirement : start <= end
+  ; float version + some nonsense code, which should not hurt
+  
+  ( cond ( (= start end) start )
+         ( (> start end) "Illegal input! the first argument must be smaller or equal to the second.")
+         ( else
+           ( let ( ( new-start (+ start 1) )
+                   ( x1 (+ x1 x2) )
+                   ( x3 (+ x3 5) )
+                 )
+                 
+                 ; instead of
+                 
+                 ; ( + start 
+                 ;     ( if ( > new-start end ) ; just in case we've got a float here
+                 ;          end
+                 ;         ( TrickySumUp new-start end ) 
+                 ;     ) ; if
+                 ; );+
+                 
+                 ; we use below
+                 
+                 ( if ( > new-start end ) ; just in case we've got a float here
+                      ( begin (+ x1 x2) (+ start end))
+                      ( let ( ( sum-of-the-rest 
+                                (TrickySumUp new-start end) 
+                              )
+                            )
+                            ( + start sum-of-the-rest )
+                      );let
+                 );if
+           );let
+         );else
+  );cond
+   
+);define TrickySumUp
+
+(TrickySumUp 3.5 10)
+(TrickySumUp 3.5 2)
+(TrickySumUp 3.5 3.5)
+(+ x1 x2 x3)
+
+( define ( Abs x )
+  ; return the absolute value of X
+
+  ( if ( not ( real? x ) )
+       "Abs: the given argument has to be a real number (including integer)"
+       ( if ( < x 0 )
+            ( * x -1 )
+            x
+       );if
+  );if
+  
+);define Abs
+
+( define ( Real x ) 
+
+  ( cond ( ( not ( real? x ) )
+           "cannot cast something that is neither a real nor an integer into a real"
+         )
+         ( ( integer? x ) ( * 1.0 x )
+         )
+         ( else x )
+  );cond
+  
+);define Real
+
+( define ( Int x ) 
+  ; return the integer part of x
+
+  ( cond ( ( integer? x ) 
+           x 
+         )
+  
+         ; x is not an integer
+         
+         ( ( not ( real? x ) )
+           "Int: cannot cast something that is neither an integer nor a real into an integer"
+         )
+         
+         ; x is a real
+         
+         ( else
+  
+           ( if ( and ( < -1 x ) 
+                      ( <  x  1 ) 
+                );and
+           
+                0
+                
+                ; x is a real and either x <= -1 or 1 <= x
+           
+                ( let ( ( x ( Abs x ) )
+                        ( negative ( < x 0 ) )
+                      )
+                      ( let ( ( below-above ( FindRange x ) ) ; below <= x <= above
+                            )
+                            ( let ( ( below ( car below-above ) )
+                                    ( above ( car ( cdr below-above ) ) )
+                                  )
+                                  ( let ( ( floor ( IntFloor below x above ) )
+                                        )
+                                        ( if negative
+                                             ( * -1 floor )
+                                             floor
+                                        );if
+                                  );let
+                            );let
+                      );let
+                );let
+           );if
+         );else
+  );cond
+
+);define Int
+
+( define ( Power a n )
+  ; return a**n
+  ; requirement: n has to be an integer
+  
+  ( cond ( ( not ( integer? n ) )
+           "Power : n has to be an integer"
+         )
+         
+         ; n an integer
+         
+         ( ( < n 0 )
+           ( let ( ( positive ( * -1 n ) )
+                 )
+                 ( / 1.0 ( Power a positive ) )
+           );let
+         )
+         
+         ; n is a non-negative integer
+         
+         ( ( = n 0 )
+           1
+         )
+         
+         ; n is a positive integer
+         
+         ( else 
+           ( * a ( Power a ( - n 1 ) ) )
+         )
+  );cond
+  
+);define Power
+           
+( define ( FindRange x )
+  ; starting with 2**0, find n and m, so that n <= m and 2**n <= x1 < 2**m
+  ; return >>( 2**n 2**m )<<
+  ; x is assumed to be greater than or equal to 1
+  
+  ( if ( < x 1 )
+       "FindRange: x must be greater than or equal to 1"
+       ( Find-Range x 0 )
+  );if
+  
+);define FindRange 
+
+( define ( Find-Range x startWith )
+  ; starting with 2**startWith, find n and m, so that n <= m and 2**n <= x1 < 2**m
+  ; return >>( 2**n 2**m )<<
+  ; x is assumed to be greater than or equal to 1
+  
+  ( let ( ( start ( Power 2 startWith ) )
+          ( end ( Power 2 ( + startWith 1 ) ) )
+        )
+    ( cond ( ( = x start )
+             ( list start start )
+           )
+           ( ( < x end )
+             ( list start end )
+           )
+           ( else ; ( <= end x )
+             ( Find-Range x ( + startWith 1 ) )
+           )
+    );cond
+  );let
+
+);define Find-Range
+       
+( define ( IntFloor below x above )
+  ( if ( not ( and ( <= below x )
+                   ( <= x above )
+             )
+       )
+       "IntFloor: the three arguments should be BELOW <= X <= ABOVE"
+       ( Int-Floor below x above )
+  );if
+);define
+
+( define ( Int-Floor below x above ) 
+  ; BELOW and ABOVE are two integers s. t. BELOW <= x <= ABOVE
+  ; find the integer FLOOR, so that FLOOR <= x < FLOOR+1
+  ; return FLOOR
+  
+  ( cond ( ( = below x ) below )
+         ( ( = above x ) above )
+         ( ( = ( + below 1 ) above )
+           below
+         )
+         
+         ; BELOW + 1 < ABOVE
+         
+         ( else
+           ( let ( ( middle ( / ( + below above ) 2 ) 
+                   )
+                 )
+                 
+                 ; MIDDLE is neither BELOW nor ABOVE
+                 ; i.e., BELOW < MIDDLE < ABOVE
+                 
+                 ( if ( < x middle )
+                      ( Int-Floor below x middle )
+                      ( Int-Floor middle x above )
+                 );if
+           );let
+         );else
+  );cond
+
+);define Int-Floor
+
+(FindRange 13579.246810)
+(IntFloor 8192 13579.246810 16384)
+(Int 13579.246810)
+(Real (Int 13579.246810))
+(FindRange 1024)
+(Int 1024)   
+(Int -13579.246810)
+
+;;;;;;;;;;;;;;;;;;; Below 4-5 2/3 ;;;;;;;;;;;;;;
+
+(define a "=============== Problem 4 viewable case =================")
 a
 ( clean-environment )
 
@@ -1625,25 +2559,31 @@ a
 
 ( define ( ExpertSystemShell )
 
-  ( display-string
+  ( if #t
   
-    ( string-append
-      "------------------ Available choices are ------------------\n"
-      "1 or DefineExpertise , 2 or RemoveExpertise , 3 or ListExpertiseNames ,\n"
-      "4 or ListRuleSet , 5 or ReplaceRuleSet , 6 or ReplaceRuleOfRuleSet ,\n"
-      "---\n"
-      "7 or DefineCondition , 8 or DefineActionList ,\n"
-      "9 or UpdateCondition , 10 or UpdateActionList ,\n"
-      "11 or RemoveCondition , 12 or RemoveActionList ,\n"
-      "13 or ListConditionKeys , 14 or ListActionListKeys ,\n"
-      "15 or SearchCondition , 16 or SearchActionList ,\n"
-      "17 or ListAllConditions , 18 or ListAllActionLists ,\n"
-      "19 or DefineExpertiseFromDB, 20 or ReplaceRuleOfExpertiseWithNewlyComposedRuleUsingDB\n"
-      "21 or Quit or quit\n"
-      "Please enter the number (or item-name) of your choice > "
-    )
+    ( display-string "? > " )
     
-  );display-string
+    ( display-string
+    
+      ( string-append
+        "------------------ Available choices are ------------------\n"
+        "1 or DefineExpertise , 2 or RemoveExpertise , 3 or ListExpertiseNames ,\n"
+        "4 or ListRuleSet , 5 or ReplaceRuleSet , 6 or ReplaceRuleOfRuleSet ,\n"
+        "---\n"
+        "7 or DefineCondition , 8 or DefineActionList ,\n"
+        "9 or UpdateCondition , 10 or UpdateActionList ,\n"
+        "11 or RemoveCondition , 12 or RemoveActionList ,\n"
+        "13 or ListConditionKeys , 14 or ListActionListKeys ,\n"
+        "15 or SearchCondition , 16 or SearchActionList ,\n"
+        "17 or ListAllConditions , 18 or ListAllActionLists ,\n"
+        "19 or DefineExpertiseFromDB, 20 or ReplaceRuleOfExpertiseWithNewlyComposedRuleUsingDB\n"
+        "21 or Quit or quit\n"
+        "Please enter the number (or item-name) of your choice > "
+      )
+      
+    );display-string
+  
+  );if #f
   
   ( let ( ( %userChoice nil )
         );locals
@@ -3056,21 +3996,15 @@ a
 
 ( set! action-7652145 nil )
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Utilities ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
 ( ExpertSystemShell )
 13  ; ListConditionKeys
-35
 14  ; ListActionListKeys
 15  ; SearchCondition
 661
-15  ; SearchCondition
-328564
-16  ; SearchActionList
-238
 16  ; SearchActionList
 473
 17  ; ListAllConditions
@@ -3083,27 +4017,15 @@ ExampleExpertise
 4   ; ListRuleSet
 Expertise-01
 quit
-(ExpertSYSTEMShell)
 
 (ExampleExpertise 35000)
 (Expertise-01 35001)
 (Expertise-01 35017)
-( Expertise-01 (Expertise-01 35000) )
-( Expertise-01 (Expertise-08 35000) )
-( Expertise-01 ( begin
-                 (Expertise-01 35000)
-                 40000
-               )
-)
 
 ( ExpertSystemShell )
 7  ; DefineCondition
 3518792
-( and ( >= n 200000 )
-      ( if ( = ( % n 2 ) 1 )
-           #t
-      )
-)
+( >= n 200000 )
 
 7  ; DefineCondition
 5478952
@@ -3111,11 +4033,7 @@ quit
 
 7  ; DefineCondition
 9157342
-( or ( >= n 50000 )
-     ( == ( % n 5 )
-          0
-     )
-)
+( >= n 50000 )
 
 7  ; DefineCondition
 1749826
@@ -3130,31 +4048,25 @@ else
 19 ; DefineExpertiseFromDB
 TryTrySee ; Name of the to-be-defined-expertise
 y ; Define a new rule from Condition/Action-list in DB? (Y/N)
-3518792 ; Key of the condition to search
+94 ; Key of the condition to search
 282 ; Key of the action-list to search
 y ; Define a new rule from Condition/Action-list in DB? (Y/N)
-5478952 ; Key of the condition to search
+189 ; Key of the condition to search
 94 ; Key of the action-list to search
 y ; Define a new rule from Condition/Action-list in DB? (Y/N)
-9157342 ; Key of the condition to search ; was 282
+362 ; Key of the condition to search ; was 282
 189 ; Key of the action-list to search
-y ; Define a new rule from Condition/Action-list in DB? (Y/N)
-1749826 ; Key of the condition to search ; was 282
-94 ; Key of the action-list to search
 n ; Define a new rule from Condition/Action-list in DB? (Y/N)
 ; The expertise 'TryTrySee' has been established.
 quit
 ; Bye!
 
 a b
-(TryTrySee 235487) a b
-(TryTrySee 235488) a b
-(TryTrySee 175487) a b
-(TryTrySee 175488) a b
-(TryTrySee 75487) a b
-(TryTrySee 75488) a b
 (TryTrySee 35487) a b
-(TryTrySee 35488) a b
+(TryTrySee 35487) a b
+(TryTrySee 35487) a b
+
+
 
 (ExpertSystemShell)
 3 ; ListExpertiseNames
@@ -3169,15 +4081,6 @@ TryTrySee ; name of the expertise
        
          ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
                );local
-               
-           ( set! a ( + b
-                        ( if ( = ( % n 5 )
-                                 0
-                             )
-                             ( + n 5 )
-                        )
-                    )
-           )
          
            ( cond   
                   
@@ -3241,16 +4144,6 @@ TryTrySee ; name of the expertise
          ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
                );local
          
-           ( set! a ( + b
-                        ( if ( = ( % n 5 )
-                                 0
-                             )
-                             ( + n ( Whatever ) )
-                             n
-                        )
-                    )
-           )
-         
            ( cond   
                   
              ( ( and ( <= 200000 %p ) ( <= %p 300000 ) 
@@ -3311,18 +4204,6 @@ TryTrySee ; name of the expertise
        
          ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
                );local
-         
-           ( set! a ( + b ( begin
-                            ( if ( = ( % n 5 )
-                                     0
-                                 )
-                                 ( + n 5 )
-                            )
-                            ( set! b ( % n 10 ) )
-                            ( + b 2 )
-                          )
-                    )
-           )
          
            ( cond   
                   
@@ -3385,18 +4266,6 @@ TryTrySee ; name of the expertise
          ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
                );local
          
-           ( set! a ( + b ( begin
-                            ( if ( = ( % n 5 )
-                                     0
-                                 )
-                                 ( b 2 )
-                            )
-                            ( set! b ( % n 10 ) )
-                            b
-                          )
-                    )
-           )
-         
            ( cond   
                   
              ( ( and ( <= 30000 %p ) ( <= %p 50000 ) 
@@ -3458,14 +4327,6 @@ TryTrySee ; name of the expertise
        ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
              );local
        
-         ( set! a ( + b
-                      ( if ( = ( % n 5 )
-                               0
-                           )
-                           ( + n 5 )
-                      )
-                  )
-         )
          ( cond   
                 
            ( ( and ( <= 500000 %p ) ( <= %p 800000 ) 
@@ -3527,16 +4388,6 @@ TryTrySee ; name of the expertise
        ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
              );local
        
-         ( set! a ( + b
-                      ( if ( = ( % n 5 )
-                               0
-                           )
-                           ( + n ( Whatever ) )
-                           n
-                      )
-                  )
-         )
-         
          ( cond   
                 
            ( ( and ( <= 400000 %p ) ( <= %p 600000 ) 
@@ -3599,18 +4450,6 @@ TryTrySee ; name of the expertise
        ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
              );local
        
-         ( set! a ( + b ( begin
-                          ( if ( = ( % n 5 )
-                                   0
-                               )
-                               ( + n 5 )
-                          )
-                          ( set! b ( % n 10 ) )
-                          ( + b 2 )
-                        )
-                  )
-         )
-         
          ( cond   
                 
            ( ( and ( <= 300000 %p ) ( <= %p 400000 ) 
@@ -3672,18 +4511,6 @@ TryTrySee ; name of the expertise
        ( let ( ( %p ( PriceTag n ) )  ; action ; it can be multiple actions
              );local
        
-         ( set! a ( + b ( begin
-                          ( if ( = ( % n 5 )
-                                   0
-                               )
-                               ( +-- b 2 )
-                          )
-                          ( set! b ( % n 10 ) )
-                          b
-                        )
-                  )
-         )
-         
          ( cond   
                 
            ( ( and ( <= 200000 %p ) ( <= %p 300000 ) 
@@ -3776,34 +4603,40 @@ quit
 
 (ResetTransactionState)
 
-(OverSpent 251475)
-(OverSpent 251480)
-(OverSpent 251473)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
 (OverSpent 251476)
 
-(OverSpent 151473)
-(OverSpent 151475) 
-
-(OverSpent 81976)
-(OverSpent 81975)
-(OverSpent 31976)
-(OverSpent 31975)
-
-(Exaggerated 382543)
-(Exaggerated 382540)
-
-(Exaggerated 251475)
-(Exaggerated 251480)
-(Exaggerated 251473)
+(Exaggerated 251476)
 (Exaggerated 251476)
 
-(Exaggerated 151480)
-(Exaggerated 151483)
+(OverSpent 78254)
+(OverSpent 78254)
 
-(Exaggerated 51480)
-(Exaggerated 51588)
-(Exaggerated 31480)
-(Exaggerated 31588)
+(Exaggerated 78254)
+
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+
+(Exaggerated 38255)
 
 (ExpertSystemShell)
 
@@ -3829,44 +4662,63 @@ quit
 1124365
 16 ; SearchActionList
 4545125
-15 ; SearchCondition
-2549865
-16 ; SearchActionList
-4544887
 quit
 
 (ResetTransactionState)
 
-(OverSpent 251475)
-(OverSpent 251480)
-(OverSpent 251473)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
 (OverSpent 251476)
 
-(OverSpent 151473)
-(OverSpent 151475) 
-
-(OverSpent 81976)
-(OverSpent 81975)
-(OverSpent 31967)
-(OverSpent 31968)
-(OverSpent 31957)
-(OverSpent 31958)
-
-(Exaggerated 382543)
-(Exaggerated 382540)
-
-(Exaggerated 251475)
-(Exaggerated 251480)
-(Exaggerated 251473)
+(Exaggerated 251476)
 (Exaggerated 251476)
 
-(Exaggerated 151480)
-(Exaggerated 151473)
+(OverSpent 78254)
+(OverSpent 78254)
 
-(Exaggerated 51480)
-(Exaggerated 51473)
-(Exaggerated 31480)
-(Exaggerated 31473)
+(Exaggerated 78254)
+
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+(Exaggerated 38254)
+
+(Exaggerated 38255)
+
+(ResetTransactionState)
+
+(Exaggerated 1251476)
+(Exaggerated 1251476)
+(Exaggerated 1251476)
+(Exaggerated 1251476)
+
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3875,10 +4727,6 @@ quit
 );define ++
 
 ( ExpertSystemShell )
-
-7 ; DefineCondition
-1547254
-( >= n 50000 )
 
 8 ; DefineActionList
 7457747
@@ -3890,10 +4738,6 @@ quit
            10 
        )
     ( begin
-    
-      ( if ( = ( % n 2 ) 1 )
-           Hi
-      )
     
       ( cond
         ( ( not ( TopPrice? ) )
@@ -3913,10 +4757,6 @@ quit
     ); begin
     
     ( begin
-    
-      ( if ( = ( % n 2 ) 0 )
-           ( + 'n Hi )
-      )
     
       ( cond
         ( ( not ( BottomPrice? ) )
@@ -3945,46 +4785,1794 @@ OverSpent ; Name of the expertise
 362 ; key of the condition
 164 ; key of the action-list
 
-20 ; ReplaceRuleOfExpertiseWithNewlyComposedRuleUsingDB
-OverSpent ; Name of the expertise
-3 ; Ordering of the rule that is to be replaced
-1547254 ; key of the condition
-251 ; key of the action-list
-
 quit
 
 (ResetTransactionState)
 
-(OverSpent 251475)
-(OverSpent 251480)
-(OverSpent 251473)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
+(OverSpent 251476)
 (OverSpent 251476)
 
-(OverSpent 151473)
-(OverSpent 151475) 
-
-(OverSpent 81976)
-(OverSpent 81975)
-(OverSpent 31967)
-(OverSpent 31968)
-(OverSpent 31957)
-(OverSpent 31958)
-
-(Exaggerated 382543)
-(Exaggerated 382540)
-
-(Exaggerated 251475)
-(Exaggerated 251480)
-(Exaggerated 251473)
+(Exaggerated 251476)
 (Exaggerated 251476)
 
-(Exaggerated 151480)
-(Exaggerated 151473)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
+(OverSpent 78254)
 
-(Exaggerated 51480)
-(Exaggerated 51473)
-(Exaggerated 31480)
-(Exaggerated 31473)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
+(Exaggerated 78254)
 
-"Great!!!   
-"
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+
+(ResetTransactionState)
+
+(Exaggerated 1251476)
+(Exaggerated 1251476)
+(Exaggerated 1251476)
+(Exaggerated 1251476)
+
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+(OverSpent 18254)
+
+(exit)
+<<
+
+正確的輸出應該是>>Welcome to OurScheme!
+
+> a defined
+
+> "=============== Problem 1 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> 12
+
+> 20
+
+> 0
+
+> Fif defined
+
+> 10
+
+> 1
+
+> 8
+
+> 76
+
+> Fbegin defined
+
+> 1
+
+> -76
+
+> 0
+
+> Fand defined
+
+> #t
+
+> nil
+
+> #t
+
+> nil
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> x4 defined
+
+> #<procedure lambda>
+
+> 10
+
+> 3
+
+> 4
+
+> environment cleaned
+
+> cadr defined
+
+> #<procedure cadr>
+
+> ( 30
+  40
+)
+
+> cadr-clone defined
+
+> #<procedure cadr>
+
+> ( 30
+  ( 40
+  )
+)
+
+> cadr-clone defined
+
+> ( 10
+  20
+)
+
+> cadr-clone defined
+
+> cdar defined
+
+> ( 2
+)
+
+> first defined
+
+> #<procedure car>
+
+> #<procedure car>
+
+> 10
+
+> FFirst defined
+
+> car
+
+> second defined
+
+> 20
+
+> ( ( 40
+    50
+  )
+  60
+)
+
+> ( 40
+  50
+)
+
+> 50
+
+> ( 50
+)
+
+> a defined
+
+> "=============== Problem 2 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> 24
+
+> 40
+
+> -20
+
+> Fif defined
+
+> -34
+
+> -43
+
+> 52
+
+> 32
+
+> Fbegin defined
+
+> 0
+
+> 83
+
+> 7
+
+> Fand defined
+
+> nil
+
+> nil
+
+> #t
+
+> nil
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> nil
+
+> #t
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 6
+
+> 9
+
+> environment cleaned
+
+> ( 3
+  2
+  3
+)
+
+> 5
+
+> 5
+
+> environment cleaned
+
+> a defined
+
+> 13
+
+> 5
+
+> 16
+
+> 5
+
+> -2
+
+> 3
+
+> 41
+
+> a defined
+
+> "=============== Problem 3 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> Fcond defined
+
+> Fif defined
+
+> Fbegin defined
+
+> Fand defined
+
+> For defined
+
+> -10320
+
+> -10
+
+> 8
+
+> For defined
+
+> nil
+
+> #t
+
+> #t
+
+> nil
+
+> #t
+
+> nil
+
+> Flambda defined
+
+> #<procedure Flambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> -60
+
+> -86
+
+> -2580
+
+> -752
+
+> environment cleaned
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> #<procedure lambda>
+
+> 11
+
+> a defined
+
+> f defined
+
+> #<procedure lambda>
+
+> c defined
+
+> 14
+
+> 54
+
+> x defined
+
+> y defined
+
+> g defined
+
+> 77556
+
+> 3110
+
+> F defined
+
+> G defined
+
+> 15
+
+> F defined
+
+> 40
+
+> F defined
+
+> 20
+
+> H defined
+
+> ( 3
+  .
+  5
+)
+
+> 10
+
+> F defined
+
+> ( 20
+  30
+)
+
+> 110
+
+> cadr defined
+
+> global defined
+
+> Try defined
+
+> 20
+
+> 10
+
+> ( 20
+  30
+)
+
+> a defined
+
+> "=============== Problem 4 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> 7
+
+> 3
+
+> 4
+
+> Transform defined
+
+> x1 defined
+
+> x2 defined
+
+> 13
+
+> 12
+
+> 5
+
+> SumUp defined
+
+> 45
+
+> "Illegal input! the first argument must be smaller or equal to the second."
+
+> 5
+
+> 30
+
+> SumUp defined
+
+> 55.500
+
+> "Illegal input! the first argument must be smaller or equal to the second."
+
+> 3.500
+
+> 387.000
+
+> 30
+
+> environment cleaned
+
+> #t
+
+> nil
+
+> #t
+
+> append defined
+
+> ( 1
+  2
+  3
+  4
+  5
+)
+
+> ( 10
+  ( ( 20
+      30
+    )
+    40
+  )
+  ( 50
+    ( 60
+    )
+  )
+  ( 70
+    ( 80
+      90
+    )
+  )
+)
+
+> ( 1
+  2
+  3
+  4
+  ( 5
+  )
+  6
+  7
+  8
+)
+
+> ( 1
+  2
+  "invalid argument"
+  3
+  ( 4
+    5
+  )
+)
+
+> ( 1
+  "invalid argument"
+  2
+  ( 3
+    4
+  )
+)
+
+> #t
+
+> nil
+
+> #t
+
+> #t
+
+> #t
+
+> append1 defined
+
+> "invalid argument"
+
+> "invalid argument"
+
+> #t
+
+> nil
+
+> ( 10
+  ( ( 20
+      30
+    )
+    40
+  )
+  ( 50
+    ( 60
+    )
+  )
+  ( 70
+    ( 80
+      90
+    )
+  )
+)
+
+> reverse defined
+
+> ( 4
+  3
+  2
+  1
+)
+
+> "Hi"
+
+> a
+
+> ( ( 70
+    ( 80
+      90
+    )
+  )
+  ( 50
+    ( 60
+    )
+  )
+  ( ( 20
+      30
+    )
+    40
+  )
+  10
+)
+
+> pairing defined
+
+> ( ( 1
+    1
+  )
+  ( 2
+    2
+  )
+  ( 3
+    3
+  )
+  ( 4
+    4
+  )
+)
+
+> ( ( 4
+    4
+  )
+  ( 3
+    3
+  )
+  ( 2
+    2
+  )
+  ( 1
+    1
+  )
+)
+
+> AllAdd defined
+
+> ( 6
+  7
+  8
+  9
+)
+
+> a defined
+
+> "=============== Problem 5 viewable case ================="
+
+> environment cleaned
+
+> x1 defined
+
+> x2 defined
+
+> x3 defined
+
+> TrickySumUp defined
+
+> 55.500
+
+> "Illegal input! the first argument must be smaller or equal to the second."
+
+> 3.500
+
+> 12
+
+> Abs defined
+
+> Real defined
+
+> Int defined
+
+> Power defined
+
+> FindRange defined
+
+> Find-Range defined
+
+> IntFloor defined
+
+> Int-Floor defined
+
+> ( 8192
+  16384
+)
+
+> 13579
+
+> 13579
+
+> 13579.000
+
+> ( 1024
+  1024
+)
+
+> 1024
+
+> -13579
+
+> a defined
+
+> "=============== Problem 4 viewable case ================="
+
+> environment cleaned
+
+> cadr defined
+
+> caddr defined
+
+> caar defined
+
+> caadr defined
+
+> caaddr defined
+
+> % defined
+
+> $%%% defined
+
+> KeyPair defined
+
+> RealKey defined
+
+> ListAppend defined
+
+> $ListAppend defined
+
+> ListLength defined
+
+> $ListLength defined
+
+> NthElementOf defined
+
+> $NthElementOf defined
+
+> WithNthElementOfListReplaced defined
+
+> $WithNthElementOfListReplaced defined
+
+> DivisibleBy defined
+
+> PrintListOfStringsAsSentence defined
+
+> PrintListOfSymbolsAsSentence defined
+
+> PrintListOfSymbolsStringsAsSentence defined
+
+> PrintListOfSymbolsNumbersStringsAsSentence defined
+
+> @size@ defined
+
+> @price@ defined
+
+> @quality@ defined
+
+> ResetTransactionState defined
+
+> ProductIndex defined
+
+> TransactionState defined
+
+> Top? defined
+
+> Bottom? defined
+
+> TopPrice? defined
+
+> BottomPrice? defined
+
+> TopSize? defined
+
+> BottomSize? defined
+
+> TopQuality? defined
+
+> BottomQuality? defined
+
+> Downgrade defined
+
+> Upgrade defined
+
+> DowngradeSize defined
+
+> DowngradePrice defined
+
+> DowngradeQuality defined
+
+> UpgradeSize defined
+
+> UpgradePrice defined
+
+> UpgradeQuality defined
+
+> Abs defined
+
+> PriceTag defined
+
+> ExampleExpertise defined
+
+> $expertise-DB defined
+
+> RuleSetOf defined
+
+> $RuleSetOfFrom defined
+
+> WithNthRuleReplaced defined
+
+> Rule defined
+
+> DefineExpertise defined
+
+> $AddToExpertiseDB defined
+
+> $IndexOfExpertiseEntry defined
+
+> ruleList-01 defined
+
+> The expertise 'Expertise-01' has been established.
+#t
+
+> rule-139 defined
+
+> The expertise 'Expertise-02' has been established.
+#t
+
+> The expertise 'Expertise-03' has been established.
+#t
+
+> ListExpertiseNames defined
+
+> $ListExpertiseNames defined
+
+> GetNotYetUsedKeyFromUser defined
+
+> DoDefineCondition defined
+
+> DoDefineAction defined
+
+> GetNotYetUsedExpertiseNameFromUser defined
+
+> NameUsedInExpertiseDB? defined
+
+> $NameUsedInExpertiseDB? defined
+
+> DoDefineExpertiseFromDB defined
+
+> DoReplaceRuleOfExpertiseWithNewlyComposedRuleUsingDB defined
+
+> GetRuleSetFromDB defined
+
+> GetConditionFromDB defined
+
+> GetActionListFromDB defined
+
+> DoSearchCondition defined
+
+> DoSearchAction defined
+
+> DoUpdateCondition defined
+
+> DoUpdateAction defined
+
+> DoRemoveCondition defined
+
+> DoRemoveAction defined
+
+> DoListConditions defined
+
+> DoListActions defined
+
+> DoListConditionKeys defined
+
+> DoListActionKeys defined
+
+> ExpertSystemShell defined
+
+> DoDefineNewExpertise defined
+
+> DoRemoveExpertise defined
+
+> $WithExpertiseRemoved defined
+
+> ListRuleSet defined
+
+> DoReplaceRuleSet defined
+
+> $ReplaceRuleSet defined
+
+> DoReplaceRuleOfRuleSet defined
+
+> $ReplaceRuleOfRuleSet defined
+
+> nil
+
+> ListConditionBST defined
+
+> ListActionBST defined
+
+> ClearConditionDB defined
+
+> ClearActionDB defined
+
+> ListConditionDB defined
+
+> ListActionDB defined
+
+> ListDB-BST defined
+
+> $ListDB-BST defined
+
+> KeyUsedInConditionDB? defined
+
+> KeyUsedInActionDB? defined
+
+> KeyUsedInBST? defined
+
+> $KeyUsedInBST? defined
+
+> ListKeysOfConditionDB defined
+
+> ListKeysOfActionDB defined
+
+> ListKeysOfBST defined
+
+> $ListKeysOfBST defined
+
+> SearchConditionDB defined
+
+> SearchActionDB defined
+
+> SearchBST defined
+
+> $SearchBST defined
+
+> AddToConditionDB defined
+
+> AddToActionDB defined
+
+> AddToBST defined
+
+> $AddToBST defined
+
+> UpdateConditionDB defined
+
+> UpdateActionDB defined
+
+> UpdateBST defined
+
+> $UpdateBST defined
+
+> FindMaxBSTnode defined
+
+> $FindMaxBSTnode defined
+
+> FindMinBSTnode defined
+
+> $FindMinBSTnode defined
+
+> RemoveFromConditionDB defined
+
+> RemoveFromActionDB defined
+
+> RemoveFromBST defined
+
+> $RemoveFromBST defined
+
+> ( DivisibleBy
+  n
+  7652145
+)
+
+> "Key (short-version long-version) : ( 189  568 )"
+
+> "Key (short-version long-version) : ( 94  473 )"
+
+> "Key (short-version long-version) : ( 282  661 )"
+
+> nil
+
+> 20
+
+> 30
+
+> ( ( set!
+    a
+    ( +
+      n
+      a
+    )
+  )
+  ( set!
+    b
+    ( +
+      n
+      a
+      b
+    )
+  )
+)
+
+> "Key (short-version long-version) : ( 189  568 )"
+
+> "Key (short-version long-version) : ( 94  473 )"
+
+> "Key (short-version long-version) : ( 282  661 )"
+
+> nil
+
+> ? > ( 94  473 )
+( 189  568 )
+( 282  661 )
+? > ( 94  473 )
+( 189  568 )
+( 282  661 )
+? > Key of the condition to be searched for > ( DivisibleBy
+  n
+  7652145
+)
+? > Key of the action-list to be searched for > ( ( set!
+    a
+    ( +
+      n
+      a
+    )
+  )
+  ( set!
+    b
+    ( +
+      n
+      a
+      b
+    )
+  )
+)
+? > ------------------------
+( 94  473 )
+( DivisibleBy
+  n
+  7652145
+)
+------------------------
+( 189  568 )
+( DivisibleBy
+  n
+  7652145
+)
+------------------------
+( 282  661 )
+( DivisibleBy
+  n
+  7652145
+)
+? > ------------------------
+( 94  473 )
+( ( set!
+    a
+    ( +
+      n
+      a
+    )
+  )
+  ( set!
+    b
+    ( +
+      n
+      a
+      b
+    )
+  )
+)
+------------------------
+( 189  568 )
+( ( set!
+    a
+    ( +
+      n
+      a
+    )
+  )
+  ( set!
+    b
+    ( +
+      n
+      a
+      b
+    )
+  )
+)
+------------------------
+( 282  661 )
+( ( set!
+    a
+    ( +
+      n
+      a
+    )
+  )
+  ( set!
+    b
+    ( +
+      n
+      a
+      b
+    )
+  )
+)
+? > Expertise-03
+Expertise-02
+Expertise-01
+ExampleExpertise
+? > Please give the name of the expertise > "NoSuchExpertise not found in expertise-DB"
+? > Please give the name of the expertise > ( ( ( DivisibleBy
+      n
+      3
+    )
+    ( cond
+      ( ( not
+          ( TopSize?
+          )
+        )
+        ( UpgradeSize
+        )
+      )
+      ( ( not
+          ( TopPrice?
+          )
+        )
+        ( UpgradePrice
+        )
+      )
+      ( ( not
+          ( TopQuality?
+          )
+        )
+        ( UpgradeQuality
+        )
+      )
+    )
+    ( TransactionState
+    )
+  )
+  ( ( DivisibleBy
+      n
+      5
+    )
+    ( cond
+      ( ( not
+          ( BottomSize?
+          )
+        )
+        ( DowngradeSize
+        )
+      )
+      ( ( not
+          ( BottomPrice?
+          )
+        )
+        ( DowngradePrice
+        )
+      )
+      ( ( not
+          ( BottomQuality?
+          )
+        )
+        ( DowngradeQuality
+        )
+      )
+    )
+    ( TransactionState
+    )
+  )
+  ( else
+    ( if
+      ( not
+        ( TopPrice?
+        )
+      )
+      ( UpgradePrice
+      )
+    )
+    ( TransactionState
+    )
+  )
+)
+? > Please give the name of the expertise > ( ( ( DivisibleBy
+      n
+      3
+    )
+    ( cond
+      ( ( not
+          ( TopSize?
+          )
+        )
+        ( UpgradeSize
+        )
+      )
+      ( ( not
+          ( TopPrice?
+          )
+        )
+        ( UpgradePrice
+        )
+      )
+      ( ( not
+          ( TopQuality?
+          )
+        )
+        ( UpgradeQuality
+        )
+      )
+    )
+    ( TransactionState
+    )
+  )
+  ( ( DivisibleBy
+      n
+      5
+    )
+    ( cond
+      ( ( not
+          ( BottomSize?
+          )
+        )
+        ( DowngradeSize
+        )
+      )
+      ( ( not
+          ( BottomPrice?
+          )
+        )
+        ( DowngradePrice
+        )
+      )
+      ( ( not
+          ( BottomQuality?
+          )
+        )
+        ( DowngradeQuality
+        )
+      )
+    )
+    ( TransactionState
+    )
+  )
+  ( else
+    ( if
+      ( not
+        ( TopPrice?
+        )
+      )
+      ( UpgradePrice
+      )
+    )
+    ( TransactionState
+    )
+  )
+)
+? > Bye!
+
+> "quality : 3 size : 2 price : 3 ProductIndex : 5"
+
+> "quality : 3 size : 3 price : 3 ProductIndex : 6"
+
+> "quality : 3 size : 3 price : 4 ProductIndex : 7"
+
+> ? > Key (at least 5 digits) associated with the to-be-defined-item > The condition to be added to the DB > Key (short-version long-version) : ( 156  3518792 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The condition to be added to the DB > Key (short-version long-version) : ( 128  5478952 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The condition to be added to the DB > Key (short-version long-version) : ( 323  9157342 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The condition to be added to the DB > Key (short-version long-version) : ( 362  1749826 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The condition to be added to the DB > Key (short-version long-version) : ( 373  4865217 )
+? > ( 94  473 )
+( 128  5478952 )
+( 156  3518792 )
+( 189  568 )
+( 282  661 )
+( 323  9157342 )
+( 362  1749826 )
+( 373  4865217 )
+? > Name of the to-be-defined-expertise > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > The expertise 'TryTrySee' has been established.
+? > Bye!
+
+> 20
+
+> 30
+
+> 71024
+
+> 35507
+
+> 71024
+
+> 177505
+
+> 70994
+
+> 177505
+
+> 319473
+
+> 106481
+
+> 319473
+
+> ? > TryTrySee
+Expertise-03
+Expertise-02
+Expertise-01
+ExampleExpertise
+? > Please give the name of the expertise > ( ( ( DivisibleBy
+      n
+      7652145
+    )
+    ( set!
+      a
+      ( +
+        n
+        a
+      )
+    )
+    ( set!
+      b
+      ( +
+        n
+        a
+        b
+      )
+    )
+  )
+  ( ( DivisibleBy
+      n
+      7652145
+    )
+    ( set!
+      a
+      ( +
+        n
+        a
+      )
+    )
+    ( set!
+      b
+      ( +
+        n
+        a
+        b
+      )
+    )
+  )
+  ( else
+    ( set!
+      a
+      ( +
+        n
+        a
+      )
+    )
+    ( set!
+      b
+      ( +
+        n
+        a
+        b
+      )
+    )
+  )
+)
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 231  49256587 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 245  398574 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 251  1124365 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 83  9258674 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 157  4545125 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 40  8416872 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > Sorry, this key is already in use. Please specify another one.
+Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 59  5545587 )
+? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 106  2653485 )
+? > ( 40  8416872 )
+( 59  5545587 )
+( 83  9258674 )
+( 94  473 )
+( 106  2653485 )
+( 157  4545125 )
+( 189  568 )
+( 231  49256587 )
+( 245  398574 )
+( 251  1124365 )
+( 282  661 )
+? > Name of the to-be-defined-expertise > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > The expertise 'OverSpent' has been established.
+? > Name of the to-be-defined-expertise > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > Key of the condition > Key of the action-list > Define a new rule from Condition/Action-list in DB? (Y/N) > The expertise 'Exaggerated' has been established.
+? > Bye!
+
+> #t
+
+> "quality : 3 size : 4 price : 3 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
+
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
+
+> "quality : 5 size : 4 price : 5 ProductIndex : 20"
+
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
+
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
+
+> "quality : 5 size : 2 price : 5 ProductIndex : 18"
+
+> "quality : 5 size : 1 price : 5 ProductIndex : 17"
+
+> "quality : 5 size : 1 price : 4 ProductIndex : 18"
+
+> "quality : 5 size : 1 price : 3 ProductIndex : 19"
+
+> "quality : 5 size : 1 price : 2 ProductIndex : 20"
+
+> "quality : 5 size : 1 price : 1 ProductIndex : 21"
+
+> "quality : 4 size : 1 price : 1 ProductIndex : 15"
+
+> "quality : 3 size : 1 price : 1 ProductIndex : 2"
+
+> "quality : 3 size : 2 price : 1 ProductIndex : 3"
+
+> "quality : 3 size : 3 price : 1 ProductIndex : 4"
+
+> "quality : 3 size : 4 price : 1 ProductIndex : 5"
+
+> "quality : 3 size : 5 price : 1 ProductIndex : 6"
+
+> "quality : 3 size : 5 price : 2 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> ? > Key of the condition to remove > ? > Key of the condition to remove > ? > ( 94  473 )
+( 128  5478952 )
+( 156  3518792 )
+( 282  661 )
+( 362  1749826 )
+( 373  4865217 )
+? > Key of the action-list to remove > ? > Key of the action-list to remove > ? > Key of the action-list to remove > ? > ( 59  5545587 )
+( 83  9258674 )
+( 94  473 )
+( 106  2653485 )
+( 157  4545125 )
+( 189  568 )
+( 245  398574 )
+( 282  661 )
+? > Key of the condition to be searched for > SearchBST error : the key 323 (originally 9157342) is not on the BST.
+? > Key of the condition to be searched for > ( >=
+  n
+  100000
+)
+? > Key of the action-list to be searched for > SearchBST error : the key 113 (originally 78945) is not on the BST.
+? > Key of the action-list to be searched for > SearchBST error : the key 251 (originally 1124365) is not on the BST.
+? > Key of the action-list to be searched for > ( ( let
+    ( ( %p
+        ( PriceTag
+          n
+        )
+      )
+    )
+    ( cond
+      ( ( and
+          ( <=
+            500000
+            %p
+          )
+          ( <=
+            %p
+            800000
+          )
+        )
+        #t
+      )
+      ( ( <
+          %p
+          500000
+        )
+        ( cond
+          ( ( not
+              ( TopSize?
+              )
+            )
+            ( UpgradeSize
+            )
+          )
+          ( ( not
+              ( TopPrice?
+              )
+            )
+            ( UpgradePrice
+            )
+          )
+          ( ( not
+              ( TopQuality?
+              )
+            )
+            ( UpgradeQuality
+            )
+          )
+        )
+      )
+      ( ( <
+          800000
+          %p
+        )
+        ( cond
+          ( ( not
+              ( BottomSize?
+              )
+            )
+            ( DowngradeSize
+            )
+          )
+          ( ( not
+              ( BottomPrice?
+              )
+            )
+            ( DowngradePrice
+            )
+          )
+          ( ( not
+              ( BottomQuality?
+              )
+            )
+            ( DowngradeQuality
+            )
+          )
+        )
+      )
+    )
+    ( TransactionState
+    )
+  )
+)
+? > Bye!
+
+> #t
+
+> "quality : 3 size : 4 price : 3 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
+
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
+
+> "quality : 5 size : 4 price : 5 ProductIndex : 20"
+
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
+
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
+
+> "quality : 5 size : 2 price : 5 ProductIndex : 18"
+
+> "quality : 5 size : 1 price : 5 ProductIndex : 17"
+
+> "quality : 5 size : 1 price : 4 ProductIndex : 18"
+
+> "quality : 5 size : 1 price : 3 ProductIndex : 19"
+
+> "quality : 5 size : 1 price : 2 ProductIndex : 20"
+
+> "quality : 5 size : 1 price : 1 ProductIndex : 21"
+
+> "quality : 4 size : 1 price : 1 ProductIndex : 15"
+
+> "quality : 3 size : 1 price : 1 ProductIndex : 2"
+
+> "quality : 3 size : 2 price : 1 ProductIndex : 3"
+
+> "quality : 3 size : 3 price : 1 ProductIndex : 4"
+
+> "quality : 3 size : 4 price : 1 ProductIndex : 5"
+
+> "quality : 3 size : 5 price : 1 ProductIndex : 6"
+
+> "quality : 3 size : 5 price : 2 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> #t
+
+> "quality : 3 size : 4 price : 3 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 3 size : 4 price : 5 ProductIndex : 9"
+
+> "quality : 3 size : 3 price : 5 ProductIndex : 8"
+
+> "quality : 3 size : 2 price : 5 ProductIndex : 7"
+
+> "quality : 3 size : 1 price : 5 ProductIndex : 6"
+
+> "quality : 3 size : 1 price : 4 ProductIndex : 5"
+
+> "quality : 3 size : 1 price : 3 ProductIndex : 4"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 2 ProductIndex : 3"
+
+> ++ defined
+
+> ? > Key (at least 5 digits) associated with the to-be-defined-item > The action-list to be added to the DB > Key (short-version long-version) : ( 164  7457747 )
+? > Name of the expertise you want to replace its rule > Ordering of the rule that is to be replaced - Please enter a number (e.g., 3) > We now need to compose a new rule using existing DB entries.
+Key of the condition > Key of the action-list > The specified rule of OverSpent has been replaced. 
+? > Bye!
+
+> #t
+
+> "quality : 3 size : 4 price : 3 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
+
+> "quality : 5 size : 5 price : 5 ProductIndex : 21"
+
+> "quality : 5 size : 4 price : 5 ProductIndex : 20"
+
+> "quality : 5 size : 3 price : 5 ProductIndex : 19"
+
+> "quality : 5 size : 2 price : 5 ProductIndex : 18"
+
+> "quality : 5 size : 1 price : 5 ProductIndex : 17"
+
+> "quality : 5 size : 1 price : 4 ProductIndex : 18"
+
+> "quality : 5 size : 1 price : 3 ProductIndex : 19"
+
+> "quality : 5 size : 1 price : 2 ProductIndex : 20"
+
+> "quality : 5 size : 1 price : 1 ProductIndex : 21"
+
+> "quality : 4 size : 1 price : 1 ProductIndex : 15"
+
+> "quality : 3 size : 1 price : 1 ProductIndex : 2"
+
+> "quality : 3 size : 2 price : 1 ProductIndex : 3"
+
+> "quality : 3 size : 2 price : 1 ProductIndex : 3"
+
+> "quality : 3 size : 3 price : 1 ProductIndex : 4"
+
+> "quality : 3 size : 4 price : 1 ProductIndex : 5"
+
+> "quality : 3 size : 5 price : 1 ProductIndex : 6"
+
+> "quality : 3 size : 5 price : 2 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 4 size : 5 price : 5 ProductIndex : 15"
+
+> "quality : 4 size : 5 price : 4 ProductIndex : 16"
+
+> "quality : 4 size : 5 price : 3 ProductIndex : 17"
+
+> "quality : 4 size : 5 price : 2 ProductIndex : 18"
+
+> "quality : 4 size : 5 price : 1 ProductIndex : 19"
+
+> "quality : 4 size : 4 price : 1 ProductIndex : 18"
+
+> "quality : 4 size : 3 price : 1 ProductIndex : 17"
+
+> "quality : 4 size : 2 price : 1 ProductIndex : 16"
+
+> "quality : 4 size : 1 price : 1 ProductIndex : 15"
+
+> "quality : 3 size : 1 price : 1 ProductIndex : 2"
+
+> "quality : 2 size : 1 price : 1 ProductIndex : -4"
+
+> "quality : 1 size : 1 price : 1 ProductIndex : -8"
+
+> "quality : 1 size : 1 price : 1 ProductIndex : -8"
+
+> #t
+
+> "quality : 3 size : 4 price : 3 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 5 ProductIndex : 10"
+
+> "quality : 3 size : 5 price : 4 ProductIndex : 9"
+
+> "quality : 3 size : 5 price : 3 ProductIndex : 8"
+
+> "quality : 3 size : 5 price : 2 ProductIndex : 7"
+
+> "quality : 3 size : 5 price : 1 ProductIndex : 6"
+
+> "quality : 3 size : 4 price : 1 ProductIndex : 5"
+
+> "quality : 3 size : 3 price : 1 ProductIndex : 4"
+
+> "quality : 3 size : 2 price : 1 ProductIndex : 3"
+
+> "quality : 3 size : 1 price : 1 ProductIndex : 2"
+
+> "quality : 2 size : 1 price : 1 ProductIndex : -4"
+
+> 
+Thanks for using OurScheme!<<
