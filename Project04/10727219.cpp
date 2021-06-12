@@ -2695,6 +2695,10 @@ class Evaler {
     
         throw e ;
       } // catch
+      if ( check->type == FLOAT )
+        isdouble = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "-", check ) ;
       
       double num = Getnum( check ) ;
       if ( check->type == FLOAT )
@@ -2768,6 +2772,11 @@ class Evaler {
     
         throw e ;
       } // catch
+      if ( check->type == FLOAT )
+        isdouble = true ;
+      else if ( check->type != INT && check->type != FLOAT )
+        throw ArgTypeError( "-", check ) ;
+      
       double num = Getnum( check ) ;
       if ( check->type == FLOAT )
         isdouble = true ;
