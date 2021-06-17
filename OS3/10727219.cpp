@@ -1,9 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include <algorithm>
 #include <string>
 #include <vector> 
-#include <queue>
+
 using namespace std ;
 
 static fstream file ;
@@ -58,6 +57,7 @@ void FIFO( vector < char > list, int frame ) {
   
 	out << "Page Fault = " << faultnum << "  Page Replaces = " << faultnum - frame << "  Page Frames = " << frame << endl;
   out << endl ;
+  
 }
 
 void LRU( vector < char > list, int frame ) {
@@ -155,6 +155,7 @@ void LFU( vector < char > list, int frame ) {
         f++ ;
        
       if ( f != frame ) {
+        cout << temp[frame - 1] ;
         for ( int j = frame - 1 ; j > 0; j-- ) {
           temp[j] = temp[j - 1] ;
           freq[j] = freq[j - 1] ;
@@ -514,10 +515,10 @@ int main() {
 	int method ;
 	int timeslice ;
 	cout << "½Ð¿é¤JÀÉ¦W¡G" ;
-	// cin >> filename;
+	cin >> filename;
 
-	// string name = filename + ".txt" ;
-	string name = "input2.txt" ;
+  string name = filename + ".txt" ;
+	// string name = "input2.txt" ;
 	file.open( name.c_str(), ios::in ) ;
 	if(file) {
 	  char ch ;
@@ -543,6 +544,7 @@ int main() {
     LFULRU( list, frame ) ;
     MFULRU( list, frame ) ;
     out.close() ;
+    cout << "done" ;
 	}
 	else {
 		cout << "File open Error" ;
