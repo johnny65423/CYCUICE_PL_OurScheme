@@ -16,19 +16,28 @@ from torch import nn, optim
 from torchvision import transforms
 from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader
+from fastai.vision.learner import create_body
+from torchvision.models.resnet import resnet34
+from fastai.vision.models.unet import DynamicUnet
+
+def build_res_unet(n_input=1, n_output=1, size=256):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    body = create_body(resnet34, pretrained=True, n_in=n_input, cut=-2)
+    net_G = DynamicUnet(body, n_output, (size, size)).to(device)
+    return net_G
+
 if torch.cuda.is_available():
-	dev = "cuda:0"
+		dev = "cuda:0"
 else:
-	dev = "cpu"
+		dev = "cpu"
 device = torch.device(dev)
 
-rootpath = r"E:\manga"
-#testpath = r"E:\manga\test"  #test data image
+rootpath = r"D:\DataSet\0803\img"
+testpath = r"D:\DataSet\0803\img"  #test data image
 imgindex = 0
 
-#testpaths = glob.glob(testpath + "/*.jpg")
-#testpaths = [r'E:\manga\test\14.jpg']
-#testsize = len(testpaths)
+testpaths = glob.glob(testpath + "/*.jpg")
+testsize = len(testpaths)
 SIZE = 256
 
 class ColorizationDataset(Dataset):
@@ -68,11 +77,13 @@ class ColorizationDataset(Dataset):
 
 def make_dataloaders(batch_size=32, **kwargs):  # A handy function to make our dataloaders
 		dataset = ColorizationDataset(**kwargs, cuda=True)
-
 		dataloader = DataLoader(dataset, batch_size=batch_size, num_workers=0, pin_memory=False, shuffle=True)
 		return dataloader
 
+test_dl = make_dataloaders(batch_size=testsize, paths=testpaths, split='train')
 
+test = next(iter(test_dl))
+Ls, abs_ = test['L'], test['ab']
 
 class UnetBlock(nn.Module):
 	def __init__(self, nf, ni, submodule=None, input_c=None, dropout=False,
@@ -152,9 +163,9 @@ class PatchDiscriminator(nn.Module):
 	def forward(self, x):
 		return self.model(x)
 
-discriminator = PatchDiscriminator(3)
-#dummy_input = torch.randn(testsize, 3, 256, 256) # batch_size, channels, size, size
-#out = discriminator(dummy_input)
+discriminator = PatchDiscriminator(1)
+dummy_input = torch.randn(testsize, 1, 256, 256) # batch_size, channels, size, size
+out = discriminator(dummy_input)
 
 class GANLoss(nn.Module):
 	def __init__(self, gan_mode='vanilla', real_label=1.0, fake_label=0.0):
@@ -196,7 +207,7 @@ def init_weights(net, init='norm', gain=0.02):
 			nn.init.constant_(m.bias.data, 0.)
 
 	net.apply(init_func)
-	#print(f"model initialized with {init} initialization")
+	print(f"model initialized with {init} initialization")
 	return net
 
 def init_model(model, device):
@@ -213,10 +224,10 @@ class MainModel(nn.Module):
 		self.lambda_L1 = lambda_L1
 
 		if net_G is None:
-				self.net_G = init_model(Unet(input_c=1, output_c=2, n_down=8, num_filters=64), self.device)
+				self.net_G = init_model(Unet(input_c=1, output_c=1, n_down=8, num_filters=64), self.device)
 		else:
 				self.net_G = net_G.to(self.device)
-		self.net_D = init_model(PatchDiscriminator(input_c=3, n_down=3, num_filters=64), self.device)
+		self.net_D = init_model(PatchDiscriminator(input_c=2, n_down=3, num_filters=64), self.device)
 		self.GANcriterion = GANLoss(gan_mode='vanilla').to(self.device)
 		self.L1criterion = nn.L1Loss().to(self.device)
 		self.opt_G = optim.Adam(self.net_G.parameters(), lr=lr_G, betas=(beta1, beta2))
@@ -303,47 +314,156 @@ def lab_to_rgb(L, ab):
 	"""
 
 	L = (L + 1.) * 50.
-	ab = ab * 110.
-	Lab = torch.cat([L, ab], dim=1).permute(0, 2, 3, 1).cpu().numpy()
+	ab = (ab + 1.) * 50.
+	#ab = ab * 110.
+	#Lab = torch.cat([L, ab], dim=1).permute(0, 2, 3, 1).cpu().numpy()
+	#Lab = (L + ab) // 2  # torch.Size([16, 1, 256, 256]) 將L層做疊加
+	Lab = (ab)  # torch.Size([16, 1, 256, 256]) 將L層做疊加
+	Lab = Lab.permute(0, 2, 3, 1).cpu().numpy()
+	Lab = Lab.squeeze()
+	#print(Lab.shape)
+	'''
+	a = torch.zeros_like(Lab)  # 製造一個a層
+	b = torch.zeros_like(Lab)  # 製造一個b層
+	Lab = torch.cat([Lab, a, b], dim=1).permute(0, 2, 3, 1).cpu().numpy()  # 把L,a,b層合在一起
+	'''
 	rgb_imgs = []
 	for img in Lab:
-		img_rgb = lab2rgb(img)
+		#img_rgb = lab2rgb(img)
+		img_rgb = img
 		rgb_imgs.append(img_rgb)
 	return np.stack(rgb_imgs, axis=0)
 
-def topath( image ) :
-	image.save(".imagetemp/gray_temp.jpg")
-	return rootpath + r"\.imagetemp\gray_temp.jpg"
-	
-	
+def merge(im1, im2):
+	mimg = Image.new('RGB', (im1.width + im2.width + 15, im1.height + 10))
+	mimg.paste(im1, (5, 5))
+	mimg.paste(im2, (10 + im1.width, 5))
+	return mimg
 
-model2 = MainModel()
-model2 = model2.to(device)
-model2.load_state_dict(torch.load(rootpath + r"\OnePiece0723.pth"))
-#model2 = torch.load(rootpath + r"\OnePiece0613.pth")
-
-
-def graytocolor(image):
-
+def visualize(model, data, testsize, save=True):
 	global imgindex
-	path = [topath(image)]
-	data = make_dataloaders(batch_size=1, paths=path, split='train')
-	data = next(iter(data))
-	
 	loader = transforms.Compose([transforms.ToTensor()])
-	model2.net_G.eval()
+
+	model.net_G.eval()
 	with torch.no_grad():
-		model2.setup_input(data)
-		model2.forward()
-	model2.net_G.train()
-	fake_color = model2.fake_color.detach()
-	L = model2.L
-
-
+		model.setup_input(data)
+		model.forward()
+	model.net_G.train()
+	fake_color = model.fake_color.detach()
+	L = model.L
 	fake_imgs = lab_to_rgb(L, fake_color)
 
-	matplotlib.image.imsave(".imagetemp/color_temp.jpg", fake_imgs[0])
+	image =L[imgindex][0].cpu().clone()
+	image = image.squeeze(0)
 
-	img2 = Image.open(".imagetemp/color_temp.jpg")
+	matplotlib.image.imsave("origin.jpg", image, cmap='gray')
+	matplotlib.image.imsave("output.jpg", fake_imgs[imgindex], cmap='gray')
 
-	return img2
+	img1 = Image.open("origin.jpg")
+	new_img1 = img1.resize((256, 394))
+	new_img1.save("origin.jpg")
+
+	img2 = Image.open("output.jpg")
+	new_img2 = img2.resize((256, 394))
+	new_img2.save("output.jpg")
+
+	mergeimg =merge(new_img1, new_img2)
+	mergeimg.save("result.jpg")
+
+
+def saveallimg(model, data, testsize, save=True):
+	global imgindex
+	loader = transforms.Compose([transforms.ToTensor()])
+
+	model.net_G.eval()
+	with torch.no_grad():
+		model.setup_input(data)
+		model.forward()
+	model.net_G.train()
+	fake_color = model.fake_color.detach()
+	L = model.L
+	fake_imgs = lab_to_rgb(L, fake_color)
+
+	for i in range(testsize):
+
+		image =L[i][0].cpu().clone()
+		image = image.squeeze(0)
+
+		matplotlib.image.imsave("origin.jpg", image, cmap='gray')
+		matplotlib.image.imsave("output.jpg", fake_imgs[i], cmap='gray')
+
+		img1 = Image.open("origin.jpg")
+		new_img1 = img1.resize((256, 394))
+		new_img1.save("origin.jpg")
+		#new_img1.save("D:/DataSet/0715_sketch/result/" + str(i) + "_original.jpg")
+
+		img2 = Image.open("output.jpg")
+		new_img2 = img2.resize((256, 394))
+		new_img2.save("output.jpg")
+		#new_img2.save(r"D:\DataSet\0804\black\done/" + str(i+1) + ".jpg")
+
+		mergeimg =merge(new_img1, new_img2)
+		mergeimg.save(r"D:\DataSet\0803\black_original\merge/" + str(i+1) + ".jpg" )
+
+
+
+#model2 = torch.load(r'E:\manga\OnePiece0530.pth')
+net_G = build_res_unet(n_input=1, n_output=1, size=256)
+net_G.load_state_dict(torch.load("res34-unet_forBlack.pt", map_location=device))
+model2 = MainModel(net_G=net_G)
+#model2 = torch.load(r'D:\PythonProject\MangaUNet\OnePiece0613.pth')
+model2.load_state_dict(torch.load(r'D:\PythonProject\MangaUNet\OnePiece0802.pth'))
+
+root = tk.Tk()
+
+#Define geometry of the window
+root.geometry('520x440')
+root.title("ShowImgTest")
+
+#Define a Function to change to Image
+
+def change_img():
+	global imgindex
+	imgindex += 1
+	if imgindex == testsize :
+			imgindex = 0
+	visualize(model2, test, testsize, save=True)
+	nimg1= ImageTk.PhotoImage(Image.open("origin.jpg"))
+	label1.configure(image=nimg1)
+	label1.image=nimg1
+	nimg2= ImageTk.PhotoImage(Image.open("output.jpg"))
+	label2.configure(image=nimg2)
+	label2.image=nimg2
+	infostr = str(imgindex + 1) + "/" + str(testsize)
+	indexlabel['text'] = infostr
+	
+def save_img():
+	saveallimg(model2, test, testsize, save=True)
+	button2['state'] = 'disable'
+
+
+visualize(model2, test, testsize, save=True)
+
+img1= ImageTk.PhotoImage(Image.open("origin.jpg"))
+img2= ImageTk.PhotoImage(Image.open("output.jpg"))
+#Create a Label widget
+label1= tk.Label(root, image=img1)
+label1.grid(row=1,column=0,padx=3, pady=3, sticky="nw")
+label2= tk.Label(root, image=img2)
+label2.grid(row=1,column=0,padx=257, pady=3, sticky="nw")
+
+infostr = str(imgindex + 1) + "/" + str(testsize)
+
+indexlabel = tk.Label(root, font= ('Helvetica 13 bold'), text= infostr )
+indexlabel.grid(row=1, column=0, padx=50, pady=410, sticky="nw")
+#Create a Button to handle the update Image event
+button1= tk.Button(root, text= "Change", font= ('Helvetica 13 bold'),command= change_img)
+button1.grid(row=1, column=0, padx=220, pady=405, sticky="nw")
+
+button2= tk.Button(root, text= "Save All", font= ('Helvetica 13 bold'),command= save_img)
+button2.grid(row=1, column=0, padx=360, pady=405, sticky="nw")
+
+root.bind("<Return>", change_img)
+
+root.mainloop()
+

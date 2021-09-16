@@ -16,10 +16,20 @@ from torch import nn, optim
 from torchvision import transforms
 from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader
+from fastai.vision.learner import create_body
+from torchvision.models.resnet import resnet34
+from fastai.vision.models.unet import DynamicUnet
+
+def build_res_unet(n_input=1, n_output=2, size=256):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    body = create_body(resnet34, pretrained=True, n_in=n_input, cut=-2)
+    net_G = DynamicUnet(body, n_output, (size, size)).to(device)
+    return net_G
+
 if torch.cuda.is_available():
-	dev = "cuda:0"
+		dev = "cuda:0"
 else:
-	dev = "cpu"
+		dev = "cpu"
 device = torch.device(dev)
 
 rootpath = r"E:\manga"
@@ -312,15 +322,18 @@ def lab_to_rgb(L, ab):
 	return np.stack(rgb_imgs, axis=0)
 
 def topath( image ) :
-	image.save(".imagetemp/gray_temp.jpg")
+	image.save("E:/manga/.imagetemp/gray_temp.jpg")
 	return rootpath + r"\.imagetemp\gray_temp.jpg"
 	
 	
 
-model2 = MainModel()
+net_G = build_res_unet(n_input=1, n_output=2, size=256)
+net_G.load_state_dict(torch.load(r"E:\manga\res34-unet.pt", map_location=device))
+model2 = MainModel(net_G=net_G)
 model2 = model2.to(device)
-model2.load_state_dict(torch.load(rootpath + r"\OnePiece0723.pth"))
-#model2 = torch.load(rootpath + r"\OnePiece0613.pth")
+#model2 = torch.load("D:\PythonProject\MangaUNet\OnePiece0613.pth")
+#model2 = model2.to(device)
+model2.load_state_dict(torch.load(rootpath + r"\OnePiece0820_temp30.pth"))
 
 
 def graytocolor(image):
@@ -338,8 +351,6 @@ def graytocolor(image):
 	model2.net_G.train()
 	fake_color = model2.fake_color.detach()
 	L = model2.L
-
-
 	fake_imgs = lab_to_rgb(L, fake_color)
 
 	matplotlib.image.imsave(".imagetemp/color_temp.jpg", fake_imgs[0])

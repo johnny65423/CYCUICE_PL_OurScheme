@@ -8,8 +8,8 @@ from PIL import Image, ImageTk
 print("load model...")
 import Pic2Sketch as ps
 #import sketch as sk
-import grayscale as gc
-import colorimage as ci
+import grayscale2 as gc
+import colorimage2 as ci
 import matplotlib.pyplot as plt
 import matplotlib
 from skimage.color import rgb2lab, lab2rgb
@@ -73,6 +73,7 @@ sketchimage = Image.fromarray(ps.pictosketch(inputimage))
 #sketchimage = Image.fromarray(sk.get(testpaths[imgindex]))
 tkimg2= ImageTk.PhotoImage( sketchimage.resize((256, 394) ))
 grayimage = gc.sketchtograyscale(sketchimage)
+#grayimage =sketchimage
 tkimg3= ImageTk.PhotoImage( grayimage.resize((256, 394) ))
 colorimage = ci.graytocolor(grayimage)
 tkimg4= ImageTk.PhotoImage( colorimage.resize((256, 394) ))
