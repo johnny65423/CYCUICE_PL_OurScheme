@@ -1,0 +1,27 @@
+1
+(define a 3) (define b 4) (define c 5)
+( * 10 ( + a b c ) )
+( if ( > a b )
+     ( + b c )
+     ( * b c ) )
+(define name "Chih Chung Hsu" )
+( string-append "CYCU" "ICE " name )
+( define ( Func x ) ( / 10.0 x ) )
+( Func 5 ) ( Func 0 )
+(define F1 ( lambda (x) (+ x x) ) )
+(define ( F2 x ) ( ( lambda (x) (+ x x) ) x ) )
+( F1 a )
+( F2 a )
+(define ( F3 y ) ( cond ( ( < y 10 ) "first" ) (else "second" ) ) )
+( F3 9 )
+( F3 11 )
+
+( define F4 ( lambda ( a b c ) ( list a b c ) ) )
+( list a b c )
+(F4 c b a )
+
+
+(define d ( define d 5 ))
+( + 5 "symbol" )
+( if ( = 7 4 ) "error" )
+( if ( if ( > 10 20 ) #t ) "ture" )

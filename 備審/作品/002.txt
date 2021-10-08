@@ -1,0 +1,4 @@
+S4 S6 S8 S7 S5
+-1
+HQ DQ C2 S2 CQ
+-1
