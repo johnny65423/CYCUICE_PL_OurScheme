@@ -1,4 +1,0 @@
-><=
-要先unpara or argtype
-
-( if #t ( if #f 5 ) )

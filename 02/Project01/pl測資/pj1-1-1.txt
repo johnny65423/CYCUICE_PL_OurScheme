@@ -1,0 +1,11 @@
+當測試「Test case 1 of 3」時，Input為>>1
+100 + 200 ;
+100 - 300 ;
+quit
+100 + 200 ;
+<<
+
+正確的輸出應該是>>Program starts...
+> 300
+> -200
+> Program exits...<<

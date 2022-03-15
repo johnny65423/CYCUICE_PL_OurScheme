@@ -1,0 +1,17 @@
+Program starts...
+int
+a
+=
+5
+;
+rrr123
+456
+4
++
+8
+*
+5
+;
+quit
+
+Program exits...

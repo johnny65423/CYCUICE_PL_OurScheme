@@ -1,0 +1,13 @@
+token cadr( token x ) {
+	return lambda(x) ;
+} // cadr
+
+
+( lambda ( x ) ( car ( cdr x ) ) )
+
+lambda ( token x ) {
+ return car( cdr( x ) ) ;
+	
+} // lambda
+
+cadr( '(1 2 3 4) ) ;
