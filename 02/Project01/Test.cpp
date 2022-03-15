@@ -12,7 +12,7 @@
 
 using namespace std;
 
-enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMMENT, ERROBJ, UNKNOWN };
+enum Type { INT, FLOAT, IDENT, OTHER, QUIT, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = 0 ;            // 「下一個要讀進來的字元」所在的column number
@@ -31,8 +31,6 @@ struct Token {
   bool iscomd ;
   Type type ;
   
-  Token * left ;
-  Token * right ;
 };
 
 typedef Token * TokenPtr ;
@@ -160,22 +158,11 @@ Token * CreatToken( Token token ) {
   retoken->doublenum = token.doublenum ;
   retoken->type = token.type ;
   retoken->iscomd = false ;
-  retoken->left = NULL ;
-  retoken->right = NULL ;
+
   
   return retoken ;
 } // CreatToken()
 
-Token * SetTree( int index, map< int, Token > morigintree ) {
-  if ( morigintree.find( index ) == morigintree.end() )
-    return NULL ;
-  else {
-    Token * temp = CreatToken( morigintree.find( index )->second ) ;
-    temp->left = SetTree( 2 * index, morigintree ) ;
-    temp->right = SetTree( 2 * index + 1, morigintree ) ;  
-    return temp ;
-  } // else
-} // SetTree() 
 
 int Decodeint( string str ) {
   int positive = 1 ;
@@ -363,6 +350,16 @@ class Scanner {
 
     
   } // ReadSexp()  
+
+  void ReadScmd( vector<Token> & tokenlist ) {
+    Token temp ;
+    Readnwschar() ;
+    temp = Gettoken() ;
+
+    gReading = true ;
+
+    
+  } // ReadScmd()  
   
   void Test() {
     while (!gEnd) {
@@ -414,7 +411,7 @@ class Scanner {
     if ( Isletter( mch ) || mch == '_' ) {
       return Getstring( mch ) ;
     } // if
-    else if ( Isdigit( mch ) ) {
+    else if ( Isdigit( mch ) || mch == '.' ) {
       return Getnum( mch ) ;
     } // else if
     else {
@@ -424,12 +421,10 @@ class Scanner {
   
   string Getstring( char & mch ) {
     string temp = "" ;
-    temp += mch ;
-    
     Token tk ;
     tk.line = gLine ;  
     tk.column = gColumn ;
-    Getchar() ;
+
     while ( Isdigit( mch ) || Isletter( mch ) || mch == '_' ) {
       temp += mch ;
       Getchar() ;
@@ -439,13 +434,15 @@ class Scanner {
   } // Getstring() 
 
   string Getnum( char & mch ) {
-    string temp = "" ; 
-    temp += mch ;
-    Getchar() ;
-    while ( Isdigit( mch ) || mch == '.' ) {
-      temp += mch ;
+    string temp = "" ;
+    bool dot = false ; 
+
+    while ( Isdigit( mch ) || ( mch == '.' && !dot ) ) {
+      if ( mch == '.' )
+        dot = true ;
+      temp += mch ; 
       Getchar() ;
-    }
+    } // while
     
     return temp ;
   } // Getseparators() 
