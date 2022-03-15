@@ -454,8 +454,14 @@ class Scanner {
     string temp = "" ; 
     temp += mch ;
     Getchar() ;
-    if( temp == "=" || temp == "!" || temp == "*" || temp == "/" || temp == ":" ) {
+    if( temp == "=" || temp == "!" || temp == "*" || temp == ":" ) {
       if ( mch == '=' ) {
+        temp += mch ;
+        Getchar() ;
+      }
+    }
+    if( temp == "/" ) {
+      if ( mch == '=' || mch == '/' ) {
         temp += mch ;
         Getchar() ;
       }
