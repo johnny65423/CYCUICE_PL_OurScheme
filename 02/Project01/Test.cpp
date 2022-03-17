@@ -105,30 +105,7 @@ Type Numtype( string str ) {
 
 } // Numtype()
 
-bool Isend( map< int, Token > tokentree ) {
-  if ( tokentree.find( 2 ) == tokentree.end() || tokentree.find( 3 ) == tokentree.end() )
-    return false ;
-  else if ( tokentree.find( 2 )->second.str == "exit" && tokentree.find( 3 )->second.type == NIL )
-    return true ;
 
-  else return false ;  
-  
-} // Isend()
-
-Type Gettype( string str ) {
-  Type numtype = Numtype( str ) ;
-  if ( str == "(" ) return LPAREN ;
-  else if ( str == ")" ) return RPAREN ;
-  else if ( str == "." ) return DOT ;
-  else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
-  else if ( str == "t" || str == "#t" ) return T ;
-  else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-  else if ( str == "'" ) return QUOTE ;
-  else if ( numtype == INT || numtype == FLOAT ) return numtype ;
-  else if ( str == ";" ) return COMMENT ;
-  else return SYMBOL ;  
-    
-} // Gettype()
   
 string Setstr( string str ) {
   
@@ -351,15 +328,28 @@ class Scanner {
     
   } // ReadSexp()  
 
-  void ReadScmd( vector<Token> & tokenlist ) {
-    Token temp ;
+  void ReadCmd( vector<Token> & tokenlist ) {
+    
+    
     Readnwschar() ;
-    temp = Gettoken() ;
+    Token temp = Peektoken() ;
 
+    if ( false ) {
+      temp = Gettoken() ;
+    } // if
+    else if ( temp.str == "quit" ) {
+      temp = Gettoken() ;
+      throw Callend();
+    } // else if
+    else {
+      temp = Gettoken() ;
+      cout << "get :" << temp.str << endl ;
+      tokenlist.push_back(temp) ;
+    } // else
     gReading = true ;
 
     
-  } // ReadScmd()  
+  } // ReadCmd()  
   
   void Test() {
     while (!gEnd) {
@@ -370,7 +360,20 @@ class Scanner {
   
   private:  
   char mch ; 
-  
+  Token Peektoken() {
+    
+    Token temp = Gettoken() ;
+    ungetc( mch, stdin ) ;
+    gColumn = temp.column ;
+    gLine = temp.line ;
+    string str = temp.str ;
+    for ( int i = str.size() - 1 ; i >= 0 ; i-- ) {
+      ungetc( str[i], stdin ) ;
+    } // for 
+    Getchar();
+    return temp ;
+  } // Peektoken()
+
   Token Gettoken() {
     Token retoken ;
 
@@ -523,16 +526,16 @@ class Interpreter{
   void Gettokenlist() {
     
     while ( 0 == 0 ) {
-		
+		  mtokenlist.clear() ;
       bool err = false ;
       
       printf( "> " ) ;
-      
       if ( gEnd )
         throw EndOfFileError() ;
       
-
-      gScanner.ReadSexp(  mtokenlist ) ;
+      gScanner.ReadCmd(  mtokenlist ) ;
+      for ( int i ; i < mtokenlist.size() ; i++ ) 
+        cout << mtokenlist.at(i).str ;
 
       gReading = false ;
       
@@ -545,7 +548,7 @@ class Interpreter{
         gScanner.Getchar() ;
         ch = gScanner.Getch() ;
       } // while
-      
+      /*
       ch = gScanner.Getch() ;
       if ( ch == ';' ) {
         while ( ch != '\n' && !gEnd ) {
@@ -553,7 +556,7 @@ class Interpreter{
           ch = gScanner.Getch() ;
         } // while
       } // if
-
+      */
       if ( gScanner.Getch() == '\n' )
         gColumn = 0 ; 
       else
@@ -581,9 +584,11 @@ int main() {
   
   printf( "Program starts...\n" ) ;
   try {
-    gScanner.Test();
+    // gScanner.Test();
+    interpreter.Gettokenlist();
   } // try
   catch ( Exception e ) {
+    cout << e.merrorstr ;
     if ( e.mname == "EndOfFileError" )
       printf( "%s", e.merrorstr.c_str() ) ;
   } // catch
