@@ -304,22 +304,37 @@ class Scanner {
     
     Readnwschar() ;
     Token temp = Peektoken() ;
-    // cout << temp.str << temp.type << " " ;
     if ( temp.type == IDENT ) {
       temp = Gettoken() ;
       cout << "i:" << temp.str << endl ;
       tokenlist.push_back(temp) ;
+      // :=->接exp else->無頭exporbool ;
     } // if
     else if ( temp.type == QUIT ) {
       temp = Gettoken() ;
       throw Callend();
     } // else if
     else if ( temp.type == NUM || Issign(temp.str) || temp.str == "(" ) {
-      // 先抓ari，再抓;->結束 else bool
+      Exp( tokenlist ) ;
+      temp = Peektoken() ;
+      if ( Isboolop( temp.str ) ) {
+        temp = Gettoken() ;
+        tokenlist.push_back(temp) ;
+        Exp( tokenlist ) ;
+        temp = Peektoken() ;
+      } // if
+
+      if ( temp.str == ";" ) {
+        temp = Gettoken() ;
+        tokenlist.push_back(temp) ;
+      } // if
+      else {
+        cout << "eor:" << temp.str << endl ;
+      } // else
     } // else if
     else { // error
       temp = Gettoken() ;
-      cout << "e:" << temp.str << endl ;
+      cout << "eor:" << temp.str << endl ;
       tokenlist.push_back(temp) ;
     } // else
 
@@ -328,10 +343,60 @@ class Scanner {
     
   } // ReadCmd()  
 
-  void Ariexp() {
+  void Exp( vector<Token> & tokenlist ) {
+    Term( tokenlist ) ;
+    Token temp = Peektoken() ;
+    while( temp.str == "+" || temp.str == "-" ) {
+      temp = Gettoken() ;
+      tokenlist.push_back(temp) ;
 
+      Term( tokenlist ) ;
 
+      temp = Peektoken() ;
+    } // while
   } // Ariexp()
+
+  void Term( vector<Token> & tokenlist ) {
+    Factor( tokenlist ) ;
+    Token temp = Peektoken() ;
+    while( temp.str == "*" || temp.str == "/" ) {
+      temp = Gettoken() ;
+      tokenlist.push_back(temp) ;
+
+      Factor( tokenlist ) ;
+
+      temp = Peektoken() ;
+    } // while
+
+  } // Term()
+
+  void Factor( vector<Token> & tokenlist ) {
+    Token temp = Peektoken() ;
+    if ( temp.str == "(" ) {
+      temp = Gettoken() ;
+      tokenlist.push_back(temp) ;
+
+      Exp( tokenlist ) ;
+      
+      temp = Peektoken() ;
+      if ( temp.str == ")" ) {
+        temp = Gettoken() ;
+        tokenlist.push_back(temp) ;
+      } // if
+      else {
+        cout << "error" ;
+      } /// else
+
+    } // if
+    else if ( temp.type == NUM || temp.type == IDENT ) {
+      temp = Gettoken() ;
+      tokenlist.push_back(temp) ;
+    }
+    else {
+      cout << "error" ;
+    }
+
+  } // Factor()
 
   void Test() {
     while (!gEnd) {
@@ -470,11 +535,12 @@ class Interpreter{
       printf( "> " ) ;
       if ( gEnd )
         throw EndOfFileError() ;
-      
       gScanner.ReadCmd(  mtokenlist ) ;
-      for ( int i ; i < mtokenlist.size() ; i++ ) 
+      for ( int i = 0 ; i < mtokenlist.size() ; i++ ) {
         cout << mtokenlist.at(i).str ;
-
+      }
+        
+      cout << "<<" ;
       
 
       printf( "\n" ) ;
