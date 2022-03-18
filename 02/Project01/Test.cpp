@@ -8,19 +8,15 @@
 # include <iomanip>
 # include <math.h>
 
-
-
 using namespace std;
 
-enum Type { INT, FLOAT, IDENT, OTHER, QUIT, UNKNOWN };
+enum Type { NUM, IDENT, OTHER, QUIT, UNKNOWN };
 
 int gLine = 1 ;              // 「下一個要讀進來的字元」所在的line number
 int gColumn = 0 ;            // 「下一個要讀進來的字元」所在的column number
-bool gReading = false ;
 int gTestNum ;
 bool gEnd = false ;
-int gCount = 0 ;
-bool gVerbose = true ;
+
 struct Token {
   string str ;
   
@@ -35,26 +31,11 @@ struct Token {
 
 typedef Token * TokenPtr ;
 
-struct Symbol {
-
-  string name ;
-  Token * args ;
-  Token * info ;
-  
-};
-
-char Cpeek() {
-  // int num = getc( stdin ) ;
-  char ch = cin.peek();
-  // ungetc(ans, stdin);
-  return ch;
-} // Cpeek()
 
 bool Isletter( char ch ) {
   if ( ch >= 'A' && ch <= 'Z' ) return true ;
   else if ( ch >= 'a' && ch <= 'z' ) return true ;
   else return false ;
-  
 }
 
 bool Iswhitespace( char ch ) {
@@ -71,49 +52,16 @@ bool Isdigit( char ch ) {
 
 } // Isdigit()
 
-bool Isseparators( char ch ) {
-  if ( ch == '(' || ch == ')' ) return true ;
-  else if ( ch == ';' || ch == '\"'  || ch == '\'' ) return true ;
-  else if ( Iswhitespace( ch ) ) return true ;
+bool Isboolop( string str ) {
+  if ( str == "=" || str == "<>" || str == ">" ) return true ;
+  else if ( str == "<" || str == ">=" || str == "<=" ) return true ;
   else return false ;
-  
-} // Isseparators() 
+} // Isdigit()
 
-Type Numtype( string str ) {
-  if ( !Isdigit( str[0] ) && str[0] != '+' && str[0] != '-' && str[0] != '.' )
-    return UNKNOWN ;
-  
-  bool hasdigit = false ;
-  
-  int dotnum = 0 ;
-  if ( str[0] == '.' ) dotnum++ ;
-  else if ( Isdigit( str[0] ) ) hasdigit = true ;
-  
-  for ( int i = 1 ; i < str.size() ; i++ ) {
-    if ( str[i] == '.' ) dotnum++ ;
-    if ( Isdigit( str[i] ) )
-      hasdigit = true ;
-    if ( !Isdigit( str[i] ) && str[i] != '.' )
-      return UNKNOWN ;
-  } // for
-  
-
-  if ( !hasdigit ) return UNKNOWN ;
-  else if ( dotnum == 0 ) return INT ;
-  else if ( dotnum == 1 ) return FLOAT ;
-  else return UNKNOWN ;
-
-} // Numtype()
-
-
-  
-string Setstr( string str ) {
-  
-  if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
-  else if ( str == "t" || str == "#t" ) return "#t" ;
-  else return str ; 
-  
-} // Setstr()
+bool Issign( string str ) {
+  if ( str == "+" || str == "-" ) return true ;
+  else return false ;
+} // Issign()
 
 string Todouble( double num ) {
   stringstream ss ;
@@ -139,7 +87,6 @@ Token * CreatToken( Token token ) {
   
   return retoken ;
 } // CreatToken()
-
 
 int Decodeint( string str ) {
   int positive = 1 ;
@@ -221,26 +168,6 @@ string Setdoublestr( string str ) {
   return str ;
 } // Setdoublestr()
 
-bool Justdot() {
-  char ch = Cpeek() ;
-  
-  if ( Iswhitespace( ch ) )
-    return true ;
-  else if ( Isseparators( ch ) )
-    return true ;
-  else 
-    return false ;  
-} // Justdot()
-
-double Getnum( Token * temp ) {
-  if ( temp->type == INT )
-    return ( double ) temp->intnum ;
-  else if ( temp->type == FLOAT )
-    return temp->doublenum ; 
-  else return 0.0 ;
-
-} // Getnum()
-
 class Exception {
 public:
   string mname ;
@@ -318,48 +245,6 @@ class Scanner {
     } // while
   } // Skipcomment() 
   
-  void ReadSexp( vector<Token> & tokenlist ) {
-    Token temp ;
-    Readnwschar() ;
-    temp = Gettoken() ;
-
-    gReading = true ;
-
-    
-  } // ReadSexp()  
-
-  void ReadCmd( vector<Token> & tokenlist ) {
-    
-    
-    Readnwschar() ;
-    Token temp = Peektoken() ;
-
-    if ( false ) {
-      temp = Gettoken() ;
-    } // if
-    else if ( temp.str == "quit" ) {
-      temp = Gettoken() ;
-      throw Callend();
-    } // else if
-    else {
-      temp = Gettoken() ;
-      cout << "get :" << temp.str << endl ;
-      tokenlist.push_back(temp) ;
-    } // else
-    gReading = true ;
-
-    
-  } // ReadCmd()  
-  
-  void Test() {
-    while (!gEnd) {
-      Token t = Gettoken() ;
-      cout << t.str << endl ;
-    } // while
-  } // Test()
-  
-  private:  
-  char mch ; 
   Token Peektoken() {
     
     Token temp = Gettoken() ;
@@ -376,11 +261,12 @@ class Scanner {
 
   Token Gettoken() {
     Token retoken ;
-
+    Type type ;
     Readnwschar() ; 
     retoken.column = gColumn ;
     retoken.line = gLine ;
-    retoken.str = Gettokenstr() ;
+    retoken.str = Gettokenstr(type) ;
+    retoken.type = type ;
     while ( retoken.str == "//" ) {
       while ( mch != '\n' && !gEnd )
         Getchar() ;
@@ -392,32 +278,84 @@ class Scanner {
         
       retoken.column = gColumn ;
       retoken.line = gLine ;
-      retoken.str = Gettokenstr() ;
+      retoken.str = Gettokenstr(type) ;
+      retoken.type = type ;
     } // while
     
-    /*
-    if ( retoken.type == INT )
-      retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT ) {
-      retoken.doublenum = Decodedouble( retoken.str ) ;
-      retoken.str = Setdoublestr( retoken.str ) ;
-    
-    } // else if
-    */  
+    if ( retoken.str == "quit" )
+      retoken.type = QUIT ;
+
 
     return retoken ;
   } // Gettoken()
   
-  string Gettokenstr() {
+
+  void ReadSexp( vector<Token> & tokenlist ) {
+    Token temp ;
+    Readnwschar() ;
+    temp = Gettoken() ;
+
+
+    
+  } // ReadSexp()  
+
+  void ReadCmd( vector<Token> & tokenlist ) {
+    
+    
+    Readnwschar() ;
+    Token temp = Peektoken() ;
+    // cout << temp.str << temp.type << " " ;
+    if ( temp.type == IDENT ) {
+      temp = Gettoken() ;
+      cout << "i:" << temp.str << endl ;
+      tokenlist.push_back(temp) ;
+    } // if
+    else if ( temp.type == QUIT ) {
+      temp = Gettoken() ;
+      throw Callend();
+    } // else if
+    else if ( temp.type == NUM || Issign(temp.str) || temp.str == "(" ) {
+      // 先抓ari，再抓;->結束 else bool
+    } // else if
+    else { // error
+      temp = Gettoken() ;
+      cout << "e:" << temp.str << endl ;
+      tokenlist.push_back(temp) ;
+    } // else
+
+
+
+    
+  } // ReadCmd()  
+
+  void Ariexp() {
+
+
+  } // Ariexp()
+
+  void Test() {
+    while (!gEnd) {
+      Token t = Gettoken() ;
+      cout << t.str << endl ;
+    } // while
+  } // Test()
+  
+  private:  
+  char mch ; 
+
+  string Gettokenstr( Type &type ) {
     Readnwschar() ;
     
     if ( Isletter( mch ) || mch == '_' ) {
+      type = IDENT ;
       return Getstring( mch ) ;
     } // if
     else if ( Isdigit( mch ) || mch == '.' ) {
+      type = NUM ;
       return Getnum( mch ) ;
     } // else if
     else {
+      type = OTHER ;
       return Getothers( mch ) ;
     } // else
   } // Gettokenstr() 
@@ -537,7 +475,6 @@ class Interpreter{
       for ( int i ; i < mtokenlist.size() ; i++ ) 
         cout << mtokenlist.at(i).str ;
 
-      gReading = false ;
       
 
       printf( "\n" ) ;
