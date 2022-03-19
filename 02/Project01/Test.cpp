@@ -58,6 +58,12 @@ bool Isboolop( string str ) {
   else return false ;
 } // Isdigit()
 
+bool Isarithop( string str ) {
+  if ( str == "+" || str == "*" ) return true ;
+  else if ( str == "*" || str == "/" ) return true ;
+  else return false ;
+} // Isdigit()
+
 bool Issign( string str ) {
   if ( str == "+" || str == "-" ) return true ;
   else return false ;
@@ -306,9 +312,36 @@ class Scanner {
     Token temp = Peektoken() ;
     if ( temp.type == IDENT ) {
       temp = Gettoken() ;
-      cout << "i:" << temp.str << endl ;
       tokenlist.push_back(temp) ;
       // :=->接exp else->無頭exporbool ;
+      temp = Peektoken() ;
+      if ( temp.str == ":=" ) {
+        temp = Gettoken() ;
+        tokenlist.push_back(temp) ;
+        Exp( tokenlist ) ;
+      } // if
+      else {
+        while ( Isarithop( temp.str ) ) {
+          temp = Gettoken() ;
+          tokenlist.push_back(temp) ;
+          if ( Issign( temp.str ) ) {
+            Term( tokenlist ) ;
+          } // if
+          else {
+            Exp( tokenlist ) ;
+          } // else
+
+          temp = Peektoken() ;
+
+        } // while
+
+        if ( Isboolop(temp.str) ) {
+          temp = Gettoken() ;
+          tokenlist.push_back(temp) ;
+          Exp( tokenlist ) ;
+        } // if
+        
+      } // else
     } // if
     else if ( temp.type == QUIT ) {
       temp = Gettoken() ;
@@ -321,16 +354,9 @@ class Scanner {
         temp = Gettoken() ;
         tokenlist.push_back(temp) ;
         Exp( tokenlist ) ;
-        temp = Peektoken() ;
+        
       } // if
 
-      if ( temp.str == ";" ) {
-        temp = Gettoken() ;
-        tokenlist.push_back(temp) ;
-      } // if
-      else {
-        cout << "eor:" << temp.str << endl ;
-      } // else
     } // else if
     else { // error
       temp = Gettoken() ;
@@ -338,7 +364,14 @@ class Scanner {
       tokenlist.push_back(temp) ;
     } // else
 
-
+    temp = Peektoken() ;
+    if ( temp.str == ";" ) {
+      temp = Gettoken() ;
+      tokenlist.push_back(temp) ;
+    } // if
+    else {
+      cout << "eor:" << temp.str << endl ;
+    } // else
 
     
   } // ReadCmd()  
@@ -488,7 +521,7 @@ class Scanner {
       }
     }
     else if( temp == "<" ) {
-      if ( mch == '=' || mch == '<' ) {
+      if ( mch == '=' || mch == '<' || mch == '>' ) {
         temp += mch ;
         Getchar() ;
       }
