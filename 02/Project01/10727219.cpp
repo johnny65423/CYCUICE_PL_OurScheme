@@ -6,15 +6,14 @@
 # include <map>
 # include <sstream>
 # include <iomanip>
+# include <math.h>
 
- 
 using namespace std;
 
-enum Type { LPAREN, RPAREN, INT, STRING, DOT, FLOAT, NIL, T, QUOTE, SYMBOL, COMMENT, UNKNOWN };
+enum Type { NUM, IDENT, OTHER, QUIT, UNKNOWN, INT, FLOAT };
 
-int gLine = 1 ;              // ¡u¤U¤@­Ó­nÅª¶i¨Óªº¦r¤¸¡v©Ò¦bªºline number
-int gColumn = 0 ;            // ¡u¤U¤@­Ó­nÅª¶i¨Óªº¦r¤¸¡v©Ò¦bªºcolumn number
-bool gReading = false ;
+int gLine = 1 ;              // ã€Œä¸‹ä¸€å€‹è¦è®€é€²ä¾†çš„å­—å…ƒã€æ‰€åœ¨çš„line number
+int gColumn = 0 ;            // ã€Œä¸‹ä¸€å€‹è¦è®€é€²ä¾†çš„å­—å…ƒã€æ‰€åœ¨çš„column number
 int gTestNum ;
 bool gEnd = false ;
 
@@ -26,24 +25,17 @@ struct Token {
   int intnum ;
   float floatnum ;
   Type type ;
+  
 };
 
-char Cpeek() {
-  // int num = getc( stdin ) ;
-  char ch = cin.peek();
-  // ungetc(ans, stdin);
-  return ch;
-} // Cpeek()
+typedef Token * TokenPtr ;
 
-bool Isatomtype( Type type ) {
-  if ( type == SYMBOL || type == INT || type == FLOAT )
-    return true ;
-  else if ( type == STRING || type == NIL || type == T )
-    return true ;   
-  else 
-    return false ;
-  
-} // Isatomtype()
+
+bool Isletter( char ch ) {
+  if ( ch >= 'A' && ch <= 'Z' ) return true ;
+  else if ( ch >= 'a' && ch <= 'z' ) return true ;
+  else return false ;
+} // Isletter()
 
 bool Iswhitespace( char ch ) {
   if ( ch == ' ' ) return true ;
@@ -59,49 +51,33 @@ bool Isdigit( char ch ) {
 
 } // Isdigit()
 
-bool Isseparators( char ch ) {
-  if ( ch == '(' || ch == ')' ) return true ;
-  else if ( ch == ';' || ch == '\"'  || ch == '\'' ) return true ;
-  else if ( Iswhitespace( ch ) ) return true ;
+bool Isboolop( string str ) {
+  if ( str == "=" || str == "<>" || str == ">" ) return true ;
+  else if ( str == "<" || str == ">=" || str == "<=" ) return true ;
   else return false ;
-  
-} // Isseparators() 
+} // Isboolop()
 
-Type Numtype( string str ) {
-  if ( !Isdigit( str[0] ) && str[0] != '+' && str[0] != '-' && str[0] != '.' )
-    return UNKNOWN ;
-  
-  bool hasdigit = false ;
-  
-  int dotnum = 0 ;
-  if ( str[0] == '.' ) dotnum++ ;
-  else if ( Isdigit( str[0] ) ) hasdigit = true ;
-  
-  for ( int i = 1 ; i < str.size() ; i++ ) {
-    if ( str[i] == '.' ) dotnum++ ;
-    if ( Isdigit( str[i] ) )
-      hasdigit = true ;
-    if ( !Isdigit( str[i] ) && str[i] != '.' )
-      return UNKNOWN ;
-  } // for
-  
+bool Isarithop( string str ) {
+  if ( str == "+" || str == "*" ) return true ;
+  else if ( str == "*" || str == "/" ) return true ;
+  else return false ;
+} // Isarithop()
 
-  if ( !hasdigit ) return UNKNOWN ;
-  else if ( dotnum == 0 ) return INT ;
-  else if ( dotnum == 1 ) return FLOAT ;
-  else return UNKNOWN ;
+bool Issign( string str ) {
+  if ( str == "+" || str == "-" ) return true ;
+  else return false ;
+} // Issign()
 
-} // Numtype()
-
-bool Isend( map< int, Token > tokentree ) {
-  if ( tokentree.find( 2 ) == tokentree.end() || tokentree.find( 3 ) == tokentree.end() )
-    return false ;
-  else if ( tokentree.find( 2 )->second.str == "exit" && tokentree.find( 3 )->second.type == NIL )
-    return true ;
-
-  else return false ;  
-  
-} // Isend()
+string Tofloat( float num ) {
+  stringstream ss ;
+  ss << num ; 
+  if ( ss.str().find( "." ) != -1 )
+    return ss.str() ;
+  else {
+    ss << "." ;
+    return ss.str() ;
+  } // else
+} // Tofloat()
 
 int Decodeint( string str ) {
   int positive = 1 ;
@@ -121,72 +97,116 @@ float Decodefloat( string str ) {
   if ( str[0] == '+' )
     str.erase( 0, 1 ) ;
   else if ( str[0] == '-' ) {
-    str.erase( 0, 1 ) ;
+    // str.erase( 0, 1 ) ;
     positive = -1 ;
   } // else if
   
   if ( str[0] == '.' )
     str = "0" + str ;
   
-  float num = atof( str.c_str() ) * positive ; 
-  return num ;
+  string ch = "" ;
+
+
+  return atof( str.c_str() ) ;
 } // Decodefloat()
 
-bool Justdot() {
-  char ch = Cpeek() ;
+string Setdoublestr( string str ) {
   
-  if ( Iswhitespace( ch ) )
-    return true ;
-  else if ( Isseparators( ch ) )
-    return true ;
-  else 
-    return false ;  
-} // Justdot()
+  if ( str[0] == '+' )
+    str.erase( 0, 1 ) ;
+    
+  if ( str[0] == '.' )
+    str = "0" + str ;
+  else if ( str[0] == '-' && str[1] == '.' ) {
+    str.erase( 0, 1 ) ;
+    str = "-0" + str ;
+  } // else if
+      
+   
+      
+  int index = str.find( "." ) ;
+  int size = str.size() - 5 ;
+
+  if ( index > size ) {
+
+    while ( index != str.size() - 5 ) {
+      str = str + "0" ;  
+    } // while
+      
+  } // if
+  else if ( index < size ) {
+
+    while ( index != str.size() - 5 ) {
+      str.erase( str.end() - 1 ) ;  
+    } // while
+      
+  } // if
+  
+  char ch = str[str.size() - 1] ;
+  
+  if ( ch > '4' ) {
+    str.erase( str.end() - 1 ) ;
+    double num = atof( str.c_str() ) ;
+    num = num + 0.001 ;
+    stringstream ss ;
+    ss << num ;
+    str = Setdoublestr( ss.str() ) ;  
+  } // if
+  else {
+    str.erase( str.end() - 1 ) ;
+  } // else
+  
+  return str ;
+} // Setdoublestr()
+
+void Settokenvalue( Token &token ) {
+  if ( token.type == INT ) {
+    token.intnum = Decodeint( token.str ) ;
+  } // if
+  else {
+    token.floatnum = Decodefloat( token.str ) ;
+  } // else
+} // Settokenvalue()
+
+void Printvalue( Token token ) {
+  if ( token.type == INT ) {
+    printf( "%d", token.intnum ) ;
+  } // if
+  else if ( token.type == FLOAT ) {
+    printf( "%.3f", token.floatnum ) ;
+  } // else if
+  else {
+    printf( "%s", token.str.c_str() ) ;
+  } // else
+} // Printvalue()
 
 class Exception {
 public:
+  string mname ;
   string merrorstr;
+  Token * mhead ;
   
   Exception() {  }
 
   Exception( string str ) {
     merrorstr = str;
   } // Exception()
+  
+  
 
 }; // Exception
-
-class Stringerror : public Exception {
-public:
-  Stringerror( Token temp, int check ) {
-    stringstream ss ;
-    if ( check == 0 ) {
-      ss << "ERROR (unexpected token) : atom or '(' expected when token at Line " ;
-      ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
-    } // if
-    else if ( check == 1 ) {
-      ss << "ERROR (unexpected token) : ')' expected when token at Line " ;
-      ss << temp.line << " Column " << temp.column << " is >>" << temp.str << "<<" ;
-    } // else if 
-    
-    else { // 2 "  "
-      ss << "ERROR (no closing quote) : END-OF-LINE encountered at Line " ;
-      ss << temp.line << " Column " << temp.column + 1 << "" ;
-    } // else
-    
-    merrorstr = ss.str() ;
-  } // Stringerror()
-};
 
 class Callend : public Exception {
 public:
   Callend() {
-    ;
+    mname = "Callend" ;
   } // Callend()
 };
 
 class EndOfFileError : public Exception {
 public:
   EndOfFileError() {
+    mname = "EndOfFileError" ;
     stringstream ss ;
 
     ss << "ERROR (no more input) : END-OF-FILE encountered" ;
@@ -195,165 +215,11 @@ public:
   } // EndOfFileError()
 };
 
-class Scanner{
+class Scanner {
   public:
-  char mch ; 
-   
-  
-  Scanner() {
-    mch = '\0' ;
-    
-  } // Scanner() 
-  
-  void Readnwschar() {
-    while ( ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) && !gEnd ) {
-      Getchar() ;
-    } // while()
-    
-  } // Readnwschar() 
-  
-  void Skipcomment() {
-    while ( mch == ';' ) {
-      Getchar() ;
-      while ( mch != '\n' && !gEnd ) {
-        Getchar() ;
-      } // while
-      
-      Readnwschar() ;
-    } // while
-  } // Skipcomment()
-  
-  void ReadSexp( vector<Token> & tokenlist ) {
-    Token temp ;
-    Readnwschar() ;
-    temp = Gettoken() ;
-    // cout << "**" << temp.str << " " << temp.column << endl ;
-    gReading = true ;
-    if ( temp.type == LPAREN ) {
-      // cout << "l(" << temp.str << endl ;
-      tokenlist.push_back( temp ) ;
-      ReadSexp( tokenlist ) ;
-      
-      Readnwschar() ;
-      Skipcomment() ; 
-      // cout << ">>" << mch ;
-      
-      while ( mch != ')' && ! ( mch == '.' && Justdot() ) ) {
-        ReadSexp( tokenlist ) ;
-        Readnwschar() ;
-        Skipcomment() ;
-
-      } // while
-
-      if ( mch == '.' && Justdot() ) {
-        // cout <<"dddot" << endl ; 
-        temp = Gettoken() ;
-        // cout << temp.str << endl ;
-        tokenlist.push_back( temp ) ;
-        ReadSexp( tokenlist ) ;
-        Readnwschar() ;
-      } // if
-        
-      Readnwschar() ;
-      Skipcomment() ;
-      // cout <<">>" << mch << "<<"<< endl ; 
-      if ( mch == ')' ) {
-       
-        temp = Gettoken() ;
-        // cout << temp.str << endl ;
-        tokenlist.push_back( temp ) ;
-      } // if
-      else {
-        // cout << mch << "in" << endl ;
-        temp = Gettoken() ;
-        throw Stringerror( temp, 1 ) ;// error
-      } // else
-      
-    } // if
-    else if ( Isatomtype( temp.type ) ) {
-      // cout << temp.str << endl ;
-      
-      tokenlist.push_back( temp ) ;
-    } // else if
-    else if ( temp.type == QUOTE ) {
-      tokenlist.push_back( temp ) ;
-      ReadSexp( tokenlist ) ;
-    } // else if 
-    else {
-      // cout << temp.str << endl ;
-      throw Stringerror( temp, 0 ) ;// error
-    } // else
-    
-  } // ReadSexp()
-  
-  void Gettokenlist() {
-    
-    // Readnwschar() ;
-    while ( 0 == 0 ) {
-      
-      bool err = false ;
-      printf( "> " ) ;
-      vector<Token> tokenlist ;
-      if ( gEnd )
-        throw EndOfFileError() ;
-      
-      // gColumn = 0 ;  
-      try {
-        
-        // cout << ">>" << mch << "<<" << endl ;
-        gLine = 1 ;  
-        
-        while ( Iswhitespace( mch ) && mch != '\n' && !gEnd )
-          Getchar() ; 
-        
-        ReadSexp(  tokenlist ) ;
-        
-      } // try
-      catch ( Stringerror e ) {
-        printf( "%s\n", e.merrorstr.c_str() ) ;
-        gReading = false ;
-        while ( !gEnd && mch != '\n' )
-          Getchar() ;
-        tokenlist.clear() ;
-        err = true ;
-      } // catch
-      
-      // cout << "readed" << endl ;
-      gReading = false ;
-      
-      if ( !err ) {
-        for ( int i = 0 ; i < tokenlist.size() ; i++ ) {
-        	cout << tokenlist.at(i).str << " " ;
-				}
-          
-      } // if
-
-
-      cout << endl ;
-      
-      int c = gColumn ;
-      
-      while ( Iswhitespace( mch ) && mch != '\n' ) {
-        Getchar() ;
-      } // while
-      
-      if ( mch == ';' ) {
-        while ( mch != '\n' ) {
-          Getchar() ;
-        } // while
-      } // if
-
-      if ( mch == '\n' )
-        gColumn = 0 ; 
-      else
-        gColumn = gColumn - c + 1 ;
-         
-    } // while()
-    
-
-  } // Gettokenlist()
-  
-  private:
+  char Getch() {
+    return mch ;
+  } // Getch()
   
   void Getchar() {
     
@@ -373,29 +239,49 @@ class Scanner{
   
   } // Getchar() 
   
-  Token Maktoken( string str ) {
-    Token retoken ;
-    retoken.column = -1 ;
-    retoken.line = -1 ;
-    retoken.str = str ;
-    retoken.type = Gettype( retoken.str ) ;
-    retoken.str = Setstr( retoken.str ) ;
-    if ( retoken.type == INT )
-      retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT )
-      retoken.floatnum = Decodefloat( retoken.str ) ;
-      
-    return retoken ;
-  } // Maktoken()
+  void Readnwschar() {
+    while ( ( mch == ' ' || mch == '\n' || mch == '\t' || mch == '\0' ) && !gEnd ) {
+      Getchar() ;
+    } // while()
+    
+  } // Readnwschar() 
   
+  void Skipcomment() {
+    while ( mch == ';' ) {
+      Getchar() ;
+      while ( mch != '\n' && !gEnd ) {
+        Getchar() ;
+      } // while
+      
+      Readnwschar() ;
+    } // while
+  } // Skipcomment() 
+  
+  Token Peektoken() {
+    
+    Token temp = Gettoken() ;
+    cin.putback( mch );
+    gColumn = temp.column ;
+    gLine = temp.line ;
+    string str = temp.str ;
+    for ( int i = str.size() - 1 ; i >= 0 ; i-- ) {
+      // ungetc( str[i], stdin ) ;
+      cin.putback( str[i] );
+    } // for 
+    
+    Getchar();
+    return temp ;
+  } // Peektoken()
+
   Token Gettoken() {
     Token retoken ;
-
+    Type type ;
     Readnwschar() ; 
     retoken.column = gColumn ;
     retoken.line = gLine ;
-    retoken.str = Gettokenstr() ;
-    while ( retoken.str == ";" ) {
+    retoken.str = Gettokenstr( type ) ;
+    retoken.type = type ;
+    while ( retoken.str == "//" ) {
       while ( mch != '\n' && !gEnd )
         Getchar() ;
       
@@ -406,178 +292,589 @@ class Scanner{
         
       retoken.column = gColumn ;
       retoken.line = gLine ;
-      retoken.str = Gettokenstr() ;
+      retoken.str = Gettokenstr( type ) ;
+      retoken.type = type ;
     } // while
     
-    retoken.type = Gettype( retoken.str ) ;
-    retoken.str = Setstr( retoken.str ) ;
-    
-    if ( retoken.type == INT )
-      retoken.intnum = Decodeint( retoken.str ) ;
-    else if ( retoken.type == FLOAT )
-      retoken.floatnum = Decodefloat( retoken.str ) ;
+    if ( retoken.str == "quit" )
+      retoken.type = QUIT ;
+
+    Settokenvalue( retoken ) ;
+
 
     return retoken ;
   } // Gettoken()
   
-  Type Gettype( string str ) {
-    Type numtype = Numtype( str ) ;
-    if ( str == "(" ) return LPAREN ;
-    else if ( str == ")" ) return RPAREN ;
-    else if ( str == "." ) return DOT ;
-    else if ( str == "nil" || str == "#f"  || str == "()" ) return NIL ;
-    else if ( str == "t" || str == "#t" ) return T ;
-    else if ( str[0] == '\"' && str[str.size() - 1] == '\"' ) return STRING ;
-    else if ( str == "'" ) return QUOTE ;
-    else if ( numtype == INT || numtype == FLOAT ) return numtype ;
-    else if ( str == ";" ) return COMMENT ;
-    else return SYMBOL ;  
-      
-  } // Gettype()
-  
-  string Setstr( string str ) {
+  void ReadSexp( vector<Token> & tokenlist ) {
+    Token temp ;
+    Readnwschar() ;
+    temp = Gettoken() ;
+
+
     
-    if ( str == "nil" || str == "#f"  || str == "()" ) return "nil" ;
-    else if ( str == "t" || str == "#t" ) return "#t" ;
-    else return str ; 
-    
-  } // Setstr()
+  } // ReadSexp()  
+
+  void Test() {
+    while ( !gEnd ) {
+      Token t = Gettoken() ;
+      cout << t.str << endl ;
+    } // while
+  } // Test()
   
-  string Gettokenstr() {
+  private:  
+  char mch ; 
+
+  string Gettokenstr( Type &type ) {
     Readnwschar() ;
     
-    if ( mch == '\"' ) {
-      
+    if ( Isletter( mch ) || mch == '_' ) {
+      type = IDENT ;
       return Getstring( mch ) ;
     } // if
-    else if ( Isseparators( mch ) ) {
-      return Getseparators( mch ) ;
+    else if ( Isdigit( mch ) || mch == '.' ) {
+      type = NUM ;
+      return Getnum( mch, type ) ;
     } // else if
     else {
+      type = OTHER ;
       return Getothers( mch ) ;
     } // else
   } // Gettokenstr() 
   
   string Getstring( char & mch ) {
     string temp = "" ;
-    temp += mch ;
-    
-    // cout << tk.line << " "<< tk.column << endl ;
     Token tk ;
     tk.line = gLine ;  
     tk.column = gColumn ;
-    Getchar() ;
 
-      
-    while ( mch != '\"' && !gEnd )  {
-      
-      if ( mch == '\n' ) {
-        // cout << tk.line << " "<< tk.column << endl ;
-        throw Stringerror( tk, 2 ) ;
-      } // if
-      
-      bool check = true ;
-      if ( mch == '\\' ) {
-        
-        // cout << gColumn << endl ; 
-        if ( gColumn > tk.column )
-          tk.column = gColumn ;
-          
-        Getchar() ; 
-        if ( mch == 't' ) {
-          temp += '\t' ;
-        } // if
-        else if ( mch == 'n' ) {
-          temp += '\n' ;
-        } // else if
-        else if ( mch == '\"' ) {
-          temp += '\"' ;
-        } // else if
-        else if ( mch == '\\' ) {
-          temp += '\\' ;
-        } // else if
-        else if ( mch == '\n' ) {
-          throw Stringerror( tk, 2 ) ;
-        } // else if
-        else {
-          check = false ;
-          temp += '\\' ;
-        } // else
-      } // if()
-      else {
-        temp += mch ;
-        
-      } // else
-      
-      if ( gColumn > tk.column )
-        tk.column = gColumn ;
-        
-      if ( check )
-        Getchar() ; 
-        
-      if ( gColumn > tk.column )
-        tk.column = gColumn ;
-          
-    } // while()
-    
-    temp += mch ;
-    Getchar() ;
+    while ( Isdigit( mch ) || Isletter( mch ) || mch == '_' ) {
+      temp += mch ;
+      Getchar() ;
+    } // while
     
     return temp ;
   } // Getstring() 
 
-  string Getseparators( char & mch ) {
-    string temp = "" ; 
-    temp += mch ;
-    Getchar() ;
-    if ( temp == "(" ) {
-      Readnwschar() ;
-      Skipcomment() ;
-      if ( mch == ')' ) {
-        temp += ")" ; 
-        Getchar() ;
+  string Getnum( char & mch, Type & t ) {
+    string temp = "" ;
+    bool dot = false ; 
+    t = INT ;
+    while ( Isdigit( mch ) || ( mch == '.' && !dot ) ) {
+      if ( mch == '.' ) {
+        dot = true ;
+        t = FLOAT ;
       } // if
-    } // if 
+        
+      temp += mch ; 
+      Getchar() ;
+    } // while
     
     return temp ;
-  } // Getseparators() 
+  } // Getnum() 
   
   string Getothers( char & mch ) {
     string temp = "" ; 
     temp += mch ;
     Getchar() ;
-    
-    while ( !Isseparators( mch ) && !gEnd ) {
-      temp += mch ;
+    if ( temp == "=" || temp == "!" || temp == "*" || temp == ":" ) {
+      if ( mch == '=' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // if
+    else if ( temp == "/" ) {
+      if ( mch == '=' || mch == '/' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
+    else if ( temp == "&" ) {
+      if ( mch == '&' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
+    else if ( temp == "|" ) {
+      if ( mch == '|' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
+    else if ( temp == ">" ) {
+      if ( mch == '=' || mch == '>' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
+    else if ( temp == "<" ) {
+      if ( mch == '=' || mch == '<' || mch == '>' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
+    else if ( temp == "-" ) {
+      if ( mch == '>' || mch == '-' || mch == '=' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
+    else if ( temp == "+" ) {
+      if ( mch == '=' || mch == '+' ) {
+        temp += mch ;
+        Getchar() ;
+      } // if
+    } // else if
       
-      Getchar() ; 
-      
-    } // while()
-    // cout << "+++" << mch << endl ;
-    if ( gEnd )
-      throw EndOfFileError() ; 
     return temp ;
   } // Getothers() 
   
+    
+  
+};
+
+
+
+class Interpreter{
+  public:
+   
+  
+  Interpreter() {
+    // mch = '\0' ;
+    // gPrinter = Printer() ;
+    mScanner = Scanner() ;
+    // gTreemaker = Treemaker() ;
+  } // Interpreter() 
+  
+  void Gettokenlist() {
+    
+    while ( 0 == 0 ) {
+      mtokenlist.clear() ;
+      bool err = false ;
+      Token retoken ;
+
+
+      printf( "> " ) ;
+      if ( gEnd )
+        throw EndOfFileError() ;
+
+
+      ReadCmd(  mtokenlist, retoken ) ;
+
+      /*
+      for ( int i = 0 ; i < mtokenlist.size() ; i++ ) {
+        Printvalue( mtokenlist.at( i ) ) ;
+      } // for
+      */
+     
+      // cout << "\n" ;
+      Printvalue( retoken ) ;  
+      // cout << "<<" ;
+      
+
+      printf( "\n" ) ;
+      
+      int c = gColumn ;
+      char ch = mScanner.Getch() ;
+      while ( Iswhitespace( ch ) && ch != '\n' ) {
+        mScanner.Getchar() ;
+        ch = mScanner.Getch() ;
+      } // while
+      /*
+      ch = gScanner.Getch() ;
+      if ( ch == ';' ) {
+        while ( ch != '\n' && !gEnd ) {
+          gScanner.Getchar() ;
+          ch = gScanner.Getch() ;
+        } // while
+      } // if
+      */
+      if ( mScanner.Getch() == '\n' )
+        gColumn = 0 ; 
+      else
+        gColumn = gColumn - c + 1 ;
+         
+
+    } // while()
+    
+
+  } // Gettokenlist()
+  
+  private:
+  vector < Token > mtokenlist ;
+  Scanner mScanner ;
+
+  void ReadCmd( vector<Token> & tokenlist, Token & retoken ) {
+    
+    Token temp = mScanner.Peektoken() ;
+    Token ctemp1, ctemp2 ;
+    if ( temp.type == IDENT ) {
+      temp = mScanner.Gettoken() ;
+      tokenlist.push_back( temp ) ;
+      // :=->æŽ¥exp else->ç„¡é ­exporbool ;
+      temp = mScanner.Peektoken() ;
+      if ( temp.str == ":=" ) {
+        temp = mScanner.Gettoken() ;
+        tokenlist.push_back( temp ) ;
+        Exp( tokenlist, retoken ) ;
+      } // if
+      else {
+        while ( Isarithop( temp.str ) ) {
+          temp = mScanner.Gettoken() ;
+          tokenlist.push_back( temp ) ;
+          if ( Issign( temp.str ) ) {
+            Term( tokenlist, retoken ) ;
+          } // if
+          else {
+            Exp( tokenlist, retoken ) ;
+          } // else
+
+          temp = mScanner.Peektoken() ;
+
+        } // while
+
+        if ( Isboolop( temp.str ) ) {
+          temp = mScanner.Gettoken() ;
+          tokenlist.push_back( temp ) ;
+          Exp( tokenlist, retoken ) ;
+        } // if
+        
+      } // else
+    } // if
+    else if ( temp.type == QUIT ) {
+      temp = mScanner.Gettoken() ;
+      throw Callend();
+    } // else if
+    else if ( temp.type == INT || temp.type == FLOAT || Issign( temp.str ) || temp.str == "(" ) {
+
+      Exp( tokenlist, ctemp1 ) ;
+      temp = mScanner.Peektoken() ;
+      if ( Isboolop( temp.str ) ) {
+        string op = temp.str ;
+        temp = mScanner.Gettoken() ;
+        tokenlist.push_back( temp ) ;
+        Exp( tokenlist, ctemp2 ) ;
+        
+        Boolwork( ctemp1, ctemp2, op ) ;
+
+      } // if
+
+      Getvalue( retoken, ctemp1 ) ;
+
+    } // else if
+    else { // error
+      temp = mScanner.Gettoken() ;
+      cout << "eor:" << temp.str << endl ;
+      tokenlist.push_back( temp ) ;
+    } // else
+
+    temp = mScanner.Peektoken() ;
+    if ( temp.str == ";" ) {
+      temp = mScanner.Gettoken() ;
+      tokenlist.push_back( temp ) ;
+    } // if
+    else {
+      cout << "eor:" << temp.str << endl ;
+    } // else
+
+    
+  } // ReadCmd()  
+
+  void Exp( vector<Token> & tokenlist, Token & retoken ) {
+    Token ttemp1, ttemp2 ;
+    Term( tokenlist, ttemp1 ) ;
+    Token temp = mScanner.Peektoken() ;
+    while ( temp.str == "+" || temp.str == "-" ) {
+      string op = temp.str ;
+      temp = mScanner.Gettoken() ;
+      tokenlist.push_back( temp ) ;
+
+      Term( tokenlist, ttemp2 ) ;
+      
+      Arithwork( ttemp1, ttemp2, op ) ;
+
+      temp = mScanner.Peektoken() ;
+    } // while
+    
+    Getvalue( retoken, ttemp1 ) ;
+    
+  } // Exp()
+
+  void Term( vector<Token> & tokenlist, Token & retoken ) {
+    Token ftemp1, ftemp2 ;
+    Factor( tokenlist, ftemp1 ) ;
+    Token temp = mScanner.Peektoken() ;
+    while ( temp.str == "*" || temp.str == "/" ) {
+      string op = temp.str ;
+      temp = mScanner.Gettoken() ;
+      tokenlist.push_back( temp ) ;
+
+      Factor( tokenlist, ftemp2 ) ;
+
+      Arithwork( ftemp1, ftemp2, op ) ;
+
+      temp = mScanner.Peektoken() ;
+    } // while
+    
+    Getvalue( retoken, ftemp1 ) ;
+
+  } // Term()
+
+  void Factor( vector<Token> & tokenlist, Token & retoken ) {
+    Token temp = mScanner.Peektoken() ;
+    if ( temp.str == "(" ) {
+      temp = mScanner.Gettoken() ;
+      tokenlist.push_back( temp ) ;
+
+      Exp( tokenlist, retoken ) ;
+      
+      temp = mScanner.Peektoken() ;
+      if ( temp.str == ")" ) {
+        temp = mScanner.Gettoken() ;
+        tokenlist.push_back( temp ) ;
+      } // if
+      else {
+        cout << "error" ;
+      } // else
+
+    } // if
+    else if ( Issign( temp.str ) ) {
+      temp = mScanner.Gettoken() ;
+      // tokenlist.push_back( temp ) ;
+      string sign = temp.str ;
+      temp = mScanner.Peektoken() ;
+      if ( temp.type == INT || temp.type == FLOAT ) {
+        temp = mScanner.Gettoken() ;
+        Setsign( temp, sign ) ;
+        Getvalue( retoken, temp ) ;
+        tokenlist.push_back( temp ) ;
+      } // if
+      else {
+        cout << "error" ;
+      } // else
+    } // else if
+    else if ( temp.type == INT || temp.type == FLOAT || temp.type == IDENT ) {
+      // å¦‚æžœæœ‰sign
+      temp = mScanner.Gettoken() ;
+      Getvalue( retoken, temp ) ;
+      tokenlist.push_back( temp ) ;
+    } // else if
+    else {
+      cout << "error" ;
+    } // else
+
+  } // Factor()
+
+  void Getvalue( Token & retoken, Token origin ) {
+    retoken.str = origin.str ;
+    retoken.type = origin.type ;
+    if ( origin.type == INT ) 
+      retoken.intnum = origin.intnum ;
+    else if ( origin.type == FLOAT ) 
+      retoken.floatnum = origin.floatnum ;
+  } // Getvalue()
+
+  void Setsign( Token & retoken, string sign ) {
+    if ( sign == "-" ) {
+      retoken.str = sign + retoken.str ;
+      Settokenvalue( retoken ) ;
+    } // if
+
+  } // Setsign()
+
+  void Arithwork( Token & token1, Token & token2, string op ) {
+    stringstream ss ;
+    if ( token1.type != token2.type ) {
+      if ( token1.type == INT ) {
+        token1.type = FLOAT ;
+        if ( op == "+" )
+          token1.floatnum = ( ( float ) token1.intnum ) + token2.floatnum ;
+        else if ( op == "-" )
+          token1.floatnum = ( ( float ) token1.intnum ) - token2.floatnum ;
+        else if ( op == "*" )
+          token1.floatnum = ( ( float ) token1.intnum ) * token2.floatnum ;
+        else if ( op == "/" )
+          token1.floatnum = ( ( float ) token1.intnum ) / token2.floatnum ;
+        token1.intnum = 0 ;
+        ss << Tofloat( token1.floatnum ) ;
+        token1.str = ss.str() ;
+      } // if
+      else {
+        token1.type = FLOAT ;
+        if ( op == "+" )
+          token1.floatnum = token1.floatnum + ( ( float ) token2.intnum ) ;
+        else if ( op == "-" )
+          token1.floatnum = token1.floatnum - ( ( float ) token2.intnum ) ;
+        else if ( op == "*" )
+          token1.floatnum = token1.floatnum * ( ( float ) token2.intnum ) ;
+        else if ( op == "/" )
+          token1.floatnum = token1.floatnum / ( ( float ) token2.intnum ) ;
+        ss << Tofloat( token1.floatnum ) ;
+        token1.str = ss.str() ;
+      } // else
+    } // if
+    else {
+      if ( token1.type == INT ) {
+        if ( op == "+" )
+          token1.intnum = token1.intnum + token2.intnum ;
+        else if ( op == "-" )
+          token1.intnum = token1.intnum - token2.intnum ;
+        else if ( op == "*" )
+          token1.intnum = token1.intnum * token2.intnum ;
+        else if ( op == "/" )
+          token1.intnum = token1.intnum / token2.intnum ;
+
+        ss << token1.intnum ;
+        token1.str = ss.str() ;
+      } // if
+      else {
+        if ( op == "+" )
+          token1.floatnum = token1.floatnum + token2.floatnum ;
+        else if ( op == "-" )
+          token1.floatnum = token1.floatnum - token2.floatnum ;
+        else if ( op == "*" )
+          token1.floatnum = token1.floatnum * token2.floatnum ;
+        else if ( op == "/" )
+          token1.floatnum = token1.floatnum / token2.floatnum ;
+
+        ss << Tofloat( token1.floatnum ) ;
+        token1.str = ss.str() ;
+      } // else
+    } // else
+
+  } // Arithwork()
+
+  void Boolwork( Token & token1, Token & token2, string op ) {
+    bool ans = true;
+    if ( token1.type != token2.type ) {
+      if ( token1.type == INT ) {
+        float num = ( float ) token1.intnum ;
+        ans = Boolfloat( num, token2.floatnum, op ) ;
+      } // if
+      else {
+        float num = ( float ) token2.intnum ;
+        ans = Boolfloat( token1.floatnum, num, op ) ;
+      } // else
+    } // if
+    else {
+      if ( token1.type == INT ) {
+        ans = Boolint( token1.intnum, token2.intnum, op ) ;
+      } // if
+      else {
+        ans = Boolfloat( token1.floatnum, token2.floatnum, op ) ;
+      } // else
+    } // else
+
+    token1.type = OTHER ;
+    token1.intnum = 0 ;
+    token1.floatnum = 0.0 ;
+    if ( ans )
+      token1.str = "true" ;
+    else
+      token1.str = "false" ;
+
+  } // Boolwork()
+
+  bool Boolint( int num1, int num2, string op ) {
+    if ( op == "=" ) {
+      if ( num1 == num2 )
+        return true ;
+    } // if
+    else if ( op == "<>" ) {
+      if ( num1 != num2 )
+        return true ;
+    } // else if
+    else if ( op == ">" ) {
+      if ( num1 > num2 )
+        return true ;
+    } // else if
+    else if ( op == "<" ) {
+      if ( num1 < num2 )
+        return true ;
+    } // else if
+    else if ( op == ">=" ) {
+      if ( num1 >= num2 )
+        return true ;
+    } // else if
+    else if ( op == "<=" ) {
+      if ( num1 <= num2 )
+        return true ;
+    } // else if
+    
+    return false ;
+  } // Boolint()
+
+  bool Boolfloat( float num1, float num2, string op ) {
+
+    float tolerance = 0.0001 ;
+    float l, s ;
+
+    bool larger, equal ;
+    if ( num1 > num2 ) {
+      larger = true ;
+      l = num1 ;
+      s = num2 ;
+    } // if
+    else {
+      larger = false ;
+      l = num2 ;
+      s = num1 ;
+    } // else
+
+    if ( l * ( 1.0 - tolerance ) <= s )
+      equal = true ;
+    else
+      equal = false;
+
+    if ( op == "=" ) {
+      if ( equal )
+        return true ;
+    } // if
+    else if ( op == "<>" ) {
+      if ( !equal )
+        return true ;
+    } // else if
+    else if ( op == ">" ) {
+      if ( larger )
+        return true ;
+    } // else if
+    else if ( op == "<" ) {
+      if ( !larger )
+        return true ;
+    } // else if
+    else if ( op == ">=" ) {
+      if ( larger || equal )
+        return true ;
+    } // else if
+    else if ( op == "<=" ) {
+      if ( !larger || equal )
+        return true ;
+    } // else if
+    
+    return false ;
+  } // Boolfloat()
+
 };
 
 int main() {
-  Scanner scanner = Scanner() ;
+  
+  Interpreter interpreter = Interpreter() ;
+
+  
   char t ;
-  scanf( "%d",  &gTestNum  ) ;
+  scanf( "%d",  &gTestNum ) ;
   scanf( "%c",  &t ) ;
-  printf( "Welcome to OurScheme!\n\n" ) ;
+  
+  printf( "Program starts...\n" ) ;
   try {
-    scanner.Gettokenlist() ;
+    // gScanner.Test();
+    interpreter.Gettokenlist();
   } // try
-  catch ( Callend e ) {
-    ;
+  catch ( Exception e ) {
+    cout << e.merrorstr ;
+    if ( e.mname == "EndOfFileError" )
+      printf( "%s", e.merrorstr.c_str() ) ;
   } // catch
-  catch ( EndOfFileError e ) {
-    printf( "%s", e.merrorstr.c_str() ) ;
-  } // catch  
-  
-  // scanner.Print() ;
-  printf( "\nThanks for using OurScheme!" ) ;
-  
+
+  printf( "Program exits..." ) ;
+
 } // main()
