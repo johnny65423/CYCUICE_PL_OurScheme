@@ -68,7 +68,7 @@ bool Issign( string str ) {
   else return false ;
 } // Issign()
 
-string Todouble( double num ) {
+string Tofloat( float num ) {
   stringstream ss ;
   ss << num ; 
   if ( ss.str().find( "." ) != -1 )
@@ -77,7 +77,7 @@ string Todouble( double num ) {
     ss << "." ;
     return ss.str() ;
   } // else
-} // Todouble()
+} // Tofloat()
 
 int Decodeint( string str ) {
   int positive = 1 ;
@@ -450,16 +450,25 @@ class Interpreter{
     while ( 0 == 0 ) {
       mtokenlist.clear() ;
       bool err = false ;
-      
+      Token retoken ;
+
+
       printf( "> " ) ;
       if ( gEnd )
         throw EndOfFileError() ;
-      ReadCmd(  mtokenlist ) ;
+
+
+      ReadCmd(  mtokenlist, retoken ) ;
+
+      /*
       for ( int i = 0 ; i < mtokenlist.size() ; i++ ) {
         Printvalue( mtokenlist.at( i ) ) ;
       } // for
-        
-      cout << "<<" ;
+      */
+     
+      // cout << "\n" ;
+      Printvalue( retoken ) ;  
+      // cout << "<<" ;
       
 
       printf( "\n" ) ;
@@ -494,7 +503,7 @@ class Interpreter{
   vector < Token > mtokenlist ;
   Scanner mScanner ;
 
-  void ReadCmd( vector<Token> & tokenlist ) {
+  void ReadCmd( vector<Token> & tokenlist, Token & retoken ) {
     
     Token temp = mScanner.Peektoken() ;
     if ( temp.type == IDENT ) {
@@ -505,17 +514,17 @@ class Interpreter{
       if ( temp.str == ":=" ) {
         temp = mScanner.Gettoken() ;
         tokenlist.push_back( temp ) ;
-        Exp( tokenlist ) ;
+        Exp( tokenlist, retoken ) ;
       } // if
       else {
         while ( Isarithop( temp.str ) ) {
           temp = mScanner.Gettoken() ;
           tokenlist.push_back( temp ) ;
           if ( Issign( temp.str ) ) {
-            Term( tokenlist ) ;
+            Term( tokenlist, retoken ) ;
           } // if
           else {
-            Exp( tokenlist ) ;
+            Exp( tokenlist, retoken ) ;
           } // else
 
           temp = mScanner.Peektoken() ;
@@ -525,7 +534,7 @@ class Interpreter{
         if ( Isboolop( temp.str ) ) {
           temp = mScanner.Gettoken() ;
           tokenlist.push_back( temp ) ;
-          Exp( tokenlist ) ;
+          Exp( tokenlist, retoken ) ;
         } // if
         
       } // else
@@ -535,12 +544,12 @@ class Interpreter{
       throw Callend();
     } // else if
     else if ( temp.type == INT || temp.type == FLOAT || Issign( temp.str ) || temp.str == "(" ) {
-      Exp( tokenlist ) ;
+      Exp( tokenlist, retoken ) ;
       temp = mScanner.Peektoken() ;
       if ( Isboolop( temp.str ) ) {
         temp = mScanner.Gettoken() ;
         tokenlist.push_back( temp ) ;
-        Exp( tokenlist ) ;
+        Exp( tokenlist, retoken ) ;
         
       } // if
 
@@ -563,40 +572,53 @@ class Interpreter{
     
   } // ReadCmd()  
 
-  void Exp( vector<Token> & tokenlist ) {
-    Term( tokenlist ) ;
+  void Exp( vector<Token> & tokenlist, Token & retoken ) {
+    Token ttemp1, ttemp2 ;
+    Term( tokenlist, ttemp1 ) ;
     Token temp = mScanner.Peektoken() ;
     while ( temp.str == "+" || temp.str == "-" ) {
+      string op = temp.str ;
       temp = mScanner.Gettoken() ;
       tokenlist.push_back( temp ) ;
 
-      Term( tokenlist ) ;
+      Term( tokenlist, ttemp2 ) ;
+      
+      Arithwork( ttemp1, ttemp2, op ) ;
 
       temp = mScanner.Peektoken() ;
     } // while
+    
+    Getvalue( retoken, ttemp1 ) ;
+    
   } // Exp()
 
-  void Term( vector<Token> & tokenlist ) {
-    Factor( tokenlist ) ;
+  void Term( vector<Token> & tokenlist, Token & retoken ) {
+    Token ftemp1, ftemp2 ;
+    Factor( tokenlist, ftemp1 ) ;
     Token temp = mScanner.Peektoken() ;
     while ( temp.str == "*" || temp.str == "/" ) {
+      string op = temp.str ;
       temp = mScanner.Gettoken() ;
       tokenlist.push_back( temp ) ;
 
-      Factor( tokenlist ) ;
+      Factor( tokenlist, ftemp2 ) ;
+
+      Arithwork( ftemp1, ftemp2, op ) ;
 
       temp = mScanner.Peektoken() ;
     } // while
+    
+    Getvalue( retoken, ftemp1 ) ;
 
   } // Term()
 
-  void Factor( vector<Token> & tokenlist ) {
+  void Factor( vector<Token> & tokenlist, Token & retoken ) {
     Token temp = mScanner.Peektoken() ;
     if ( temp.str == "(" ) {
       temp = mScanner.Gettoken() ;
       tokenlist.push_back( temp ) ;
 
-      Exp( tokenlist ) ;
+      Exp( tokenlist, retoken ) ;
       
       temp = mScanner.Peektoken() ;
       if ( temp.str == ")" ) {
@@ -610,11 +632,13 @@ class Interpreter{
     } // if
     else if ( Issign( temp.str ) ) {
       temp = mScanner.Gettoken() ;
-      tokenlist.push_back( temp ) ;
-
+      // tokenlist.push_back( temp ) ;
+      string sign = temp.str ;
       temp = mScanner.Peektoken() ;
       if ( temp.type == INT || temp.type == FLOAT ) {
         temp = mScanner.Gettoken() ;
+        Setsign( temp, sign ) ;
+        Getvalue( retoken, temp ) ;
         tokenlist.push_back( temp ) ;
       } // if
       else {
@@ -624,6 +648,7 @@ class Interpreter{
     else if ( temp.type == INT || temp.type == FLOAT || temp.type == IDENT ) {
       // 如果有sign
       temp = mScanner.Gettoken() ;
+      Getvalue( retoken, temp ) ;
       tokenlist.push_back( temp ) ;
     } // else if
     else {
@@ -632,6 +657,84 @@ class Interpreter{
 
   } // Factor()
 
+  void Getvalue( Token & retoken, Token origin ) {
+    retoken.str = origin.str ;
+    retoken.type = origin.type ;
+    if ( origin.type == INT ) 
+      retoken.intnum = origin.intnum ;
+    else if ( origin.type == FLOAT ) 
+      retoken.floatnum = origin.floatnum ;
+  } // Getvalue()
+
+  void Setsign( Token & retoken, string sign ) {
+    if ( sign == "-" ) {
+      retoken.str = sign + retoken.str ;
+      Settokenvalue( retoken ) ;
+    } // if
+
+  } // Setsign()
+
+  void Arithwork( Token & token1, Token & token2, string op ) {
+    stringstream ss ;
+    if ( token1.type != token2.type ) {
+      if ( token1.type == INT ) {
+        token1.type = FLOAT ;
+        if ( op == "+" )
+          token1.floatnum = ( ( float ) token1.intnum ) + token2.floatnum ;
+        else if ( op == "-" )
+          token1.floatnum = ( ( float ) token1.intnum ) - token2.floatnum ;
+        else if ( op == "*" )
+          token1.floatnum = ( ( float ) token1.intnum ) * token2.floatnum ;
+        else if ( op == "/" )
+          token1.floatnum = ( ( float ) token1.intnum ) / token2.floatnum ;
+        token1.intnum = 0 ;
+        ss << Tofloat( token1.floatnum ) ;
+        token1.str = ss.str() ;
+      } // if
+      else {
+        token1.type = FLOAT ;
+        if ( op == "+" )
+          token1.floatnum = token1.floatnum + ( ( float ) token2.intnum ) ;
+        else if ( op == "-" )
+          token1.floatnum = token1.floatnum - ( ( float ) token2.intnum ) ;
+        else if ( op == "*" )
+          token1.floatnum = token1.floatnum * ( ( float ) token2.intnum ) ;
+        else if ( op == "/" )
+          token1.floatnum = token1.floatnum / ( ( float ) token2.intnum ) ;
+        ss << Tofloat( token1.floatnum ) ;
+        token1.str = ss.str() ;
+      } // else
+    } // if
+    else {
+      if ( token1.type == INT ) {
+        if ( op == "+" )
+          token1.intnum = token1.intnum + token2.intnum ;
+        else if ( op == "-" )
+          token1.intnum = token1.intnum - token2.intnum ;
+        else if ( op == "*" )
+          token1.intnum = token1.intnum * token2.intnum ;
+        else if ( op == "/" )
+          token1.intnum = token1.intnum / token2.intnum ;
+
+        ss << token1.intnum ;
+        token1.str = ss.str() ;
+      } // if
+      else {
+        if ( op == "+" )
+          token1.floatnum = token1.floatnum + token2.floatnum ;
+        else if ( op == "-" )
+          token1.floatnum = token1.floatnum - token2.floatnum ;
+        else if ( op == "*" )
+          token1.floatnum = token1.floatnum * token2.floatnum ;
+        else if ( op == "/" )
+          token1.floatnum = token1.floatnum / token2.floatnum ;
+
+        ss << Tofloat( token1.floatnum ) ;
+        token1.str = ss.str() ;
+      } // else
+    } // else
+
+  } // Arithwork()
 
 };
 
@@ -655,6 +758,6 @@ int main() {
       printf( "%s", e.merrorstr.c_str() ) ;
   } // catch
 
-  printf( "\nProgram exits..." ) ;
+  printf( "Program exits..." ) ;
 
 } // main()
