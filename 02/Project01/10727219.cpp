@@ -31,6 +31,8 @@ struct Token {
 typedef Token * TokenPtr ;
 
 
+
+
 bool Isletter( char ch ) {
   if ( ch >= 'A' && ch <= 'Z' ) return true ;
   else if ( ch >= 'a' && ch <= 'z' ) return true ;
@@ -67,6 +69,16 @@ bool Issign( string str ) {
   if ( str == "+" || str == "-" ) return true ;
   else return false ;
 } // Issign()
+
+bool Isotherhead( char ch ) {
+  if ( ch == '+' || ch == '-' ) return true ;
+  else if ( ch == '*' || ch == '/' ) return true ;
+  else if ( ch == '>' || ch == '<' ) return true ;
+  else if ( ch == '(' || ch == ')' ) return true ;
+  else if ( ch == '=' || ch == ';' ) return true ;
+  else if ( ch == ':' ) return true ;
+  else return false ;
+} // Isotherhead()
 
 string Tofloat( float num ) {
   stringstream ss ;
@@ -184,7 +196,7 @@ class Exception {
 public:
   string mname ;
   string merrorstr;
-  Token * mhead ;
+  Token mtoken ;
   
   Exception() {  }
 
@@ -202,6 +214,31 @@ public:
     mname = "Callend" ;
   } // Callend()
 };
+
+class LexicalError : public Exception {
+public:
+  LexicalError( char ch ) {
+    mname = "LexicalError" ;
+    stringstream ss ;
+
+    ss << "Unrecognized token with first char : '" << ch << "'" ;
+
+    merrorstr = ss.str() ;
+  } // LexicalError()
+};
+
+class SyntacticError : public Exception {
+public:
+  SyntacticError( string str ) {
+    mname = "LexicalError" ;
+    stringstream ss ;
+
+    ss << "Unexpected token : '" << str << "'" ;
+
+    merrorstr = ss.str() ;
+  } // SyntacticError()
+};
+
 
 class EndOfFileError : public Exception {
 public:
@@ -285,11 +322,14 @@ class Scanner {
       while ( mch != '\n' && !gEnd )
         Getchar() ;
       
+      /*
       if ( gEnd )  
         throw EndOfFileError() ;
       else
         Readnwschar() ; 
-        
+      */
+      Readnwschar() ; 
+
       retoken.column = gColumn ;
       retoken.line = gLine ;
       retoken.str = Gettokenstr( type ) ;
@@ -335,9 +375,12 @@ class Scanner {
       type = NUM ;
       return Getnum( mch, type ) ;
     } // else if
-    else {
+    else if ( Isotherhead( mch ) ) {
       type = OTHER ;
       return Getothers( mch ) ;
+    } // else if
+    else {
+      throw LexicalError( mch ) ;
     } // else
   } // Gettokenstr() 
   
@@ -350,6 +393,11 @@ class Scanner {
     while ( Isdigit( mch ) || Isletter( mch ) || mch == '_' ) {
       temp += mch ;
       Getchar() ;
+
+      if ( gEnd ) {
+        return temp ;
+      } // if
+        
     } // while
     
     return temp ;
@@ -367,6 +415,9 @@ class Scanner {
         
       temp += mch ; 
       Getchar() ;
+
+      if ( gEnd )
+        return temp ;
     } // while
     
     return temp ;
@@ -457,18 +508,26 @@ class Interpreter{
       if ( gEnd )
         throw EndOfFileError() ;
 
-
-      ReadCmd(  mtokenlist, retoken ) ;
+      try {
+        ReadCmd(  mtokenlist, retoken ) ;
+        Printvalue( retoken ) ;  
+      } // try
+      catch ( LexicalError e ) {
+        printf( "%s", e.merrorstr.c_str() ) ;
+        while ( !gEnd && mScanner.Getch() != '\n' )
+          mScanner.Getchar() ;
+      }  // catch
+      catch ( SyntacticError e ) {
+        printf( "%s", e.merrorstr.c_str() ) ;
+        while ( !gEnd && mScanner.Getch() != '\n' )
+          mScanner.Getchar() ;
+      }  // catch
 
       /*
       for ( int i = 0 ; i < mtokenlist.size() ; i++ ) {
         Printvalue( mtokenlist.at( i ) ) ;
       } // for
       */
-     
-      // cout << "\n" ;
-      Printvalue( retoken ) ;  
-      // cout << "<<" ;
       
 
       printf( "\n" ) ;
@@ -541,7 +600,7 @@ class Interpreter{
       } // else
     } // if
     else if ( temp.type == QUIT ) {
-      temp = mScanner.Gettoken() ;
+      // temp = mScanner.Gettoken() ;
       throw Callend();
     } // else if
     else if ( temp.type == INT || temp.type == FLOAT || Issign( temp.str ) || temp.str == "(" ) {
@@ -563,8 +622,8 @@ class Interpreter{
     } // else if
     else { // error
       temp = mScanner.Gettoken() ;
-      cout << "eor:" << temp.str << endl ;
-      tokenlist.push_back( temp ) ;
+      throw SyntacticError( temp.str ) ;
+
     } // else
 
     temp = mScanner.Peektoken() ;
@@ -573,7 +632,8 @@ class Interpreter{
       tokenlist.push_back( temp ) ;
     } // if
     else {
-      cout << "eor:" << temp.str << endl ;
+      temp = mScanner.Gettoken() ;
+      throw SyntacticError( temp.str ) ;
     } // else
 
     
@@ -633,7 +693,8 @@ class Interpreter{
         tokenlist.push_back( temp ) ;
       } // if
       else {
-        cout << "error" ;
+        temp = mScanner.Gettoken() ;
+        throw SyntacticError( temp.str ) ;
       } // else
 
     } // if
@@ -649,7 +710,8 @@ class Interpreter{
         tokenlist.push_back( temp ) ;
       } // if
       else {
-        cout << "error" ;
+        temp = mScanner.Gettoken() ;
+        throw SyntacticError( temp.str ) ;
       } // else
     } // else if
     else if ( temp.type == INT || temp.type == FLOAT || temp.type == IDENT ) {
@@ -659,7 +721,8 @@ class Interpreter{
       tokenlist.push_back( temp ) ;
     } // else if
     else {
-      cout << "error" ;
+      temp = mScanner.Gettoken() ;
+      throw SyntacticError( temp.str ) ;
     } // else
 
   } // Factor()
@@ -805,7 +868,7 @@ class Interpreter{
 
   bool Boolfloat( float num1, float num2, string op ) {
 
-    float tolerance = 0.0001 ;
+    float tolerance = 0.01 ;
     float l, s ;
 
     bool larger, equal ;
@@ -819,12 +882,15 @@ class Interpreter{
       l = num2 ;
       s = num1 ;
     } // else
-
+    
+    // if ( l - s < 0.0001 )
     if ( l * ( 1.0 - tolerance ) <= s )
       equal = true ;
     else
       equal = false;
 
+    // if ( equal ) cout << "eq" ;
+    
     if ( op == "=" ) {
       if ( equal )
         return true ;
@@ -870,7 +936,7 @@ int main() {
     interpreter.Gettokenlist();
   } // try
   catch ( Exception e ) {
-    cout << e.merrorstr ;
+    // cout << e.mname ;
     if ( e.mname == "EndOfFileError" )
       printf( "%s", e.merrorstr.c_str() ) ;
   } // catch

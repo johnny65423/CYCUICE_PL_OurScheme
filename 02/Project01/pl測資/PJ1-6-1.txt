@@ -1,0 +1,26 @@
+當測試「Test case 1 of 3」時，Input為>>1
+
+    100+-200   
+
+   +
+           500 
+;;
+   
+  100          +-200 // *-2+300*2 ;
+*-2+/300*
+2 ;
+  100          +-200
+         // - 5 // minus five
+//
+*-2+300*
+2 ;
+quit
+<<
+
+正確的輸出應該是>>Program starts...
+> 400
+> Unexpected token : ';'
+> Unexpected token : '/'
+> 2
+> 1100
+> Program exits...<<
