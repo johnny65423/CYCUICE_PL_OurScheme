@@ -336,6 +336,14 @@ class Scanner {
       retoken.type = type ;
     } // while
     
+    /*
+    if ( retoken.str == "==" ) {
+      int a[5] ;
+      int b = 10 ;
+      a[b] = 0 ;
+    } // if
+    */
+
     if ( retoken.str == "quit" )
       retoken.type = QUIT ;
 
