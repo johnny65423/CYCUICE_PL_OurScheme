@@ -1,4 +1,4 @@
-2
+當測試「Test case 2 of 3」時，Input為>>2
 salary:=3000; // Comment here
 //
 this_is_a_name123:=500:=5;
@@ -21,3 +21,21 @@ salary:=30000;
 =
 2*10000*10+(30000*2)*10
 ;quit$
+<<
+
+正確的輸出應該是>>Program starts...
+> 3000
+> Unexpected token : ':='
+> Undefined identifier : 'this_is_a_name123'
+> Unexpected token : ';'
+> 500
+> 12
+> 36000
+> 360000
+> true
+> false
+> 30000
+> true
+> false
+> true
+> Program exits...<<

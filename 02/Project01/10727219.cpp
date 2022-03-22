@@ -239,6 +239,17 @@ public:
   } // SyntacticError()
 };
 
+class SemanticError : public Exception {
+public:
+  SemanticError( string str ) {
+    mname = "LexicalError" ;
+    stringstream ss ;
+
+    ss << "Undefined identifier : '" << str << "'" ;
+
+    merrorstr = ss.str() ;
+  } // SemanticError()
+};
 
 class EndOfFileError : public Exception {
 public:
@@ -310,6 +321,19 @@ class Scanner {
     return temp ;
   } // Peektoken()
 
+  void Cenceltoken( Token temp ) {
+    cin.putback( mch );
+    gColumn = temp.column ;
+    gLine = temp.line ;
+    string str = temp.str ;
+    for ( int i = str.size() - 1 ; i >= 0 ; i-- ) {
+      // ungetc( str[i], stdin ) ;
+      cin.putback( str[i] );
+    } // for 
+
+    Getchar();
+  } // Cenceltoken()
+
   Token Gettoken() {
     Token retoken ;
     Type type ;
@@ -336,16 +360,9 @@ class Scanner {
       retoken.type = type ;
     } // while
     
-    /*
-    if ( retoken.str == "==" ) {
-      int a[5] ;
-      int b = 10 ;
-      a[b] = 0 ;
-    } // if
-    */
 
-    if ( retoken.str == "quit" )
-      retoken.type = QUIT ;
+    // if ( retoken.str == "quit" )
+    //   retoken.type = QUIT ;
 
     Settokenvalue( retoken ) ;
 
@@ -435,7 +452,8 @@ class Scanner {
     string temp = "" ; 
     temp += mch ;
     Getchar() ;
-    if ( temp == "=" || temp == "!" || temp == "*" || temp == ":" ) {
+    // if ( temp == "=" || temp == "!" || temp == "*" || temp == ":" ) {
+    if ( temp == "*" || temp == ":" ) {
       if ( mch == '=' ) {
         temp += mch ;
         Getchar() ;
@@ -530,6 +548,11 @@ class Interpreter{
         while ( !gEnd && mScanner.Getch() != '\n' )
           mScanner.Getchar() ;
       }  // catch
+      catch ( SemanticError e ) {
+        printf( "%s", e.merrorstr.c_str() ) ;
+        while ( !gEnd && mScanner.Getch() != '\n' )
+          mScanner.Getchar() ;
+      }  // catch
 
       /*
       for ( int i = 0 ; i < mtokenlist.size() ; i++ ) {
@@ -568,48 +591,89 @@ class Interpreter{
   
   private:
   vector < Token > mtokenlist ;
+  map< string, Token > mVarmap ;
   Scanner mScanner ;
 
   void ReadCmd( vector<Token> & tokenlist, Token & retoken ) {
     
     Token temp = mScanner.Peektoken() ;
+    Token temp2 ;
     Token ctemp1, ctemp2 ;
-    if ( temp.type == IDENT ) {
+    string name = "";
+    if ( temp.str == "quit" ) {
+      // temp = mScanner.Gettoken() ;
+      throw Callend();
+    } // if
+    else if ( temp.type == IDENT ) {
       temp = mScanner.Gettoken() ;
       tokenlist.push_back( temp ) ;
       // :=->接exp else->無頭exporbool ;
-      temp = mScanner.Peektoken() ;
-      if ( temp.str == ":=" ) {
+      temp2 = mScanner.Peektoken() ;
+      if ( temp2.str == ":=" ) {
+        name = temp.str ;
         temp = mScanner.Gettoken() ;
         tokenlist.push_back( temp ) ;
-        Exp( tokenlist, retoken ) ;
+        Exp( tokenlist, ctemp1 ) ;
+
+        // Define( name, ctemp1 ) ;
+        // Getvalue( retoken, ctemp1 ) ;
       } // if
-      else {
-        while ( Isarithop( temp.str ) ) {
+      else if ( Isarithop( temp2.str ) ) {
+        mScanner.Cenceltoken( temp ) ;
+        
+        Exp( tokenlist, ctemp1 ) ;
+        temp = mScanner.Peektoken() ;
+        if ( Isboolop( temp.str ) ) {
+          string op = temp.str ;
           temp = mScanner.Gettoken() ;
           tokenlist.push_back( temp ) ;
-          if ( Issign( temp.str ) ) {
-            Term( tokenlist, retoken ) ;
+          Exp( tokenlist, ctemp2 ) ;
+          
+          Boolwork( ctemp1, ctemp2, op ) ;
+
+        } // if
+
+        Getvalue( retoken, ctemp1 ) ;
+
+
+
+        /*
+        string op ;
+        Getvalue( ctemp1, temp ) ;
+        while ( Isarithop( temp2.str ) ) {
+          
+          temp = mScanner.Gettoken() ;
+          op = temp2.str ;
+          tokenlist.push_back( temp2 ) ;
+          if ( Issign( temp2.str ) ) {
+            Term( tokenlist, ctemp2 ) ;
           } // if
           else {
-            Exp( tokenlist, retoken ) ;
+            Exp( tokenlist, ctemp2 ) ;
           } // else
+          
+          Arithwork( ctemp1, ctemp2, op ) ; 
 
-          temp = mScanner.Peektoken() ;
+          temp2 = mScanner.Peektoken() ;
 
         } // while
 
-        if ( Isboolop( temp.str ) ) {
-          temp = mScanner.Gettoken() ;
-          tokenlist.push_back( temp ) ;
-          Exp( tokenlist, retoken ) ;
+        if ( Isboolop( temp2.str ) ) {
+          temp2 = mScanner.Gettoken() ;
+          op = temp2.str ;
+          tokenlist.push_back( temp2 ) ;
+          Exp( tokenlist, ctemp2 ) ;
+
+          Boolwork( ctemp1, ctemp2, op ) ;
+
         } // if
-        
-      } // else
-    } // if
-    else if ( temp.type == QUIT ) {
-      // temp = mScanner.Gettoken() ;
-      throw Callend();
+
+        Getvalue( retoken, ctemp1 ) ;
+        */
+      } // else if
+      else if ( temp2.str == ";" ) {
+        Getvalue( retoken, temp ) ;
+      } // else if
     } // else if
     else if ( temp.type == INT || temp.type == FLOAT || Issign( temp.str ) || temp.str == "(" ) {
 
@@ -638,6 +702,12 @@ class Interpreter{
     if ( temp.str == ";" ) {
       temp = mScanner.Gettoken() ;
       tokenlist.push_back( temp ) ;
+
+      if ( name != "" ) {
+        Define( name, ctemp1 ) ;
+        Getvalue( retoken, ctemp1 ) ;
+      } // if
+
     } // if
     else {
       temp = mScanner.Gettoken() ;
@@ -666,6 +736,8 @@ class Interpreter{
     Getvalue( retoken, ttemp1 ) ;
     
   } // Exp()
+
+
 
   void Term( vector<Token> & tokenlist, Token & retoken ) {
     Token ftemp1, ftemp2 ;
@@ -736,12 +808,27 @@ class Interpreter{
   } // Factor()
 
   void Getvalue( Token & retoken, Token origin ) {
-    retoken.str = origin.str ;
-    retoken.type = origin.type ;
-    if ( origin.type == INT ) 
+    
+    if ( origin.type == IDENT ) {
+      if ( mVarmap.find( origin.str ) != mVarmap.end() ) {
+        Token temp = mVarmap[ origin.str ] ;
+        retoken.str = temp.str ;
+        retoken.type = temp.type ;
+        retoken.intnum = temp.intnum ;
+        retoken.floatnum = temp.floatnum ;
+      } // if
+      else {
+        throw SemanticError( origin.str ) ;
+      } // else
+
+    } // if
+    else {
+      retoken.str = origin.str ;
+      retoken.type = origin.type ;
       retoken.intnum = origin.intnum ;
-    else if ( origin.type == FLOAT ) 
       retoken.floatnum = origin.floatnum ;
+    } // else
+
   } // Getvalue()
 
   void Setsign( Token & retoken, string sign ) {
@@ -876,7 +963,7 @@ class Interpreter{
 
   bool Boolfloat( float num1, float num2, string op ) {
 
-    float tolerance = 0.01 ;
+    float tolerance = 0.0001 ;
     float l, s ;
 
     bool larger, equal ;
@@ -891,8 +978,9 @@ class Interpreter{
       s = num1 ;
     } // else
     
-    // if ( l - s < 0.0001 )
-    if ( l * ( 1.0 - tolerance ) <= s )
+    // cout << l * ( 1.0 - tolerance ) << " " << s << endl ;
+    // if ( l * ( 1.0 - tolerance ) <= s )
+    if ( l - s <= tolerance )
       equal = true ;
     else
       equal = false;
@@ -908,11 +996,11 @@ class Interpreter{
         return true ;
     } // else if
     else if ( op == ">" ) {
-      if ( larger )
+      if ( larger && !equal )
         return true ;
     } // else if
     else if ( op == "<" ) {
-      if ( !larger )
+      if ( !larger && !equal )
         return true ;
     } // else if
     else if ( op == ">=" ) {
@@ -926,6 +1014,17 @@ class Interpreter{
     
     return false ;
   } // Boolfloat()
+
+  void Define( string name, Token temp ) {
+    Token ntoken ;
+    
+    ntoken.str = temp.str ;
+    ntoken.intnum = temp.intnum ;
+    ntoken.floatnum = temp.floatnum ;
+    ntoken.type = temp.type ;
+    mVarmap[ name ] = ntoken ;
+
+  } // Define()
 
 };
 
