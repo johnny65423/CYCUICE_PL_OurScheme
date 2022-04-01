@@ -66,7 +66,7 @@ bool Isarithop( string str ) {
 } // Isarithop()
 
 bool Issign( string str ) {
-  if ( str == "+" || str == "-" ) return true ;
+  if ( str == "+" || str == "-" || str == "!" ) return true ;
   else return false ;
 } // Issign()
 
@@ -79,6 +79,18 @@ bool Isotherhead( char ch ) {
   else if ( ch == ':' ) return true ;
   else return false ;
 } // Isotherhead()
+
+bool Istypespec( string str ) {
+  if ( str == "int" || str == "float" || str == "char" ) return true ;
+  else if ( str == "string" || str == "bool" ) return true ;
+  else return false ;
+} // Istypespec()
+
+bool Isassignop( string str ) {
+  if ( str == "=" || str == "+=" || str == "-=" ) return true ;
+  else if ( str == "*=" || str == "/=" || str == "%=" ) return true ;
+  else return false ;
+} // Isassignop()
 
 string Tofloat( float num ) {
   stringstream ss ;
