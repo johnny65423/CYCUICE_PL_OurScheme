@@ -92,6 +92,12 @@ bool Isassignop( string str ) {
   else return false ;
 } // Isassignop()
 
+bool Issysfunc( string str ) {
+  if ( str == "ListAllVariables" || str == "ListAllFunctions" ) return true ;
+  else if ( str == "ListVariable" || str == "ListFunction" || str == "Done" ) return true ;
+  else return false ;
+} // Isassignop()
+
 string Tofloat( float num ) {
   stringstream ss ;
   ss << num ; 
@@ -601,6 +607,10 @@ class Interpreter{
 
   } // Gettokenlist()
   
+  void Getuserinput() {
+    ;
+  } // Getuserinput()
+  
   private:
   vector < Token > mtokenlist ;
   map< string, Token > mVarmap ;
@@ -748,8 +758,6 @@ class Interpreter{
     Getvalue( retoken, ttemp1 ) ;
     
   } // Exp()
-
-
 
   void Term( vector<Token> & tokenlist, Token & retoken ) {
     Token ftemp1, ftemp2 ;
