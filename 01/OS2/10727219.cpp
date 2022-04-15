@@ -702,8 +702,9 @@ class Scheduler {
 				
 				for( int i = 0 ; i < pqueue.size() ; i++ ) {
 					pqueue.at(i).ratio = (float) ( pqueue.at(i).waiting + pqueue.at(i).cpuburst ) / pqueue.at(i).cpuburst ;
-					//cout << "*" << pqueue.at(i).ratio << " " << getid(pqueue.at(i).id) << endl ;
+					cout << "*" << pqueue.at(i).ratio << " " << getid(pqueue.at(i).id) << endl ;
 				} 	
+				cout << endl ;
 				sort( pqueue.begin(),pqueue.end(), checkHRRN ) ;
 					
 				
