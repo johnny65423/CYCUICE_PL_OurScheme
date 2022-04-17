@@ -553,8 +553,9 @@ class Interpreter{
         throw EndOfFileError() ;
 
       try {
-        ReadCmd(  mtokenlist, retoken ) ;
-        Printvalue( retoken ) ;  
+        // ReadCmd(  mtokenlist, retoken ) ;
+        // Printvalue( retoken ) ;  
+        Readuserinput( mtokenlist, retoken ) ;
       } // try
       catch ( LexicalError e ) {
         printf( "%s", e.merrorstr.c_str() ) ;
@@ -607,14 +608,28 @@ class Interpreter{
 
   } // Gettokenlist()
   
-  void Getuserinput() {
-    ;
-  } // Getuserinput()
-  
   private:
   vector < Token > mtokenlist ;
   map< string, Token > mVarmap ;
   Scanner mScanner ;
+
+  void Readuserinput( vector<Token> & tokenlist, Token & retoken ) {
+    Token temp = mScanner.Peektoken() ;
+    if ( Issysfunc( temp.str ) ) {
+      temp = mScanner.Gettoken() ;
+      throw Callend();
+    } // if
+    else if ( Istypespec( temp.str ) ) {
+      temp = mScanner.Gettoken() ;
+      Printvalue( temp ) ;
+    } // else if
+    else {
+      temp = mScanner.Gettoken() ;
+      cout << "->" ;
+      Printvalue( temp ) ;
+    } // else
+    
+  } // Readuserinput()
 
   void ReadCmd( vector<Token> & tokenlist, Token & retoken ) {
     
