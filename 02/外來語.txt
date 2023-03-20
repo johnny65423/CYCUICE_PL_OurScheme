@@ -16,5 +16,5 @@
 16.	access		アクセス
 17.	animation   	アニメ		簡稱 亦可
 18.	demostration  	デモ		簡稱 亦可
-19.	motherboard	マズァーボード      マザーボード
+19.	motherboard	マザーボード
 20.	costdown	コストダウン
